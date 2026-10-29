@@ -47,9 +47,9 @@ docs/                   общая документация
 
 ## Ветки и review
 
-`main` — стабильная ветка, `frontend` — интеграционная ветка frontend. Feature-ветки создаются от `frontend` и отправляются PR обратно в `frontend`. Перед merge требуется review техлида. Прямой push в защищённые ветки и автоматический merge не используются. Подробности — в [CONTRIBUTING.md](CONTRIBUTING.md).
+`main` — default branch репозитория; актуального frontend-приложения в ней пока нет. `frontend` — рабочая ветка приложения и Production Branch в Vercel. Feature-ветки создаются от `frontend` и отправляются PR обратно в `frontend`. Code review техлида — командное правило перед merge. Подробности — в [CONTRIBUTING.md](CONTRIBUTING.md).
 
-Настройте branch protection для `main` и `frontend` в GitHub: обязательный PR, review техлида и успешные проверки. `CODEOWNERS` добавляется после определения реального владельца, без выдуманных аккаунтов.
+GitHub Ruleset `Frontend Protection` требует PR в `frontend` и успешные проверки `quality`, `unit-tests`, `build`, `e2e`. Сейчас ruleset допускает 0 approvals: review техлида ожидается по процессу команды, но технически не требуется GitHub. `CODEOWNERS` добавляется после определения реального владельца, без выдуманных аккаунтов.
 
 ## Бренд
 
