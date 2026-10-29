@@ -2,9 +2,9 @@
 
 1. Обновите `frontend` и создайте от неё ветку `feat/<scope>` или `chore/<scope>`.
 2. Делайте PR в `frontend`. Заполните шаблон PR, приложите скриншоты изменений интерфейса и укажите ограничения.
-3. Запустите `npm run lint`, `npm run typecheck`, `npm run test:coverage`, `npm run build` и `npm run test:e2e` перед PR. После внедрения CI каждый frontend PR должен успешно пройти автоматические проверки `quality`, `unit-tests`, `build` и `e2e` до merge. Подробности — в `docs/ci-cd.md`.
+3. Из каталога `frontend/` запустите `npm ci`, `npm run lint`, `npm run typecheck`, `npm run test:coverage`, `npm run build` и `npm run test:e2e` перед PR. После внедрения CI каждый frontend PR должен успешно пройти автоматические проверки `quality`, `unit-tests`, `build` и `e2e` до merge. Подробности — в `docs/ci-cd.md`.
 4. Дождитесь code review техлида. Не выполняйте прямой push в `main` или `frontend` и не включайте автоматический merge.
-5. Используйте токены из `src/app/styles/tokens.css` и существующий UI kit. Новые визуальные паттерны добавляйте в общую систему после согласования с командой.
+5. Используйте токены из `frontend/src/app/styles/tokens.css` и существующий UI kit. Новые визуальные паттерны добавляйте в общую систему после согласования с командой.
 6. Не придумывайте backend endpoints и не имитируйте авторизацию. Новые контракты берите из согласованного OpenAPI. Разрешения проверяйте на уровне действия и объекта; сервер остаётся источником истины.
 7. Не коммитьте секреты, `.env` и персональные данные.
 
