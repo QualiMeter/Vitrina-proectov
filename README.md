@@ -47,11 +47,11 @@ docs/                   общая документация
 
 ## Ветки и review
 
-`main` — общая интеграционная ветка для frontend и будущего backend. Создавайте временные feature-ветки от `main` и направляйте обычные PR в `main`. `frontend` — стабильная Production-ветка Vercel: после проверки интеграционной сборки выпускайте изменения отдельным PR из `main` в `frontend`. Прямые изменения `frontend` не допускаются. Code review техлида — командное правило перед merge. Подробности — в [CONTRIBUTING.md](CONTRIBUTING.md).
+`main` — единственная основная интеграционная и Production-ветка для frontend и будущего backend. Создавайте временные ветки `feat/<scope>` или `chore/<scope>` от актуальной `main` и направляйте PR в `main`. После code review и успешных обязательных проверок объединение PR запускает Production Deployment фронтенда в Vercel. Review техлида — правило команды, хотя GitHub Ruleset сейчас допускает 0 обязательных approvals. Подробности — в [CONTRIBUTING.md](CONTRIBUTING.md).
 
-До принятия PR по переходу на эту модель `main` содержала только исходную основу; PR переносит в неё актуальную структуру. Git-ветка хранит снимок всего репозитория: наличие каталога `backend/` в `frontend` не означает деплой backend на Vercel. Проект Vercel собирает только `frontend/`. Backend CI и деплой будут настроены отдельно после появления приложения и согласования архитектуры.
+Vercel использует Root Directory `frontend/` и не разворачивает `backend/`. Backend CI и отдельный деплой настроим после появления серверного приложения и согласования архитектуры. Ветка `frontend` сохранена как историческая и больше не используется для разработки и релизов; новые PR в неё не направляем.
 
-GitHub Rulesets `Main Integration Protection` и `Frontend Protection` требуют PR и успешные проверки `quality`, `unit-tests`, `build`, `e2e` для `main` и `frontend` соответственно. Оба допускают 0 approvals: review техлида ожидается по процессу команды, но технически не требуется GitHub. Force push и удаление защищённых веток запрещены. `CODEOWNERS` добавляется после определения реального владельца, без выдуманных аккаунтов.
+GitHub Ruleset `Main Integration Protection` защищает `main`: требует PR и успешные проверки `quality`, `unit-tests`, `build`, `e2e`, запрещает force push и удаление ветки. Прежний `Frontend Protection` остаётся на неиспользуемой ветке `frontend` до отдельной очистки. `CODEOWNERS` добавим после определения реального GitHub-аккаунта техлида.
 
 ## Бренд
 
