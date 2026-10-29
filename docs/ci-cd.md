@@ -46,7 +46,7 @@ Artifacts доступны на странице репозитория **Action
 
 ## Required status checks
 
-GitHub Ruleset `Frontend Protection` защищает `frontend`, требует PR и checks `quality`, `unit-tests`, `build`, `e2e` из **Frontend CI**. Сейчас он допускает 0 approvals: code review техлида — правило команды, а не технический gate GitHub. Перед merge убедитесь, что все четыре проверки прошли на PR. Для `main` включайте аналогичный ruleset только после успешного запуска этих четырёх checks на PR в `main`; до этого прямой push запрещён командным процессом.
+GitHub Rulesets `Main Integration Protection` и `Frontend Protection` защищают `main` и `frontend` соответственно. Оба требуют PR и checks `quality`, `unit-tests`, `build`, `e2e` из **Frontend CI**, запрещают force push и удаление веток, но допускают 0 approvals. Code review техлида — правило команды, а не технический gate GitHub. Перед merge убедитесь, что все четыре проверки прошли на PR.
 
 ## Vercel Git Integration и окружения
 
