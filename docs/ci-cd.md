@@ -33,7 +33,7 @@ npm run test:e2e
 | `quality` | ESLint и TypeScript | — |
 | `unit-tests` | Vitest и coverage | `frontend-coverage` |
 | `build` | Production build Vite | `frontend-dist` |
-| `e2e` | Vitest, production build, установка Chromium с системными библиотеками, Playwright | `frontend-playwright-report` при ошибке |
+| `e2e` | Production build, установка Chromium с системными библиотеками, Playwright | `frontend-playwright-report` при ошибке |
 
 Ненулевой код любой команды завершает соответствующий job с ошибкой. Для PR новые запуски отменяют устаревшие. Workflow не содержит секретов и не выполняет деплой.
 
@@ -45,14 +45,16 @@ Artifacts доступны на странице репозитория **Action
 
 ## Required status checks
 
-Владелец репозитория должен включить branch protection или ruleset для `frontend` и `main`: требовать PR, актуальную ветку перед merge и успешные checks `quality`, `unit-tests`, `build`, `e2e` из **Frontend CI**. GitHub предложит эти имена после первого запуска workflow. Также назначьте обязательный review техлида согласно `CONTRIBUTING.md`. До включения защиты красный CI сам по себе не блокирует merge.
+Владелец репозитория должен включить branch protection или ruleset для `frontend`: требовать PR, актуальную ветку перед merge и успешные checks `quality`, `unit-tests`, `build`, `e2e` из **Frontend CI**. GitHub предложит имена checks после запуска workflow. Также назначьте обязательный review техлида согласно `CONTRIBUTING.md`. До включения защиты красный CI сам по себе не блокирует merge.
 
 ## Vercel Git Integration и окружения
 
-1. В Vercel импортируйте `QualiMeter/Vitrina-proectov` через Git Integration с корневым каталогом репозитория. Убедитесь, что framework определяется как Vite, install command использует `npm ci`, build command — существующий `npm run build`, output directory — `dist`.
-2. В **Project Settings → Environments → Production → Branch Tracking** вручную задайте **Production Branch** `main`. Ветка `frontend` остаётся preview и служит staging окружением. Не назначайте `frontend` production branch.
-3. При появлении утверждённого API контракта добавляйте необходимые переменные отдельно в **Project Settings → Environment Variables**, с нужным scope для Preview и Production. Сейчас frontend не требует дополнительных переменных. Не храните значения и секреты в репозитории; помните, что `VITE_` переменные попадают в клиентскую сборку и не подходят для секретов.
-4. Для PR и push в `frontend` проверьте preview URL из Vercel в PR: главную страницу, прямое открытие и обновление `/university`, `/mentor`, `/admin`, неизвестный маршрут и мобильную ширину 375 px. `vercel.json` отправляет клиентские маршруты в `index.html`, чтобы React Router обработал их в браузере.
-5. Перед разрешением production релизов настройте в Vercel **Deployment Checks** для обязательных GitHub checks и защитите `main` указанными выше правилами. Git Integration выполняет деплой; GitHub Actions запускает тесты и сборку, не повторяя деплой.
+Репозиторий `QualiMeter/Vitrina-proectov` уже подключён к Vercel. Текущая **Production Branch — `frontend`**; push в неё запускает production-деплой через Git Integration. PR получают Preview deployment. Этот workflow выполняет только проверки и не дублирует деплой.
 
-Текущая модель CD: `frontend` → staging через Vercel Preview, `main` → production через Vercel Git Integration после обязательных проверок. Подключение проекта, выбор production branch, Deployment Checks и любые реальные переменные выполняются владельцем после review. Этот PR не запускает production deployment и не меняет настройки проекта Vercel.
+Для существующего проекта проверьте настройки Vite: корневой каталог репозитория, install command `npm ci`, build command `npm run build`, output directory `dist`. `vercel.json` отправляет прямые запросы к клиентским маршрутам в `index.html`, чтобы React Router обработал их в браузере. Не импортируйте репозиторий повторно и не меняйте Production Branch в рамках этого PR.
+
+Для каждого PR откройте Preview URL из Vercel и проверьте главную страницу, прямое открытие и обновление `/university`, `/mentor`, `/admin`, неизвестный маршрут и мобильную ширину 375 px. Preview может быть защищён Vercel Authentication; используйте доступ владельца проекта для ручной проверки.
+
+При появлении утверждённого API контракта добавляйте необходимые переменные в **Project Settings → Environment Variables** с нужным scope для Preview и Production. Сейчас frontend не требует дополнительных переменных. Не храните значения и секреты в репозитории: `VITE_` переменные попадают в клиентскую сборку и не подходят для секретов.
+
+Для production-деплоев из `frontend` настройте в Vercel **Deployment Checks** на обязательные GitHub checks и защитите `frontend` правилами выше. Тогда изменения не попадут на production-домен до успешных проверок. Будущий переход на monorepo и другая схема релизов пока не утверждены; менять ветки и окружения по этому документу не требуется.
