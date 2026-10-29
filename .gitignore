@@ -8,3 +8,11 @@ test-results/
 !.env.example
 *.local
 *.tsbuildinfo
+
+# Future .NET backend build and local IDE output
+backend/**/bin/
+backend/**/obj/
+backend/**/TestResults/
+.vs/
+*.user
+*.suo
