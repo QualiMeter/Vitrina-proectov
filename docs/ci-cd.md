@@ -27,7 +27,7 @@ npm run test:e2e
 
 ## GitHub Actions
 
-`.github/workflows/frontend-ci.yml` настроен для PR и push в `frontend` и `main`, а также ручного запуска. Сейчас актуальный workflow и приложение находятся в `frontend`; default branch `main` их пока не содержит. Jobs независимы, выполняют npm-команды из `frontend/`, используют `frontend/package-lock.json` для npm cache, Node.js 22 LTS и доступ только на чтение к содержимому репозитория. Фильтра `paths` нет: все четыре обязательные проверки запускаются для каждого PR в `frontend`.
+`.github/workflows/frontend-ci.yml` настроен для PR и push в `main` и `frontend`, а также ручного запуска. Jobs независимы, выполняют npm-команды из `frontend/`, используют `frontend/package-lock.json` для npm cache, Node.js 22 LTS и доступ только на чтение к содержимому репозитория. Фильтра `paths` нет: все четыре проверки запускаются для PR в обе ветки. Workflow не публикует Production.
 
 | Check | Что выполняет | Artifact |
 | --- | --- | --- |
@@ -46,16 +46,24 @@ Artifacts доступны на странице репозитория **Action
 
 ## Required status checks
 
-GitHub Ruleset `Frontend Protection` защищает `frontend`, требует PR и checks `quality`, `unit-tests`, `build`, `e2e` из **Frontend CI**. Сейчас он допускает 0 approvals: code review техлида — правило команды, а не технический gate GitHub. Имена jobs и триггеры сохранены при переносе. Перед merge убедитесь, что все четыре проверки прошли на PR.
+GitHub Ruleset `Frontend Protection` защищает `frontend`, требует PR и checks `quality`, `unit-tests`, `build`, `e2e` из **Frontend CI**. Сейчас он допускает 0 approvals: code review техлида — правило команды, а не технический gate GitHub. Перед merge убедитесь, что все четыре проверки прошли на PR. Для `main` включайте аналогичный ruleset только после успешного запуска этих четырёх checks на PR в `main`; до этого прямой push запрещён командным процессом.
 
 ## Vercel Git Integration и окружения
 
 Репозиторий `QualiMeter/Vitrina-proectov` уже подключён к Vercel. Текущая **Production Branch — `frontend`**; push в неё запускает production-деплой через Git Integration. PR получают Preview deployment. Этот workflow выполняет только проверки и не дублирует деплой.
 
-Для структуры монорепозитория в **Vercel → vitrina-uust → Settings → Build and Deployment** настройте **Root Directory** на `frontend`, оставив Production Branch `frontend`, install command `npm ci`, build command `npm run build` и output directory `dist`. Vercel должен читать `frontend/vercel.json`: SPA rewrite отправляет прямые запросы к клиентским маршрутам в `index.html`. После изменения Root Directory заново запустите Preview Deployment миграционного PR и проверьте его. Объединяйте PR в `frontend` только после успешного Preview и всех четырёх GitHub checks. Между переключением Root Directory и merge избегайте новых production-деплоев старого состояния `frontend` с приложением в корне.
+В **Vercel → vitrina-uust → Settings → Build and Deployment** Root Directory уже установлена на `frontend`; Framework — Vite, install command — `npm ci`, build command — `npm run build`, output directory — `dist`. Vercel читает `frontend/vercel.json`: SPA rewrite отправляет прямые запросы к клиентским маршрутам в `index.html`. Production Branch остаётся `frontend`; слияние PR в `main` не запускает Production-деплой. Vercel может создать Preview для `main` и для PR, поскольку Git-интеграция продолжает работать с репозиторием.
 
 Для каждого PR откройте Preview URL из Vercel и проверьте главную страницу, прямое открытие и обновление `/university`, `/mentor`, `/admin`, неизвестный маршрут и мобильную ширину 375 px. Preview может быть защищён Vercel Authentication; используйте доступ владельца проекта для ручной проверки.
 
 При появлении утверждённого API контракта добавляйте необходимые переменные в **Project Settings → Environment Variables** с нужным scope для Preview и Production. Сейчас frontend не требует дополнительных переменных. Не храните значения и секреты в репозитории: `VITE_` переменные попадают в клиентскую сборку и не подходят для секретов.
 
-Настройки Deployment Checks и Production Branch эта миграция не меняет. Каталог `backend/` пока содержит только README; backend создаётся отдельно после утверждения контрактов и архитектуры.
+## Процесс разработки и релиза
+
+1. Разработчик создаёт временную feature-ветку от актуальной `main` и PR в `main`.
+2. GitHub Actions запускает `quality`, `unit-tests`, `build`, `e2e`; команда проводит review.
+3. После merge команда проверяет интеграционную сборку `main`.
+4. Для релиза создаётся PR `main` → `frontend`; после review, успешных checks и Preview его объединяют.
+5. Git-интеграция Vercel автоматически разворачивает новый Production Deployment из `frontend`.
+
+Git-ветка содержит снимок всего репозитория. Наличие `backend/` в `frontend` не означает деплой backend: Vercel собирает только `frontend/`. Каталог `backend/` пока содержит README; backend-приложение, CI и деплой будут созданы отдельно после утверждения архитектуры. Production Branch и Deployment Checks этим процессом не меняются.
