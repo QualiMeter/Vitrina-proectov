@@ -1,0 +1,30 @@
+:root {
+  --brand: #4d19cc;
+  --brand-dark: #2a1468;
+  --brand-soft: #cbb8ff;
+  --brand-pale: #f1ecff;
+  --brand-gray: #e8e8e8;
+  --ink: #211b30;
+  --muted: #665f70;
+  --surface: #ffffff;
+  --canvas: #faf9fc;
+  --line: #dedbe4;
+  --danger: #aa2848;
+  --success: #186a50;
+  --success-pale: #e6f4ed;
+  --brand-hover: #f5f2fb;
+  --visual-surface: #f3effb;
+  --visual-line: #d7cee9;
+  --visual-grid: #e8e0f5;
+  --visual-orbit: #c7b5e6;
+  --visual-label-line: #d1c3e9;
+  --on-dark-muted: #ded4f7;
+  --overlay: rgb(32 22 52 / 40%);
+  --modal-overlay: rgb(27 20 44 / 55%);
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --shadow-soft: 0 10px 32px rgb(42 20 104 / 6%);
+  --shadow-modal: 0 24px 80px rgb(31 20 61 / 20%);
+  --container: 1200px;
+  --font: 'Golos Text', 'Golos', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
