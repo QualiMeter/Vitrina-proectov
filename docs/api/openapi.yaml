@@ -1,13 +1,13 @@
 openapi: 3.1.0
 info:
   title: 'Витрина ИТ-проектов УУНиТ — P0: авторизация, студенты, кейсы, выполнение и итоги'
-  version: 0.1.4-draft
+  version: 0.1.5-draft
   description: Единый проектный контракт, не реализованный backend. Auth/Companies (0.1), Teams/Applications (0.1.1),
-    Execution/Files (0.1.2), Evaluations/Results (0.1.3), StudentProfiles/ReferenceData (0.1.4). Утверждённые правила и предложения разделяются в docs/decisions/001-auth-and-permissions.md
+    Execution/Files (0.1.2), Evaluations/Results (0.1.3), StudentProfiles/ReferenceData (0.1.4), TL decisions (0.1.5). Утверждённые правила и предложения разделяются в docs/decisions/001-auth-and-permissions.md
     и docs/architecture/case-evaluation-results.md. Результаты и отзывы не публикуются до ручного подтверждения
     компанией. Без автоматического ранжирования по баллам; совместные места — только если разрешены опубликованными
-    условиями. Открытые решения о соло-отборе и NDA требуют согласования заказчика до реализации. Смена капитана
-    — с подтверждением, повторное участие после WITHDRAWN запрещено.
+    условиями. Для SOLO действует ручной отбор, NDA подтверждает капитан (или solo) при подаче заявки.
+    Смена капитана — по подтверждению, состав команды фиксируется при submit, повторное участие после WITHDRAWN/REJECTED запрещено.
 servers:
 - url: /
   description: Тот же origin, что и frontend; /api/* проксируется backend
@@ -1161,7 +1161,7 @@ paths:
       - Teams
       operationId: teamsInvite
       summary: Пригласить студента в команду
-      description: Только капитан, до подачи командной заявки и пока набор открыт. Время истечения приглашения не
+      description: Только капитан, до подачи командной заявки и пока набор открыт. После submit состав навсегда зафиксирован для этой заявки. Время истечения приглашения не
         позднее дедлайна/закрытия набора.
       security:
       - sessionCookie: []
@@ -1183,6 +1183,42 @@ paths:
                 $ref: '#/components/schemas/CaseTeamInvitation'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /api/v1/teams/{teamId}/members/{memberUserId}:
+    delete:
+      tags:
+      - Teams
+      operationId: teamsRemoveMember
+      summary: Удалить участника или покинуть команду до подачи заявки
+      description: Капитан вправе исключить другого участника, обычный участник — только себя. Капитан не может покинуть команду до подтверждённой передачи капитанства. После submit командной заявки состав фиксирован и изменение запрещено (409), включая отклонённые/отозванные заявки; новая команда не снимает запрет повторной подачи для участника.
+      security:
+      - sessionCookie: []
+      parameters:
+      - $ref: '#/components/parameters/TeamIdPath'
+      - name: memberUserId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/Id'
+      - $ref: '#/components/parameters/CsrfHeader'
+      responses:
+        '200':
+          description: Обновлённый состав команды
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaseTeam'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -1342,7 +1378,7 @@ paths:
       operationId: applicationsCreateDraft
       summary: 'Создать единый черновик заявки: SOLO или TEAM'
       description: SOLO создаёт сам студент, TEAM — капитан команды того же кейса. Повторный черновик того же субъекта
-        и новая заявка после WITHDRAWN запрещены (409).
+        и новая заявка после WITHDRAWN/REJECTED запрещены для любого прежнего участника (409).
       security:
       - sessionCookie: []
       parameters:
@@ -1527,7 +1563,7 @@ paths:
       summary: Отправить заявку с проверкой состава и лимитов
       description: Только капитан/solo. Для TEAM все приглашения должны быть разрешены, состав подтверждён. OPEN
         -> ADMITTED атомарно; SELECTIVE -> SUBMITTED без занятия квоты. При нехватке мест -> 409, без частичного
-        изменения статуса.
+        изменения статуса; при обязательном NDA передаёт ndaAcceptance с актуальной версией. Подпись хранится атомарно от имени капитана TEAM или solo; состав TEAM после submit неизменяем.
       security:
       - sessionCookie: []
       parameters:
@@ -2392,8 +2428,7 @@ paths:
       - Checkpoints
       operationId: checkpointsCompleteSelection
       summary: Вручную завершить отбор на контрольной точке
-      description: 'Ручной атомарный отбор до N команд, без автоматического ранжирования. Для соло предложены отдельная
-        квота и список passingSoloApplicationIds, но это НЕ утверждённое требование: x-decision-needed до реализации.'
+      description: 'Ручной атомарный отбор команд и SOLO по одинаковому принципу, без автоматического ранжирования. Для SOLO используется независимая квота soloSelectionLimit и список passingSoloApplicationIds; параметры определяет компания при настройке контрольной точки.'
       security:
       - sessionCookie: []
       parameters:
@@ -2433,7 +2468,7 @@ paths:
       - Checkpoints
       operationId: checkpointsMySelectionResult
       summary: Узнать свой результат отбора
-      description: Выдать только статус собственной команды, не список других команд.
+      description: Выдать только результат собственной команды или SOLO-заявки, не список других участников.
       security:
       - sessionCookie: []
       parameters:
@@ -2445,7 +2480,7 @@ paths:
             application/json:
               schema:
                 oneOf:
-                - $ref: '#/components/schemas/SelectionOutcomeMine'
+                - $ref: '#/components/schemas/MyCheckpointSelectionResult'
                 - $ref: '#/components/schemas/SoloSelectionOutcomeMine'
         '400':
           $ref: '#/components/responses/BadRequest'
@@ -2622,8 +2657,7 @@ paths:
       - NDA
       operationId: ndaGetPolicy
       summary: Ознакомиться с NDA своего кейса
-      description: 'Доступ допущенным участникам до запуска: текст должен быть доступен до принятия. Команда и версия
-        проверяются на сервере; условия per-user/per-team ещё требуют подтверждения.'
+      description: 'Доступен капитану создаваемой командной заявки или SOLO-заявителю до её отправки. Версия фиксируется при подаче; личное подтверждение остальных членов команды не требуется.'
       security:
       - sessionCookie: []
       parameters:
@@ -2655,8 +2689,7 @@ paths:
       operationId: ndaConfigurePolicy
       summary: Настроить текст NDA для кейса до публикации
       description: 'Только компания при DRAFT/REVISION: required=true требует документ, версия вычисляется сервером.
-        При публикации политика фиксируется, прежние принятия сохраняются в истории. Формат и порядок принятия NDA
-        требуют согласования заказчика.'
+        При публикации политика фиксируется, прежние принятия сохраняются в истории. NDA принимает капитан/solo в момент отправки заявки.'
       security:
       - sessionCookie: []
       parameters:
@@ -2690,48 +2723,6 @@ paths:
           $ref: '#/components/responses/Unprocessable'
         '429':
           $ref: '#/components/responses/TooManyRequests'
-  /api/v1/cases/{caseId}/nda/accept:
-    post:
-      tags:
-      - NDA
-      operationId: ndaAcceptPolicy
-      summary: Лично подтвердить ознакомление с NDA
-      description: Каждый участник может подтвердить NDA от собственного имени. Рекомендуемая политика обязательности
-        для каждого участника — проектное предложение; согласовать перед выпуском. Входящую версию и пользователя
-        проверять на сервере.
-      security:
-      - sessionCookie: []
-      parameters:
-      - $ref: '#/components/parameters/CaseIdPath'
-      - $ref: '#/components/parameters/CsrfHeader'
-      - $ref: '#/components/parameters/IdempotencyKey'
-      responses:
-        '200':
-          description: Успешно
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/NdaAcceptanceResult'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '409':
-          $ref: '#/components/responses/Conflict'
-        '422':
-          $ref: '#/components/responses/Unprocessable'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AcceptNdaRequest'
   /api/v1/teams/{teamId}/exclude:
     post:
       tags:
@@ -3142,7 +3133,7 @@ paths:
       - StudentProfiles
       operationId: studentsGetMyProfile
       summary: Получить собственный профиль студента
-      description: 'Только собственный профиль; академические сведения и личные настройки не публикуются автоматически.'
+      description: 'Только собственный профиль; академические сведения и личные настройки не публикуются гостям; все поля публичной схемы видны всем.'
       security:
       - sessionCookie: []
       responses:
@@ -3201,7 +3192,7 @@ paths:
       - StudentProfiles
       operationId: studentsGetPublicProfile
       summary: Публичный профиль студента
-      description: 'Только публичный whitelist данных. Никогда не отдавать email, телефон, учебную группу или приватные ссылки; опубликованные внешние ссылки только по выбору студента.'
+      description: 'Публичные никнейм, аватар и достижения всегда видны. ФИО, курс и группа не публичны, их получают только авторизованные представители компаний через защищённый API.'
       security: []
       parameters:
       - name: studentId
@@ -3216,6 +3207,118 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/StudentProfilePublic'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /api/v1/companies/{companyId}/students/{studentId}/profile:
+    get:
+      tags:
+      - StudentProfiles
+      operationId: studentsGetCompanyVisibleProfile
+      summary: Профиль студента для представителя компании
+      description: Только действительный участник компании companyId с разрешением студентов просматривать. Возвращает ФИО, группу и курс без дополнительного opt-in студента. Проверка членства и права сервером при каждом запросе. Незарегистрированным компаниям и гостям данные не выдаются.
+      security:
+      - sessionCookie: []
+      parameters:
+      - $ref: '#/components/parameters/CompanyIdPath'
+      - name: studentId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/Id'
+      responses:
+        '200':
+          description: Профиль студента с расширенными академическими полями
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyStudentProfile'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /api/v1/me/student-profile/avatar:
+    post:
+      tags:
+      - StudentProfiles
+      operationId: studentsUploadMyAvatar
+      summary: Загрузить свой аватар
+      description: Изображение обрабатывается на сервере; публично отдается только безопасная версия. Размеры, допустимые MIME-типы и лимиты требуют технического review.
+      security:
+      - sessionCookie: []
+      parameters:
+      - $ref: '#/components/parameters/CsrfHeader'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/StudentAvatarUpload'
+      responses:
+        '200':
+          description: Обновлённый профиль
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudentProfilePrivate'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+    delete:
+      tags:
+      - StudentProfiles
+      operationId: studentsDeleteMyAvatar
+      summary: Удалить свой аватар
+      description: Возвращает стандартный аватар-заглушку на UI; старый публичный avatar URL становится недоступным.
+      security:
+      - sessionCookie: []
+      parameters:
+      - $ref: '#/components/parameters/CsrfHeader'
+      responses:
+        '200':
+          description: Обновлённый профиль
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudentProfilePrivate'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /api/v1/public/students/{studentId}/avatar:
+    get:
+      tags:
+      - StudentProfiles
+      operationId: studentsGetPublicAvatar
+      summary: Получить публичный аватар студента
+      description: Выдавать только проверенное сервером изображение; отсутствующий аватар возвращает 404 и UI использует заглушку. Не использовать клиентские внешние URL произвольных изображений.
+      security: []
+      parameters:
+      - name: studentId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/Id'
+      responses:
+        '200':
+          description: Публичное изображение
+          content:
+            image/webp:
+              schema:
+                type: string
+                format: binary
         '404':
           $ref: '#/components/responses/NotFound'
         '429':
@@ -3401,6 +3504,11 @@ components:
       type: string
       minLength: 2
       maxLength: 200
+    Nickname:
+      type: string
+      minLength: 2
+      maxLength: 32
+      description: Обязательный никнейм студента; правила уникальности и допустимых символов согласовать при backend-review.
     CsrfTokenResponse:
       type: object
       additionalProperties: false
@@ -3417,6 +3525,7 @@ components:
       - email
       - password
       - fullName
+      - nickname
       - privacyAccepted
       - privacyPolicyVersion
       properties:
@@ -3426,6 +3535,8 @@ components:
           $ref: '#/components/schemas/Password'
         fullName:
           $ref: '#/components/schemas/DisplayName'
+        nickname:
+          $ref: '#/components/schemas/Nickname'
         privacyAccepted:
           type: boolean
           const: true
@@ -3568,6 +3679,8 @@ components:
           $ref: '#/components/schemas/Email'
         fullName:
           $ref: '#/components/schemas/DisplayName'
+        nickname:
+          $ref: '#/components/schemas/Nickname'
         globalRoles:
           type: array
           uniqueItems: true
@@ -4495,6 +4608,7 @@ components:
       - captainUserId
       - members
       - pendingInvitations
+      - membershipLocked
       - createdAt
       properties:
         id:
@@ -4513,6 +4627,9 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CaseTeamInvitation'
+        membershipLocked:
+          type: boolean
+          description: True с момента отправки заявки; состав команды не изменяется, даже после REJECTED/WITHDRAWN.
         captainTransfer:
           oneOf:
           - $ref: '#/components/schemas/CaptainTransfer'
@@ -4639,6 +4756,14 @@ components:
           items:
             $ref: '#/components/schemas/Id'
           uniqueItems: true
+        ndaAcceptedByUserId:
+          $ref: '#/components/schemas/Id'
+        ndaAcceptedVersion:
+          type: string
+          maxLength: 64
+        ndaAcceptedAt:
+          type: string
+          format: date-time
         submittedAt:
           type:
           - string
@@ -4665,7 +4790,7 @@ components:
           items:
             type: string
           uniqueItems: true
-      description: Приватный DTO. Снимок участников фиксируется при подаче командной заявки; только капитан отправляет.
+      description: Приватный DTO. Снимок участников фиксируется при подаче командной заявки и не меняется даже при последующем REJECTED/WITHDRAWN; NDA при обязательности подтверждается капитаном/solo атомарно с submit.
       allOf:
       - if:
           properties:
@@ -4722,6 +4847,8 @@ components:
         expectedVersion:
           type: integer
           minimum: 1
+        ndaAcceptance:
+          $ref: '#/components/schemas/AcceptNdaRequest'
     CaseApplicationWithdrawRequest:
       type: object
       additionalProperties: false
@@ -5101,10 +5228,8 @@ components:
         soloSelectionLimit:
           type: integer
           minimum: 0
-          x-decision-needed: true
-          description: 'ПРОЕКТНОЕ ПРЕДЛОЖЕНИЕ: отдельный максимум проходящих соло-заявок, только на SELECTION и
-            при допуске SOLO/BOTH. Не реализовывать до согласования с TL/заказчиком.'
-      description: Только DRAFT/REVISION; при kind=SELECTION нужно selectionLimit, при других kind — нет. Одна общая
+          description: Независимая квота для соло-заявок на SELECTION. Доступна при формате SOLO/BOTH, обязательность для конкретного кейса проверяет backend.
+      description: Только DRAFT/REVISION; при kind=SELECTION компания задаёт квоту по разрешённым форматам TEAM/SOLO; backend проверяет соответствие participationFormat кейса. Одна общая
         дата для всех команд; без индивидуальных переносов.
       allOf:
       - if:
@@ -5114,8 +5239,11 @@ components:
           required:
           - kind
         then:
-          required:
-          - selectionLimit
+          anyOf:
+          - required:
+            - selectionLimit
+          - required:
+            - soloSelectionLimit
         else:
           not:
             required:
@@ -5170,9 +5298,7 @@ components:
         soloSelectionLimit:
           type: integer
           minimum: 0
-          x-decision-needed: true
-          description: 'ПРОЕКТНОЕ ПРЕДЛОЖЕНИЕ: отдельный максимум проходящих соло-заявок, только на SELECTION и
-            при допуске SOLO/BOTH. Не реализовывать до согласования с TL/заказчиком.'
+          description: Независимая квота для соло-заявок на SELECTION. Доступна при формате SOLO/BOTH, обязательность для конкретного кейса проверяет backend.
     CaseCheckpoint:
       type: object
       additionalProperties: false
@@ -5228,9 +5354,7 @@ components:
         soloSelectionLimit:
           type: integer
           minimum: 0
-          x-decision-needed: true
-          description: 'ПРОЕКТНОЕ ПРЕДЛОЖЕНИЕ: отдельный максимум проходящих соло-заявок, только на SELECTION и
-            при допуске SOLO/BOTH. Не реализовывать до согласования с TL/заказчиком.'
+          description: Независимая квота для соло-заявок на SELECTION. Доступна при формате SOLO/BOTH, обязательность для конкретного кейса проверяет backend.
       description: Приватный для компании; у участника показывается лишь доступный фрагмент в workspace.
     AttachStageMaterialRequest:
       type: object
@@ -5606,11 +5730,8 @@ components:
             $ref: '#/components/schemas/Id'
           maxItems: 500
           uniqueItems: true
-          x-decision-needed: true
-          description: 'ПРОЕКТНОЕ ПРЕДЛОЖЕНИЕ: независимый ручной выбор соло-заявок до soloSelectionLimit, не смешивать
-            с N команд.'
-      description: Выбор до N допущенных команд; для SOLO/BOTH отдельные soloSelectionLimit и passingSoloApplicationIds
-        только после согласования. Атомарно; без автоматической оценки.
+          description: Ручной список проходящих SOLO-заявок, ограничен soloSelectionLimit.
+      description: Выбор до N допущенных команд; для SOLO/BOTH отдельные soloSelectionLimit и passingSoloApplicationIds по тем же правилам ручного отбора. Атомарно; без автоматической оценки.
     CheckpointClosure:
       type: object
       additionalProperties: false
@@ -5763,7 +5884,6 @@ components:
       required:
       - caseId
       - required
-      - acceptedByMe
       properties:
         caseId:
           $ref: '#/components/schemas/Id'
@@ -5777,14 +5897,7 @@ components:
           type: string
           minLength: 1
           maxLength: 20000
-        acceptedByMe:
-          type: boolean
-        allCurrentTeamMembersAccepted:
-          type: boolean
-          description: Информационный признак; индивидуальное подписание NDA каждым участником и влияние на доступ
-            всей команды требует решения TL.
-      description: Доступно допущенным участникам перед стартом, чтобы ознакомиться и подтвердить. Состав и версия
-        NDA фиксируются на сервере.
+      description: NDA доступно студенту до подачи заявки. Если required=true, при submit обязателен ndaAcceptance. От TEAM подписывает только капитан, от SOLO — сам заявитель.
     AcceptNdaRequest:
       type: object
       additionalProperties: false
@@ -6348,14 +6461,74 @@ components:
           - string
           - 'null'
           format: date-time
-      description: Проектный ответ соло-участнику, требуется решение TL/заказчика.
+      description: Результат собственной соло-заявки, чужие данные не выдаются.
+    MyCheckpointSelectionResult:
+      oneOf:
+      - $ref: '#/components/schemas/SelectionOutcomeMine'
+      - $ref: '#/components/schemas/SoloSelectionOutcomeMine'
+      description: Одна из моделей, в зависимости от формата подачи заявки.
 
+    ProfileAchievement:
+      type: object
+      additionalProperties: false
+      required:
+      - title
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 160
+        description:
+          type: string
+          maxLength: 1000
+        url:
+          type: string
+          format: uri
+          maxLength: 2048
+      description: Достижение, добавленное студентом в профиль; не означает официальную верификацию университетом.
+    StudentAvatarUpload:
+      type: object
+      additionalProperties: false
+      required:
+      - file
+      properties:
+        file:
+          type: string
+          format: binary
+      description: Один файл изображения; сервер проверяет MIME, сигнатуру, размер, отсутствие опасного содержимого, пересоздаёт безопасные варианты изображения.
+    CompanyStudentProfile:
+      type: object
+      additionalProperties: false
+      required:
+      - publicProfile
+      - fullName
+      - studyGroup
+      - course
+      properties:
+        publicProfile:
+          $ref: '#/components/schemas/StudentProfilePublic'
+        fullName:
+          $ref: '#/components/schemas/DisplayName'
+        studyGroup:
+          type:
+          - string
+          - 'null'
+          maxLength: 64
+        course:
+          type:
+          - integer
+          - 'null'
+          minimum: 1
+          maximum: 6
+      description: ФИО, группа и курс обязательно отображаются авторизованному представителю компании при наличии данных; если группа или курс не заполнены, сервер передаёт null и интерфейс показывает «Не указано». Не публичный endpoint.
     StudentProfilePrivate:
       type: object
       additionalProperties: false
       required:
       - userId
       - fullName
+      - nickname
+      - achievements
       - version
       - skillIds
       - technologyIds
@@ -6365,6 +6538,19 @@ components:
           $ref: '#/components/schemas/Id'
         fullName:
           $ref: '#/components/schemas/DisplayName'
+        nickname:
+          $ref: '#/components/schemas/Nickname'
+        avatarUrl:
+          type:
+          - string
+          - 'null'
+          format: uri-reference
+          description: Ссылка на безопасный публичный аватар через same-origin API, null если не загружен.
+        achievements:
+          type: array
+          maxItems: 50
+          items:
+            $ref: '#/components/schemas/ProfileAchievement'
         version:
           type: integer
           minimum: 1
@@ -6409,6 +6595,13 @@ components:
           minimum: 1
         fullName:
           $ref: '#/components/schemas/DisplayName'
+        nickname:
+          $ref: '#/components/schemas/Nickname'
+        achievements:
+          type: array
+          maxItems: 50
+          items:
+            $ref: '#/components/schemas/ProfileAchievement'
         instituteId:
           $ref: '#/components/schemas/Id'
         course:
@@ -6460,21 +6653,28 @@ components:
       additionalProperties: false
       required:
       - studentId
-      - displayName
+      - nickname
+      - avatarUrl
+      - achievements
       - skillIds
       - technologyIds
       - publicLinks
       properties:
         studentId:
           $ref: '#/components/schemas/Id'
-        displayName:
-          $ref: '#/components/schemas/DisplayName'
-        instituteId:
-          $ref: '#/components/schemas/Id'
-        course:
-          type: integer
-          minimum: 1
-          maximum: 6
+        nickname:
+          $ref: '#/components/schemas/Nickname'
+        avatarUrl:
+          type:
+          - string
+          - 'null'
+          format: uri-reference
+          description: URL публичного изображения или null для отображения стандартного аватара.
+        achievements:
+          type: array
+          maxItems: 50
+          items:
+            $ref: '#/components/schemas/ProfileAchievement'
         publicSummary:
           type: string
         skillIds:
@@ -6489,7 +6689,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PublicStudentLink'
-      description: Белый список публичных полей. Email, группа, членства, закрытые работы и приватные данные отсутствуют.
+      description: Никнейм, аватар и достижения видны всем; при отсутствии аватара UI показывает заглушку, при отсутствии достижений — пустое состояние. ФИО, курс и группа доступны только представителям компаний через отдельный защищённый API. Email, группа, членства и закрытые работы публично отсутствуют.
     MyCaseParticipation:
       type: object
       additionalProperties: false
