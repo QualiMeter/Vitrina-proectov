@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: 'Витрина ИТ-проектов УУНиТ — P0: авторизация, кейсы, заявки, выполнение и итоги'
-  version: 0.1.3-draft
+  version: 0.1.4-draft
   description: Единый проектный контракт, не реализованный backend. Auth/Companies (0.1), Teams/Applications (0.1.1),
     Execution/Files (0.1.2), Evaluations/Results (0.1.3). Утверждённые правила и предложения разделяются в docs/decisions/001-auth-and-permissions.md
     и docs/architecture/case-evaluation-results.md. Результаты и отзывы не публикуются до ручного подтверждения
@@ -12,6 +12,10 @@ servers:
 - url: /
   description: Тот же origin, что и frontend; /api/* проксируется backend
 tags:
+- name: StudentProfiles
+  description: Личный профиль, публичная карточка и участия студента (P0 плана v2.1)
+- name: ReferenceData
+  description: Опубликованные read-only справочники для P0 форм и фильтров
 - name: Auth
   description: Сессии, регистрация, подтверждение email, восстановление
 - name: Companies
@@ -3132,6 +3136,139 @@ paths:
           $ref: '#/components/responses/Unprocessable'
         '429':
           $ref: '#/components/responses/TooManyRequests'
+  /api/v1/me/student-profile:
+    get:
+      tags:
+      - StudentProfiles
+      operationId: studentsGetMyProfile
+      summary: Получить собственный профиль студента
+      description: 'Только собственный профиль; академические сведения и личные настройки не публикуются автоматически.'
+      security:
+      - sessionCookie: []
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudentProfilePrivate'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+    patch:
+      tags:
+      - StudentProfiles
+      operationId: studentsUpdateMyProfile
+      summary: Редактировать свой профиль студента
+      description: 'Оптимистическая блокировка expectedVersion; нельзя менять чужой профиль, email, глобальные роли и права.'
+      security:
+      - sessionCookie: []
+      parameters:
+      - $ref: '#/components/parameters/CsrfHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StudentProfileUpdateRequest'
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudentProfilePrivate'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /api/v1/public/students/{studentId}:
+    get:
+      tags:
+      - StudentProfiles
+      operationId: studentsGetPublicProfile
+      summary: Публичный профиль студента
+      description: 'Только публичный whitelist данных. Никогда не отдавать email, телефон, учебную группу или приватные ссылки; опубликованные внешние ссылки только по выбору студента.'
+      security:
+      []
+      parameters:
+      - name: studentId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/Id'
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudentProfilePublic'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /api/v1/me/case-participations:
+    get:
+      tags:
+      - StudentProfiles
+      operationId: studentsListMyCaseParticipations
+      summary: Мои участия и черновики заявок в кейсах
+      description: 'Вывести участия SOLO/TEAM, статус заявки, роль капитан/участник, доступный маршрут. Не раскрывать чужие заявки.'
+      security:
+      - sessionCookie: []
+      parameters:
+      - $ref: '#/components/parameters/PageQuery'
+      - $ref: '#/components/parameters/PageSizeQuery'
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MyCaseParticipationListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /api/v1/reference-data:
+    get:
+      tags:
+      - ReferenceData
+      operationId: referenceDataListPublic
+      summary: Опубликованные справочники для форм и фильтров
+      description: 'Read-only справочники направлений, технологий, компетенций, категорий и институтов; справочники управляются отдельно по правам.'
+      security:
+      []
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReferenceDataResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
 components:
   securitySchemes:
     sessionCookie:
@@ -6214,6 +6351,250 @@ components:
           - 'null'
           format: date-time
       description: Проектный ответ соло-участнику, требуется решение TL/заказчика.
+
+    StudentProfilePrivate:
+      type: object
+      additionalProperties: false
+      required:
+      - userId
+      - fullName
+      - version
+      - skillIds
+      - technologyIds
+      - publicLinks
+      properties:
+        userId:
+          $ref: '#/components/schemas/Id'
+        fullName:
+          $ref: '#/components/schemas/DisplayName'
+        version:
+          type: integer
+          minimum: 1
+        instituteId:
+          $ref: '#/components/schemas/Id'
+        course:
+          type: integer
+          minimum: 1
+          maximum: 6
+        studyGroup:
+          type: string
+          maxLength: 64
+        description:
+          type: string
+          maxLength: 5000
+        publicSummary:
+          type: string
+          maxLength: 2000
+        skillIds:
+          type: array
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/Id'
+        technologyIds:
+          type: array
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/Id'
+        publicLinks:
+          type: array
+          description: Только ссылки, которые студент явно разрешил показывать публично.
+          items:
+            $ref: '#/components/schemas/PublicStudentLink'
+    StudentProfileUpdateRequest:
+      type: object
+      additionalProperties: false
+      required:
+      - expectedVersion
+      properties:
+        expectedVersion:
+          type: integer
+          minimum: 1
+        fullName:
+          $ref: '#/components/schemas/DisplayName'
+        instituteId:
+          $ref: '#/components/schemas/Id'
+        course:
+          type: integer
+          minimum: 1
+          maximum: 6
+        studyGroup:
+          type: string
+          maxLength: 64
+        description:
+          type: string
+          maxLength: 5000
+        publicSummary:
+          type: string
+          maxLength: 2000
+        skillIds:
+          type: array
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/Id'
+        technologyIds:
+          type: array
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/Id'
+        publicLinks:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublicStudentLink'
+      description: Изменяется только собственный профиль; отсутствие поля означает сохранить прежнее значение.
+    PublicStudentLink:
+      type: object
+      additionalProperties: false
+      required:
+      - label
+      - url
+      properties:
+        label:
+          type: string
+          minLength: 1
+          maxLength: 80
+        url:
+          type: string
+          format: uri
+          maxLength: 2048
+      description: Публичная ссылка по согласию студента, например GitHub или GitLab; приватные контакты сюда не включать.
+    StudentProfilePublic:
+      type: object
+      additionalProperties: false
+      required:
+      - studentId
+      - displayName
+      - skillIds
+      - technologyIds
+      - publicLinks
+      properties:
+        studentId:
+          $ref: '#/components/schemas/Id'
+        displayName:
+          $ref: '#/components/schemas/DisplayName'
+        instituteId:
+          $ref: '#/components/schemas/Id'
+        course:
+          type: integer
+          minimum: 1
+          maximum: 6
+        publicSummary:
+          type: string
+        skillIds:
+          type: array
+          items:
+            $ref: '#/components/schemas/Id'
+        technologyIds:
+          type: array
+          items:
+            $ref: '#/components/schemas/Id'
+        publicLinks:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublicStudentLink'
+      description: Белый список публичных полей. Email, группа, членства, закрытые работы и приватные данные отсутствуют.
+    MyCaseParticipation:
+      type: object
+      additionalProperties: false
+      required:
+      - caseId
+      - caseTitle
+      - format
+      - role
+      - applicationStatus
+      properties:
+        caseId:
+          $ref: '#/components/schemas/Id'
+        caseTitle:
+          type: string
+        caseStatus:
+          $ref: '#/components/schemas/CaseStatus'
+        applicationId:
+          $ref: '#/components/schemas/Id'
+        teamId:
+          $ref: '#/components/schemas/Id'
+        format:
+          $ref: '#/components/schemas/CaseApplicationFormat'
+        role:
+          type: string
+          enum:
+          - SOLO
+          - CAPTAIN
+          - MEMBER
+        applicationStatus:
+          $ref: '#/components/schemas/CaseApplicationStatus'
+        teamExecutionStatus:
+          type: string
+          enum:
+          - ACTIVE
+          - ELIMINATED
+          - EXCLUDED
+      description: Роль вычисляется сервером на момент запроса; не принимать её из клиентской формы.
+    MyCaseParticipationListResponse:
+      type: object
+      additionalProperties: false
+      required:
+      - items
+      - page
+      - pageSize
+      - total
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/MyCaseParticipation'
+        page:
+          type: integer
+          minimum: 1
+        pageSize:
+          type: integer
+          minimum: 1
+        total:
+          type: integer
+          minimum: 0
+    DirectoryEntry:
+      type: object
+      additionalProperties: false
+      required:
+      - id
+      - name
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        name:
+          type: string
+          minLength: 1
+    ReferenceDataResponse:
+      type: object
+      additionalProperties: false
+      required:
+      - directions
+      - technologies
+      - competencies
+      - portfolioCategories
+      - institutes
+      properties:
+        directions:
+          type: array
+          items:
+            $ref: '#/components/schemas/DirectoryEntry'
+        technologies:
+          type: array
+          items:
+            $ref: '#/components/schemas/DirectoryEntry'
+        competencies:
+          type: array
+          items:
+            $ref: '#/components/schemas/DirectoryEntry'
+        portfolioCategories:
+          type: array
+          description: Список категорий из ТЗ, не задавать названия девяти категорий без утверждённого справочника.
+          items:
+            $ref: '#/components/schemas/DirectoryEntry'
+        institutes:
+          type: array
+          items:
+            $ref: '#/components/schemas/DirectoryEntry'
+
   responses:
     AcceptedWithoutEnumeration:
       description: Запрос принят, информация отправлена при наличии адресата
