@@ -322,8 +322,7 @@ paths:
               $ref: '#/components/schemas/ResetPasswordRequest'
       responses:
         '204':
-          description: Пароль сменён
-          прежние сессии отозваны: null
+          description: Пароль сменён; прежние сессии отозваны
         '400':
           $ref: '#/components/responses/BadRequest'
         '403':
