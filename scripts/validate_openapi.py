@@ -96,7 +96,9 @@ def main() -> None:
 
     assert count > 0, "OpenAPI must contain at least one operation"
     version = doc["info"].get("version", "")
-    assert re.fullmatch(r"\\d+\\.\\d+\\.\\d+(?:-[A-Za-z0-9.-]+)?", version), (\n        f"Unexpected API version format: {version}"\n    )
+    assert re.fullmatch(r"\d+\.\d+\.\d+(?:-[A-Za-z0-9.-]+)?", version), (
+        f"Unexpected API version format: {version}"
+    )
     print(
         f"OpenAPI check passed: {count} operations, "
         f"{len(paths)} paths, {len(components.get('schemas', {}))} schemas"
