@@ -1,6 +1,6 @@
 # Примеры запросов для FE-A / FE-B / FE-C
 
-**Статус:** проектные примеры к `docs/api/openapi.yaml` версии `0.1.3-draft`. Не обращаться к ним как к уже работающим API. Значения UUID условные.
+**Статус:** проектные примеры к `docs/api/openapi.yaml` версии `0.1.4-draft`. Не обращаться к ним как к уже работающим API. Значения UUID условные.
 
 В реальном клиенте перед изменяющим запросом запрашивается `GET /api/v1/auth/csrf`, а затем передаётся `X-CSRF-Token`. Cookie отправляется браузером автоматически на том же origin. Для операций `submit`, `withdraw`, `decision` клиент задаёт отдельный `Idempotency-Key` и использует **тот же ключ для сетевых повторов**.
 
@@ -280,3 +280,31 @@
 `GET /api/v1/public/cases/{caseId}/results` — открывается **только после** успешного перехода в `COMPLETED`. Приватные отзывы и баллы доступны лишь своей заявке через `GET /api/v1/cases/{caseId}/results/mine`.
 
 **Важно:** эти примеры — документация проектируемого API, серверные маршруты ещё не существуют.
+
+
+## P0 дополнение 0.1.4: профиль, участия и справочники
+
+Следующие операции пока **не реализованы** на backend; схемы и поля требуют review TL и FE-B.
+
+`GET /api/v1/me/student-profile` возвращает `StudentProfilePrivate` только для текущего пользователя, включая `version` и приватную учебную группу.
+
+`PATCH /api/v1/me/student-profile` (cookie + `X-CSRF-Token`):
+
+```json
+{
+  "expectedVersion": 1,
+  "description": "Разрабатываю веб-приложения",
+  "skillIds": [],
+  "technologyIds": [],
+  "publicSummary": "Участвую в командных ИТ-проектах",
+  "publicLinks": [
+    {"label": "GitHub", "url": "https://github.com/example"}
+  ]
+}
+```
+
+`GET /api/v1/public/students/{studentId}` возвращает `StudentProfilePublic` без email, учебной группы и закрытых данных.
+
+`GET /api/v1/me/case-participations?page=1&pageSize=20` возвращает `MyCaseParticipationListResponse`: `items`, `page`, `pageSize`, `total`.
+
+`GET /api/v1/reference-data` возвращает `ReferenceDataResponse` с опубликованными направлениями, технологиями, компетенциями, категориями портфолио и институтами. Названия девяти категорий берутся из утверждённого ТЗ/справочника, а не придумываются frontend.
