@@ -1,9 +1,9 @@
 openapi: 3.1.0
 info:
-  title: 'Витрина ИТ-проектов УУНиТ — P0: авторизация, кейсы, заявки, выполнение и итоги'
+  title: 'Витрина ИТ-проектов УУНиТ — P0: авторизация, студенты, кейсы, выполнение и итоги'
   version: 0.1.4-draft
   description: Единый проектный контракт, не реализованный backend. Auth/Companies (0.1), Teams/Applications (0.1.1),
-    Execution/Files (0.1.2), Evaluations/Results (0.1.3). Утверждённые правила и предложения разделяются в docs/decisions/001-auth-and-permissions.md
+    Execution/Files (0.1.2), Evaluations/Results (0.1.3), StudentProfiles/ReferenceData (0.1.4). Утверждённые правила и предложения разделяются в docs/decisions/001-auth-and-permissions.md
     и docs/architecture/case-evaluation-results.md. Результаты и отзывы не публикуются до ручного подтверждения
     компанией. Без автоматического ранжирования по баллам; совместные места — только если разрешены опубликованными
     условиями. Открытые решения о соло-отборе и NDA требуют согласования заказчика до реализации. Смена капитана
@@ -3202,8 +3202,7 @@ paths:
       operationId: studentsGetPublicProfile
       summary: Публичный профиль студента
       description: 'Только публичный whitelist данных. Никогда не отдавать email, телефон, учебную группу или приватные ссылки; опубликованные внешние ссылки только по выбору студента.'
-      security:
-      []
+      security: []
       parameters:
       - name: studentId
         in: path
@@ -3255,8 +3254,7 @@ paths:
       operationId: referenceDataListPublic
       summary: Опубликованные справочники для форм и фильтров
       description: 'Read-only справочники направлений, технологий, компетенций, категорий и институтов; справочники управляются отдельно по правам.'
-      security:
-      []
+      security: []
       responses:
         '200':
           description: Успешно
