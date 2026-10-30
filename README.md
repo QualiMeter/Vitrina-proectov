@@ -47,7 +47,7 @@ docs/                   общая документация
 
 ## Ветки и review
 
-`main` — единственная основная интеграционная и Production-ветка для frontend и будущего backend. Создавайте временные ветки `feat/<scope>` или `chore/<scope>` от актуальной `main` и направляйте PR в `main`. После code review и успешных обязательных проверок объединение PR запускает Production Deployment фронтенда в Vercel. Review техлида — правило команды, хотя GitHub Ruleset сейчас допускает 0 обязательных approvals. Подробности — в [CONTRIBUTING.md](CONTRIBUTING.md).
+`main` — единственная основная интеграционная и Production-ветка для frontend и будущего backend. Создавайте временные ветки `feat/<scope>` или `chore/<scope>` от актуальной `main` и направляйте PR в `main`. После code review и успешных обязательных проверок объединение PR запускает Production Deployment фронтенда в Vercel. Review техлида для бизнес-изменений — правило команды, хотя GitHub Ruleset сейчас допускает 0 обязательных approvals. **Любой PR с изменениями `frontend/` мержит только `@Mouse-ai`; backend-владелец вправе самостоятельно мержить свои backend/API PR после проверок и предметного review.** Политика владельцев описана в `CONTRIBUTING.md`. Подробности — в [CONTRIBUTING.md](CONTRIBUTING.md).
 
 Vercel использует Root Directory `frontend/` и не разворачивает `backend/`. Backend CI и отдельный деплой настроим после появления серверного приложения и согласования архитектуры. Ветка `frontend` сохранена как историческая и больше не используется для разработки и релизов; новые PR в неё не направляем.
 
