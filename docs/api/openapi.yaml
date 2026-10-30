@@ -1987,8 +1987,7 @@ paths:
       - Checkpoints
       operationId: checkpointsCreate
       summary: Добавить контрольную точку
-      description: Только DRAFT/REVISION; общая дата; FINAL без отбора. Политика селекции SOLO/BOTH пока требует
-        решения — не выпускать в production без неё.
+      description: Только DRAFT/REVISION; общая дата; FINAL без отбора. Для SOLO/BOTH backend проверяет отдельные квоты и ручной отбор в соответствии с участием, без автоматического ранжирования.
       security:
       - sessionCookie: []
       parameters:
@@ -4756,14 +4755,9 @@ components:
           items:
             $ref: '#/components/schemas/Id'
           uniqueItems: true
-        ndaAcceptedByUserId:
-          $ref: '#/components/schemas/Id'
-        ndaAcceptedVersion:
-          type: string
-          maxLength: 64
-        ndaAcceptedAt:
-          type: string
-          format: date-time
+        ndaAcceptance:
+          $ref: '#/components/schemas/NdaAcceptanceResult'
+          description: Отсутствует, если NDA не требовался. Подписание происходит атомарно с submit.
         submittedAt:
           type:
           - string
@@ -5520,7 +5514,7 @@ components:
       - status
       - myParticipationStatus
       - ndaRequired
-      - ndaAcceptedByMe
+      - ndaAcceptedForApplication
       - stages
       - allowedActions
       properties:
@@ -5534,8 +5528,9 @@ components:
           $ref: '#/components/schemas/ApplicationExecutionStatus'
         ndaRequired:
           type: boolean
-        ndaAcceptedByMe:
+        ndaAcceptedForApplication:
           type: boolean
+          description: True если капитан TEAM или SOLO-заявитель подписал необходимую версию NDA при submit; не требует подписи каждого участника команды.
         stages:
           type: array
           items:
