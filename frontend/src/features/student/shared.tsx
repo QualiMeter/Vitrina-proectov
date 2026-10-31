@@ -229,8 +229,8 @@ export function StudentRoot({ demo = false }: { demo?: boolean }) {
           </Load>
           {session.error instanceof ApiError &&
             session.error.status === 401 && (
-              <p>
-                <Link to="/login">Войти через общий экран входа</Link>
+              <p role="status">
+                Общий экран входа ещё не подключён. <Link to="/">Вернуться на главную</Link> или повторите проверку сессии после входа через доступный экран команды.
               </p>
             )}
         </main>

@@ -137,6 +137,8 @@ describe("Frontend B day 1", () => {
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(fetch.mock.calls[0][0]).toBe("/api/v1/auth/me");
     expect(screen.queryByLabelText("ФИО")).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", {name: "Войти через общий экран входа"})).not.toBeInTheDocument();
+    expect(screen.getByRole("link", {name: "Вернуться на главную"})).toHaveAttribute("href", "/");
   });
   it("does not grant a company account access to the student area", async () => {
     const session = await createDemoGateway().session();
