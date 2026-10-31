@@ -10,6 +10,7 @@ import { ForgotPasswordPage } from '../../pages/auth/ForgotPasswordPage';
 import { ResetPasswordPage } from '../../pages/auth/ResetPasswordPage';
 import { AcceptInvitationPage } from '../../pages/auth/AcceptInvitationPage';
 import { PublicLayout } from './PublicLayout';
+import '../../pages/auth/Auth.css';
 
 const route = (path: string) => ({ path, element: <PlaceholderPage /> });
 
