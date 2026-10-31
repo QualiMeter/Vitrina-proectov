@@ -1,4 +1,3 @@
-// frontend/src/pages/auth/VerifyEmailPage.tsx
 import { useEffect, useState } from 'react';
 import { useLocation, useSearchParams, Link } from 'react-router-dom';
 import { verifyEmail, resendVerification } from '../../api/auth';

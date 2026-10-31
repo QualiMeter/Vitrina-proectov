@@ -1,4 +1,4 @@
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
 import { HomePage } from '../../pages/public/HomePage/HomePage';
 import { AppShell } from '../../components/layout/AppShell';
 import { PlaceholderPage } from '../../pages/PlaceholderPage';
@@ -12,13 +12,19 @@ import { ForgotPasswordPage } from '../../pages/auth/ForgotPasswordPage';
 import { ResetPasswordPage } from '../../pages/auth/ResetPasswordPage';
 import { AcceptInvitationPage } from '../../pages/auth/AcceptInvitationPage';
 
+function PublicLayout() {
+  return (
+    <AuthProvider>
+      <Outlet />
+    </AuthProvider>
+  );
+}
+
 const route = (path: string) => ({ path, element: <PlaceholderPage /> });
 
 export const router = createBrowserRouter([
-  { path: '/',
-  element: (<AuthProvider>
-        <AppShell />
-      </AuthProvider>),
+  {
+  element: <PublicLayout />,
   children: [
     { index: true, element: <HomePage /> },
     { path: 'login', element: <LoginPage /> },
@@ -27,8 +33,6 @@ export const router = createBrowserRouter([
     { path: 'forgot-password', element: <ForgotPasswordPage /> },
     { path: 'reset-password', element: <ResetPasswordPage /> },
     { path: 'accept-invitation', element: <AcceptInvitationPage /> },
-
-    { path: '403', element: <ErrorState kind="forbidden" /> },
 
     { path: '/university', element: <ProtectedRoute allowedRoles={['UniversityStaff', 'Admin']} />, children: [
       { index: true, element: <PlaceholderPage />},

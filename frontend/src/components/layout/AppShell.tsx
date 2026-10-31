@@ -34,3 +34,4 @@ export function AppShell({ area }: { area: Area }) {
     <div className="shell__main"><header className="shell-header"><Button variant="ghost" className="shell-header__menu" aria-expanded={menuOpen} aria-controls="cabinet-menu" onClick={() => setMenuOpen(!menuOpen)}>☰ <span>Меню</span></Button><div className="shell-header__title">Витрина ИТ-проектов <span>/ {areas[area].title}</span></div><div className="shell-header__switch"><label htmlFor="area-switch">Доступные кабинеты</label><select id="area-switch" disabled value={area} aria-describedby="area-switch-hint"><option value={area}>{areas[area].title}</option></select><span id="area-switch-hint">После подключения прав</span></div></header><main className="shell__content"><Breadcrumbs area={area} /><Outlet /></main></div>
   </div>;
 }
+
