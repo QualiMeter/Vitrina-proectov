@@ -33,7 +33,7 @@ TEAM: создать команду → управление составом �
 
 ## Проверки
 
-Локальные команды: `npm run lint`, `npm run typecheck`, `npm run test:coverage`, `npm run build` в frontend; генератор `--check` в корне. 38 unit/integration-тестов, включая конфликт сохранения, переход при in-flight запросе, NDA, terminal withdrawal, серверную пагинацию и запрет подтверждения чужого приглашения.
+Локальные команды: `npm run lint`, `npm run typecheck`, `npm run test:coverage`, `npm run build` в frontend; генератор `--check` в корне. 53 unit/integration-теста, включая конфликт сохранения, переход при in-flight запросе, NDA, terminal withdrawal, серверную пагинацию и запрет подтверждения чужого приглашения.
 
 Playwright-сценарии: SOLO/NDA/отзыв; TEAM с ожидающим приглашением; личное подтверждение; desktop/mobile снимки inbox/application/drafts/team. Локальный Chromium недоступен (SIGTRAP до открытия страниц), поэтому результат E2E определяется отдельным GitHub Actions запуском. Снимки сохраняются артефактом frontend-playwright-report. Они проверяют CI-сборку, а не конфигурацию Vercel Preview.
 
