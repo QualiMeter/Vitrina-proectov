@@ -32,7 +32,7 @@ def ts(s):
     return {'integer': 'number', 'number': 'number', 'string': 'string', 'boolean': 'boolean', 'null': 'null'}.get(t, 'unknown')
 
 # Generate student-facing schemas and their referenced dependencies.
-required = {'AuthSessionResponse','StudentProfilePrivate','StudentProfileUpdateRequest','StudentProfilePublic','ReferenceDataResponse','MyCaseParticipationListResponse','CsrfTokenResponse'}
+required = {'MyCaseTeamListResponse','AuthSessionResponse','StudentProfilePrivate','StudentProfileUpdateRequest','StudentProfilePublic','ReferenceDataResponse','MyCaseParticipationListResponse','CsrfTokenResponse'}
 required.update({'CasePublicDetails','CaseTeamListResponse','CaseTeam','CaseTeamInvitation','CaptainTransfer','CaseApplicationListResponse','CaseApplication','TeamInvitationInboxResponse','StudentInviteCandidateList','CreateCaseApplicationRequest','UpdateCaseApplicationDraftRequest','CaseApplicationVersionCommand','CaseApplicationWithdrawRequest','NdaPolicy'})
 def collect(value):
     if isinstance(value, dict):

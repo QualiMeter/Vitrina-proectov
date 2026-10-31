@@ -1,5 +1,5 @@
 // Generated from OpenAPI; do not edit by hand.
-// SHA256: 6c5aa03a7188c5717d3a9f8e11ad3d122fe6c16c01baeb58544f3d157bda15fb
+// SHA256: bb6665eb9bf2188538ce9a028b1c1a4070e2ffa7ad7f710e251595c2c1dce24f
 // Compile-time shapes only; conditional constraints are validated by the server.
 export type Id = string;
 export type Email = string;
@@ -47,6 +47,8 @@ export type StudentProfilePrivate = { "userId": Id; "fullName": DisplayName; "ni
 export type StudentProfileUpdateRequest = { "expectedVersion": number; "fullName"?: DisplayName; "nickname"?: Nickname; "achievements"?: (ProfileAchievement)[]; "instituteId"?: (Id | null); "course"?: number; "studyGroup"?: string; "description"?: string; "publicSummary"?: string; "skillIds"?: (Id)[]; "technologyIds"?: (Id)[]; "publicLinks"?: (PublicStudentLink)[]; };
 export type PublicStudentLink = { "label": string; "url": string; };
 export type StudentProfilePublic = { "studentId": Id; "nickname": Nickname; "avatarUrl": (string | null); "achievements": (ProfileAchievement)[]; "publicSummary"?: string; "skillIds": (Id)[]; "technologyIds": (Id)[]; "publicLinks": (PublicStudentLink)[]; };
+export type MyCaseTeamSummary = { "teamId": Id; "caseId": Id; "caseTitle": string; "teamName": string; "role": "CAPTAIN" | "MEMBER"; "members": (CaseTeamMember)[]; "membershipLocked": boolean; "applicationId"?: (Id | null); "applicationStatus"?: (CaseApplicationStatus | null); };
+export type MyCaseTeamListResponse = { "items": (MyCaseTeamSummary)[]; "page": number; "pageSize": number; "total": number; };
 export type MyCaseParticipation = { "caseId": Id; "caseTitle": string; "caseStatus"?: CaseStatus; "applicationId"?: Id; "teamId"?: Id; "format": CaseApplicationFormat; "role": "SOLO" | "CAPTAIN" | "MEMBER"; "applicationStatus": CaseApplicationStatus; "teamExecutionStatus"?: "ACTIVE" | "ELIMINATED" | "EXCLUDED"; };
 export type MyCaseParticipationListResponse = { "items": (MyCaseParticipation)[]; "page": number; "pageSize": number; "total": number; };
 export type DirectoryEntry = { "id": Id; "name": string; };

@@ -17,6 +17,7 @@ export interface StudentGateway {
   avatar(file?: File): Promise<C.StudentProfilePrivate>;
   reference(): Promise<C.ReferenceDataResponse>;
   participations(page: number): Promise<C.MyCaseParticipationListResponse>;
+  myTeams(page: number): Promise<C.MyCaseTeamListResponse>;
   invitations(page: number): Promise<C.TeamInvitationInboxResponse>;
   decideInvitation(
     id: string,
@@ -107,6 +108,7 @@ export const liveStudentGateway: StudentGateway = {
   reference: () => get("/reference-data"),
   participations: (page) =>
     get(`/me/case-participations?page=${page}&pageSize=20`),
+  myTeams: (page) => get(`/me/teams?page=${page}&pageSize=20`),
   invitations: (page) => get(`/me/team-invitations?page=${page}&pageSize=20`),
   decideInvitation: (invitationId, action) =>
     mutate(

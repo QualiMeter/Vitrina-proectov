@@ -69,6 +69,19 @@ export function withParticipationDemo(base: Day1Gateway): StudentGateway {
   ];
   const apps: C.CaseApplication[] = [
     {
+      id: uid(23),
+      caseId: uid(13),
+      format: "TEAM",
+      teamId: uid(33),
+      status: "DRAFT",
+      version: 1,
+      participantUserIds: [otherCaptain],
+      coverLetter: "Общая заявка команды по приглашению.",
+      allowedActions: ["edit", "submit", "withdraw"],
+      createdAt: now(),
+      updatedAt: now(),
+    },
+    {
       id: uid(20),
       caseId: uid(10),
       format: "TEAM",
@@ -230,6 +243,27 @@ export function withParticipationDemo(base: Day1Gateway): StudentGateway {
         .map((x) => ({ id: x.id, title: x.title, at: x.registrationDeadline }))
         .sort((a, b) => Date.parse(a.at) - Date.parse(b.at)),
     }),
+    myTeams: async (page) =>
+      paged(
+        teams.filter(member).map((t) => {
+          const app = apps.find((a) => a.teamId === t.id);
+          return {
+            teamId: t.id,
+            caseId: t.caseId,
+            caseTitle: detail(t.caseId).title,
+            teamName: t.name,
+            role:
+              t.captainUserId === me
+                ? ("CAPTAIN" as const)
+                : ("MEMBER" as const),
+            members: copy(t.members),
+            membershipLocked: t.membershipLocked,
+            applicationId: app?.id,
+            applicationStatus: app?.status,
+          };
+        }),
+        page,
+      ),
     participations: async (page) =>
       paged(
         apps.filter(appForMe).map((a) => ({

@@ -344,3 +344,10 @@
 ```
 
 `null` явно очищает институт. Отсутствие `instituteId` сохраняет его прежнее значение; UUID выбирает институт. Ответ StudentProfilePrivate допускает `instituteId: null`. Устаревшая expectedVersion по-прежнему приводит к 409. Backend должен реализовать эту семантику; согласование контракта не является подтверждением готовности сервера.
+
+
+### Подтверждённые команды текущего студента
+
+`GET /api/v1/me/teams?page=1&pageSize=20` использует текущую cookie-сессию. Список включает капитанские команды сразу после создания и команды после личного accept, даже без заявки. Ожидающее приглашение не даёт доступа к составу. Ответ MyCaseTeamListResponse содержит items/page/pageSize/total. Элемент: teamId, caseId, caseTitle, teamName, role, members, membershipLocked, необязательные applicationId/applicationStatus. Это read-only расширение контракта для общего раздела команд.
+
+Участнику доступно чтение заявки через существующие applications/mine и applications/{id}; изменение, submit и withdraw — владельцу SOLO или капитану. Сервер проверяет права независимо от UI.
