@@ -22,6 +22,9 @@ test('home page has accessible headings and navigation', async ({ page }) => {
     await page.getByRole('link', { name: /Открыть каталог кейсов/ }).click();
     await expect(page).toHaveURL(/\/cases$/);
     await expect(page.getByRole('heading', { level: 1, name: 'Кейсы для совместной работы' })).toBeVisible();
+    await page.goto('/');
+    await page.getByRole('link', { name: /Найти опубликованный кейс/ }).click();
+    await expect(page).toHaveURL(/\/cases$/);
   });
 });
 
@@ -39,6 +42,35 @@ test('implemented cabinet routes work on direct navigation and reload', async ({
       await page.getByRole('link', { name: /на главную/ }).first().click();
       await expect(page).toHaveURL('/');
     }
+  });
+});
+
+test('case detail and catalogue hash navigation work from direct URLs', async ({ page }) => {
+  await assertNoPageErrors(page, async () => {
+    await page.goto('/cases');
+    await page.getByRole('link', { name: /Подробнее о кейсе/ }).first().click();
+    await expect(page).toHaveURL(/\/cases\/[0-9a-f-]+$/);
+    await expect(page.getByRole('heading', { level: 1, name: 'Сервис мониторинга городской среды' })).toBeVisible();
+    await page.getByRole('link', { name: /К каталогу/ }).click();
+    await page.getByRole('link', { name: 'О платформе' }).click();
+    await expect(page).toHaveURL(/\/#about$/);
+    await expect(page.locator('#about')).toBeInViewport();
+    await page.goto('/cases');
+    await page.getByRole('link', { name: 'Направления' }).click();
+    await expect(page).toHaveURL(/\/#directions$/);
+    await expect(page.locator('#directions')).toBeInViewport();
+  });
+});
+
+test('public company profile opens from a case and links back to its published case', async ({ page }) => {
+  await assertNoPageErrors(page, async () => {
+    await page.goto('/cases');
+    await page.getByRole('link', { name: 'Лаборатория цифровых решений' }).click();
+    await expect(page).toHaveURL(/\/companies\/[0-9a-f-]+$/);
+    await expect(page.getByRole('heading', { level: 1, name: 'Лаборатория цифровых решений' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Сервис мониторинга городской среды' })).toBeVisible();
+    await page.getByRole('link', { name: /К описанию кейса/ }).click();
+    await expect(page).toHaveURL(/\/cases\/[0-9a-f-]+$/);
   });
 });
 
@@ -62,7 +94,7 @@ test('mobile navigation opens and closes', async ({ page }) => {
 
 test('375px layout has no horizontal overflow', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
-  for (const route of ['/', '/university', '/mentor', '/admin']) {
+  for (const route of ['/', '/cases', '/cases/a1000000-0000-4000-8000-000000000001', '/companies/c1000000-0000-4000-8000-000000000001', '/university', '/mentor', '/admin']) {
     await page.goto(route);
     const widths = await page.evaluate(() => ({ document: document.documentElement.scrollWidth, viewport: window.innerWidth }));
     expect(widths.document, `horizontal overflow on ${route}`).toBeLessThanOrEqual(widths.viewport);

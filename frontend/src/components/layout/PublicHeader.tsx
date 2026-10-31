@@ -9,7 +9,7 @@ export function PublicHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
   return <><header className="public-header"><div className="container public-header__inner">
     <Brand />
-    <nav id="public-navigation" className={menuOpen ? 'is-open' : ''} aria-label="Основная навигация"><Link to="/#about" onClick={() => setMenuOpen(false)}>О платформе</Link><Link to="/#directions" onClick={() => setMenuOpen(false)}>Направления</Link><Link to="/cases" onClick={() => setMenuOpen(false)}>Каталог кейсов</Link></nav>
+    <nav id="public-navigation" className={menuOpen ? 'is-open' : ''} aria-label="Основная навигация"><a href="/#about" onClick={() => setMenuOpen(false)}>О платформе</a><a href="/#directions" onClick={() => setMenuOpen(false)}>Направления</a><Link to="/cases" onClick={() => setMenuOpen(false)}>Каталог кейсов</Link></nav>
     <Button variant="ghost" className="public-header__menu" aria-controls="public-navigation" aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)} aria-label="Открыть меню">☰</Button>
     <Button variant="secondary" onClick={() => setShowLogin(true)}>Войти</Button>
   </div></header>

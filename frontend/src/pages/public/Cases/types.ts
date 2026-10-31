@@ -1,15 +1,18 @@
-export type CaseStatus =
-  | 'DRAFT'
-  | 'MODERATION'
-  | 'REVISION'
-  | 'REJECTED'
-  | 'APPROVED'
-  | 'REGISTRATION_OPEN'
-  | 'REGISTRATION_CLOSED'
-  | 'EXECUTING'
-  | 'EVALUATING'
-  | 'COMPLETED'
-  | 'CANCELED';
+/** Mirrors CaseStatus in docs/api/openapi.yaml; regenerate shared API types when codegen is adopted. */
+export const caseStatuses = [
+  'DRAFT', 'MODERATION', 'REVISION', 'REJECTED', 'APPROVED',
+  'REGISTRATION_OPEN', 'REGISTRATION_CLOSED', 'EXECUTING', 'FINAL_CLOSED',
+  'EVALUATING', 'COMPLETED', 'CANCELED'
+] as const;
+export type CaseStatus = (typeof caseStatuses)[number];
+
+export type PublicCaseStatus = Extract<CaseStatus,
+  'APPROVED' | 'REGISTRATION_OPEN' | 'REGISTRATION_CLOSED' | 'EXECUTING' |
+  'FINAL_CLOSED' | 'EVALUATING' | 'COMPLETED' | 'CANCELED'>;
+export const publicCaseStatuses: readonly PublicCaseStatus[] = [
+  'APPROVED', 'REGISTRATION_OPEN', 'REGISTRATION_CLOSED', 'EXECUTING',
+  'FINAL_CLOSED', 'EVALUATING', 'COMPLETED', 'CANCELED'
+];
 
 export type CaseParticipationFormat = 'SOLO' | 'TEAM' | 'BOTH';
 export type CaseAdmissionMode = 'OPEN' | 'SELECTIVE';
@@ -31,6 +34,16 @@ export interface CasePublicSummary {
   maxCourse?: number;
 }
 
+/** Public fields from CasePublicDetails; excludes private moderation/submission data. */
+export interface CasePublicDetails extends CasePublicSummary {
+  description: string;
+  publicTaskDescription?: string;
+  minTeamSize?: number;
+  maxTeamSize?: number;
+  maxAdmittedTeams?: number | null;
+}
+
+/** List response DTO returned by the future paginated API. */
 export interface CasePublicListResponse {
   items: CasePublicSummary[];
   page: number;
