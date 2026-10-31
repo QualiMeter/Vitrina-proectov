@@ -205,22 +205,20 @@ export function withParticipationDemo(base: Day1Gateway): StudentGateway {
     ...base,
     participations: async (page) =>
       paged(
-        apps
-          .filter(appForMe)
-          .map((a) => ({
-            caseId: a.caseId,
-            caseTitle: detail(a.caseId).title,
-            format: a.format,
-            role: (a.format === "SOLO"
-              ? "SOLO"
-              : rawTeam(a.teamId!).captainUserId === me
-                ? "CAPTAIN"
-                : "MEMBER") as C.MyCaseParticipation["role"],
-            applicationStatus: a.status,
-            applicationId: a.id,
-            teamId: a.teamId,
-            caseStatus: detail(a.caseId).status,
-          })),
+        apps.filter(appForMe).map((a) => ({
+          caseId: a.caseId,
+          caseTitle: detail(a.caseId).title,
+          format: a.format,
+          role: (a.format === "SOLO"
+            ? "SOLO"
+            : rawTeam(a.teamId!).captainUserId === me
+              ? "CAPTAIN"
+              : "MEMBER") as C.MyCaseParticipation["role"],
+          applicationStatus: a.status,
+          applicationId: a.id,
+          teamId: a.teamId,
+          caseStatus: detail(a.caseId).status,
+        })),
         page,
       ),
     invitations: async (page) =>
@@ -395,6 +393,11 @@ export function withParticipationDemo(base: Day1Gateway): StudentGateway {
       ),
     application: async (id) => copy(application(id)),
     createApplication: async (caseId, body) => {
+      if (
+        body.format === "SOLO" &&
+        teams.some((t) => t.caseId === caseId && member(t))
+      )
+        throw new ApiError("conflict", 409);
       if (
         detail(caseId).status !== "REGISTRATION_OPEN" ||
         apps.some((a) => a.caseId === caseId && appForMe(a))

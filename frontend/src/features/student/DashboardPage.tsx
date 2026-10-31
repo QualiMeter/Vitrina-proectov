@@ -1,3 +1,4 @@
+import { demoCaseId } from "./day2Demo";
 import { Link } from "react-router-dom";
 import { Card } from "../../components/ui/Card";
 import { ButtonLink } from "../../components/ui/Button";
@@ -62,6 +63,13 @@ export function DashboardPage() {
                 </Card>
               ))}
             </div>
+            {demo && (
+              <p>
+                <ButtonLink to={`${base}/cases/${demoCaseId}/apply`}>
+                  Открыть учебный кейс
+                </ButtonLink>
+              </p>
+            )}
             {demo && (
               <StudentProjectsBlock
                 projects={demoStudentProjects}

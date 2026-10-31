@@ -69,6 +69,13 @@ export function ApplicationPage() {
               ) : (
                 <Card>
                   <h2>Выберите формат участия</h2>
+                  <p className="student-note">
+                    Черновик можно заполнить заранее; ограничения участия должны
+                    быть выполнены перед отправкой.
+                  </p>
+                  {team && team.captainUserId !== user.id && (
+                    <p>Заявку вашей команды создаёт и отправляет капитан.</p>
+                  )}
                   <div className="student-form">
                     <fieldset>
                       <legend>Формат</legend>

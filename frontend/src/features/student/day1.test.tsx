@@ -87,13 +87,13 @@ describe("Frontend B day 1", () => {
       screen.queryByRole("button", { name: "Отправить заявку" }),
     ).not.toBeInTheDocument();
   });
-  it("leaves invitation actions for day 2", async () => {
+  it("renders the personal invitation center introduced on day 2", async () => {
     demo("/demo/student/invitations");
     expect(
-      await screen.findByText("Раздел пока недоступен"),
+      await screen.findByRole("button", { name: "Принять" }),
     ).toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: "Принять" }),
+      screen.queryByText("Раздел пока недоступен"),
     ).not.toBeInTheDocument();
   });
   it("filters unpublished initiatives out of the embeddable FE-A block", () => {

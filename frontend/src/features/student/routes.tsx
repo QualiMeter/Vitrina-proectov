@@ -1,3 +1,6 @@
+import { InvitationsPage } from "./InvitationsPage";
+import { TeamPage } from "./TeamPage";
+import { ApplicationPage } from "./ApplicationPage";
 import type { RouteObject } from "react-router-dom";
 import { StudentRoot } from "./shared";
 import {
@@ -11,10 +14,15 @@ const privatePages: RouteObject[] = [
   { index: true, element: <DashboardPage /> },
   { path: "profile", element: <ProfilePage /> },
   { path: "participations", element: <ParticipationsPage /> },
+  { path: "invitations", element: <InvitationsPage /> },
+  { path: "teams/:teamId", element: <TeamPage /> },
+  { path: "cases/:caseId/apply", element: <ApplicationPage /> },
+  { path: "drafts", element: <ParticipationsPage key="drafts" draftsOnly /> },
   // Navigation sections required by FB-01; their business functions belong to later days.
-  ...["invitations", "portfolio", "projects", "cases/:caseId/workspace"].map(
-    (path) => ({ path, element: <LaterSection /> }),
-  ),
+  ...["portfolio", "projects", "cases/:caseId/workspace"].map((path) => ({
+    path,
+    element: <LaterSection />,
+  })),
 ];
 export const studentRoutes: RouteObject[] = [
   { path: "/student", element: <StudentRoot />, children: privatePages },

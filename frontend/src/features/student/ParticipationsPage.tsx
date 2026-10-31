@@ -4,28 +4,39 @@ import { ButtonLink } from "../../components/ui/Button";
 import { EmptyState } from "../../components/feedback/States";
 import { Load, Pager, Status } from "./shared";
 import { useLoad, useStudent } from "./hooks";
-export function ParticipationsPage() {
+export function ParticipationsPage({
+  draftsOnly = false,
+}: { draftsOnly?: boolean } = {}) {
   const { api, base } = useStudent();
   const [page, setPage] = useState(1);
-  const [drafts, setDrafts] = useState(false);
+  const [filterDrafts, setDrafts] = useState(false);
+  const drafts = draftsOnly || filterDrafts;
   const state = useLoad(
     () => api.participations(page),
     `participations-${page}`,
   );
   return (
     <>
-      <h1>Мои участия</h1>
+      <h1>{draftsOnly ? "Черновики заявок" : "Мои участия"}</h1>
+      {draftsOnly && (
+        <p className="student-note">
+          Страницы относятся ко всем вашим участиям; здесь отображаются
+          черновики полученной страницы.
+        </p>
+      )}
       <p className="student-lead">
         Продолжайте черновики и следите за выполнением кейсов.
       </p>
-      <label className="student-check">
-        <input
-          type="checkbox"
-          checked={drafts}
-          onChange={(e) => setDrafts(e.target.checked)}
-        />
-        Только черновики на текущей странице
-      </label>
+      {!draftsOnly && (
+        <label className="student-check">
+          <input
+            type="checkbox"
+            checked={drafts}
+            onChange={(e) => setDrafts(e.target.checked)}
+          />
+          Только черновики на текущей странице
+        </label>
+      )}
       <Load state={state}>
         {(data) => (
           <>
@@ -53,6 +64,14 @@ export function ParticipationsPage() {
                       </p>
                     )}
                     <div className="student-actions">
+                      <ButtonLink
+                        variant="secondary"
+                        to={`${base}/cases/${item.caseId}/apply`}
+                      >
+                        {item.applicationStatus === "DRAFT"
+                          ? "Продолжить заявку"
+                          : "Посмотреть заявку"}
+                      </ButtonLink>
                       {item.applicationStatus === "ADMITTED" && (
                         <ButtonLink
                           to={`${base}/cases/${item.caseId}/workspace`}
@@ -68,11 +87,24 @@ export function ParticipationsPage() {
               (x) => !drafts || x.applicationStatus === "DRAFT",
             ).length && (
               <EmptyState
-                title="Участий пока нет"
-                description="Откройте подходящий кейс и подайте заявку."
+                title={
+                  draftsOnly
+                    ? "На этой странице черновиков нет"
+                    : "Участий пока нет"
+                }
+                description={
+                  draftsOnly
+                    ? "Просмотрите другие страницы списка участий."
+                    : "Откройте подходящий кейс и подайте заявку."
+                }
               />
             )}
-            <Pager page={page} total={data.total} onPage={setPage} />
+            <Pager
+              page={data.page}
+              pageSize={data.pageSize}
+              total={data.total}
+              onPage={setPage}
+            />
           </>
         )}
       </Load>
