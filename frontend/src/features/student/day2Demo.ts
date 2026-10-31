@@ -203,6 +203,33 @@ export function withParticipationDemo(base: Day1Gateway): StudentGateway {
   };
   return {
     ...base,
+    dashboardSignals: async (caseIds) => ({
+      pending: invites
+        .filter(
+          (x) =>
+            x.inviteeUserId === me &&
+            x.status === "PENDING" &&
+            Date.parse(x.expiresAt) > Date.now(),
+        )
+        .map((x) => {
+          const t = rawTeam(x.teamId);
+          return {
+            id: x.id,
+            title: `${t.name} · ${detail(t.caseId).title}`,
+            expiresAt: x.expiresAt,
+          };
+        }),
+      pendingPageOnly: false,
+      deadlines: caseIds
+        .map(detail)
+        .filter(
+          (x) =>
+            x.status === "REGISTRATION_OPEN" &&
+            Date.parse(x.registrationDeadline) > Date.now(),
+        )
+        .map((x) => ({ id: x.id, title: x.title, at: x.registrationDeadline }))
+        .sort((a, b) => Date.parse(a.at) - Date.parse(b.at)),
+    }),
     participations: async (page) =>
       paged(
         apps.filter(appForMe).map((a) => ({
