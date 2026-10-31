@@ -20,11 +20,24 @@ test("accepted invitations become discoverable teams and member applications are
     page.getByRole("link", { name: "Открыть команду" }),
   ).toBeVisible();
   await page.getByRole("link", { name: "Мои команды", exact: true }).click();
+  await expect(page).toHaveURL(/\/demo\/student\/teams$/);
+  await expect(
+    page.getByRole("heading", { name: "Мои команды", exact: true }),
+  ).toBeVisible();
   const card = page.getByRole("article").filter({
     has: page.getByRole("heading", { name: "Команда по приглашению" }),
   });
   await card.getByRole("link", { name: "Открыть команду" }).click();
+  await expect(page).toHaveURL(
+    /\/teams\/00000000-0000-4000-8000-000000000033$/,
+  );
+  await expect(
+    page.getByRole("heading", { name: "Команда кейса", exact: true }),
+  ).toBeVisible();
   await page.getByRole("link", { name: "Посмотреть заявку" }).click();
+  await expect(page).toHaveURL(
+    /\/cases\/00000000-0000-4000-8000-000000000013\/apply$/,
+  );
   await expect(
     page.getByText("Общая заявка команды по приглашению."),
   ).toBeVisible();
