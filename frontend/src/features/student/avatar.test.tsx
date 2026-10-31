@@ -70,6 +70,6 @@ it("does not allow avatar mutations while unsaved profile fields would be lost",
     screen.getByRole("button", { name: "Загрузить аватар" }),
   ).toBeDisabled();
   expect(
-    screen.getByText(/Сначала сохраните изменения полей профиля/),
+    screen.getByText(/Сначала сохраните изменения профиля/),
   ).toBeInTheDocument();
 });
