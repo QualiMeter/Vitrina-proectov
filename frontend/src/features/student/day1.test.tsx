@@ -24,6 +24,13 @@ function demo(path: string) {
   );
 }
 describe("Frontend B day 1", () => {
+  it("does not offer unsupported PATCH clearing of saved academic fields", async () => {
+    demo("/demo/student/profile");
+    const institute = await screen.findByLabelText("Институт / факультет");
+    expect(institute.querySelector('option[value=""]')).toBeDisabled();
+    expect(screen.getByLabelText("Курс")).toBeRequired();
+    expect(screen.getByText(/Очистка станет доступна/)).toBeInTheDocument();
+  });
   it("shows the dashboard and required navigation sections", async () => {
     demo("/demo/student");
     expect(

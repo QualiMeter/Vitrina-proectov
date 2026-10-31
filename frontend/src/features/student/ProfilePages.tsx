@@ -122,8 +122,8 @@ function ProfileEditor({
         expectedVersion: profile.version,
         fullName: fullName.trim(),
         nickname: nickname.trim(),
-        instituteId,
-        course,
+        instituteId: instituteId ?? profile.instituteId,
+        course: course ?? profile.course,
         studyGroup,
         description,
         publicSummary,
@@ -170,7 +170,7 @@ function ProfileEditor({
               patch({ instituteId: e.target.value || undefined })
             }
           >
-            <option value="">Не указан</option>
+            <option value="" disabled={Boolean(profile.instituteId)}>Не указан</option>
             {reference.institutes.map((x) => (
               <option key={x.id} value={x.id}>
                 {x.name}
@@ -178,9 +178,11 @@ function ProfileEditor({
             ))}
           </select>
         </label>
+        {profile.instituteId && <p className="student-note">Институт можно изменить. Очистка станет доступна после согласования её поддержки сервером.</p>}
         <Input
           label="Курс"
           type="number"
+          required={profile.course !== undefined}
           min={1}
           max={6}
           value={form.course ?? ""}
