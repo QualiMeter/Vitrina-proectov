@@ -69,7 +69,10 @@ export function createDemoGateway(): StudentGateway {
       const { expectedVersion, ...values } = body;
       if (expectedVersion !== profile.version)
         throw new ApiError("conflict", 409);
-      profile = { ...profile, ...values, version: profile.version + 1 };
+      const provided = Object.fromEntries(
+        Object.entries(values).filter(([, value]) => value !== undefined),
+      );
+      profile = { ...profile, ...provided, version: profile.version + 1 };
       return clone(profile);
     },
     avatar: async (file) => {
