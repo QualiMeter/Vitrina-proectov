@@ -129,3 +129,13 @@ it("filters expired and decided invitations from dashboard signals", async () =>
     vi.unstubAllGlobals();
   }
 });
+
+it("labels demonstration data with the shared UI Ready badge", async () => {
+  open("/demo/student");
+  expect(
+    screen.getByText("UI Ready · демонстрационные данные"),
+  ).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Разделы" })).toHaveAccessibleName(
+    "Разделы",
+  );
+});
