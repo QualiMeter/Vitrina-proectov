@@ -14,7 +14,7 @@ test('home page has accessible headings and navigation', async ({ page }) => {
     await expect(page.getByRole('navigation', { name: 'Основная навигация' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'О платформе' })).toHaveAttribute('href', '/#about');
     await expect(page.getByRole('link', { name: 'Направления' })).toHaveAttribute('href', '/#directions');
-    await expect(page.getByRole('link', { name: 'Каталог кейсов' })).toHaveAttribute('href', '/cases');
+    await expect(page.getByRole('link', { name: 'Каталог кейсов', exact: true })).toHaveAttribute('href', '/cases');
     await page.getByRole('link', { name: /Посмотреть структуру кабинета/ }).click();
     await expect(page).toHaveURL(/\/university$/);
     await expect(page.getByRole('heading', { level: 1, name: 'Кабинет сотрудника университета' })).toBeVisible();
