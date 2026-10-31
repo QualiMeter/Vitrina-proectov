@@ -20,11 +20,9 @@ test("accepted invitations become discoverable teams and member applications are
     page.getByRole("link", { name: "Открыть команду" }),
   ).toBeVisible();
   await page.getByRole("link", { name: "Мои команды", exact: true }).click();
-  const card = page
-    .getByRole("article")
-    .filter({
-      has: page.getByRole("heading", { name: "Команда по приглашению" }),
-    });
+  const card = page.getByRole("article").filter({
+    has: page.getByRole("heading", { name: "Команда по приглашению" }),
+  });
   await card.getByRole("link", { name: "Открыть команду" }).click();
   await page.getByRole("link", { name: "Посмотреть заявку" }).click();
   await expect(
@@ -58,6 +56,15 @@ test("created teams are reachable before an application is created", async ({
   await expect(
     card.getByRole("link", { name: "Открыть команду" }),
   ).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await page.screenshot({
+    path: "test-results/screenshots/teams-320-created-long-name.png",
+    fullPage: true,
+  });
 });
 
 test("participation filters include later API pages", async ({ page }) => {
@@ -117,7 +124,7 @@ test("participation filters include later API pages", async ({ page }) => {
 test("teams tabs fit narrow screens and have review captures", async ({
   page,
 }) => {
-  for (const width of [320, 375, 400, 1280]) {
+  for (const width of [320, 360, 375, 400, 1280]) {
     await page.setViewportSize({ width, height: 900 });
     for (const [name, path] of [
       ["teams", "/demo/student/teams"],
