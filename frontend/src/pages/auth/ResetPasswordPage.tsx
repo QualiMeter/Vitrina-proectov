@@ -27,9 +27,10 @@ export function ResetPasswordPage() {
     try {
       await resetPassword({ token, newPassword });
       setStatus('success');
-    } catch (err: any) {
-      setError(err?.status === 401 ? 'Ссылка недействительна или истекла.' : 'Ошибка сброса пароля.');
-    }
+    } catch (err: unknown) {
+  const status = (err as { status?: number })?.status;
+  setError(status === 401 ? 'Ссылка недействительна или истекла.' : 'Ошибка сброса пароля.');
+}
   }
 
   if (status === 'success') {

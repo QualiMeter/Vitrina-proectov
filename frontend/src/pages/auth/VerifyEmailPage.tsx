@@ -8,7 +8,7 @@ export function VerifyEmailPage() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
   const location = useLocation();
-  const emailFromState = (location.state as any)?.email as string | undefined;
+  const emailFromState = (location.state as { email?: string } | null)?.email;
   const [status, setStatus] = useState<'idle' | 'verifying' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
 

@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { acceptInvitation } from '../../api/auth';
-import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 
 export function AcceptInvitationPage() {

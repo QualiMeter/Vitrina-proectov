@@ -94,10 +94,13 @@ export async function resetPassword(payload: ResetPasswordPayload): Promise<void
 export async function me(): Promise<AuthSession | null> {
   try {
     return await apiRequest<AuthSession>('/api/auth/me');
-  } catch (e: any) {
-    if (e?.status === 401) return null;
-    throw e;
+  } catch (e: unknown) {
+  if (typeof e === 'object' && e !== null && 'status' in e) {
+    const status = (e as { status?: number }).status;
+    if (status === 401) return null;
   }
+  throw e;
+}
 }
 
 /** Выход. */

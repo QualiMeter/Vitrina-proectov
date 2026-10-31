@@ -1,18 +1,6 @@
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { fetchCsrfToken, me as apiMe, login as apiLogin, logout as apiLogout, type AuthSession, type LoginPayload } from '../../api/auth';
-import { ApiError } from '../../api/client';
-
-interface AuthContextValue {
-  session: AuthSession | null;
-  isLoading: boolean;
-  login: (payload: LoginPayload) => Promise<void>;
-  logout: () => Promise<void>;
-  refreshSession: () => Promise<void>;
-  csrfToken: string | null;
-  ensureCsrf: () => Promise<string>;
-}
-
-const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+import { AuthContext} from './context';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<AuthSession | null>(null);
@@ -45,13 +33,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [csrfToken]);
 
   const login = useCallback(async (payload: LoginPayload) => {
-    const csrf = await ensureCsrf();
-    // Добавление CSRF-заголовка ко всем изменяющим запросам
-    const originalApiRequest = (await import('../../api/client')).apiRequest;
-    // (см. примечание ниже)
-    const session = await apiLogin(payload);
-    setSession(session);
-  }, [ensureCsrf]);
+  await ensureCsrf();
+  const session = await apiLogin(payload);
+  setSession(session);
+}, [ensureCsrf]);
 
   const logout = useCallback(async () => {
     await apiLogout();
@@ -69,10 +54,4 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
-  return ctx;
 }

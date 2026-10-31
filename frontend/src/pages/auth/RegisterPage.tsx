@@ -32,8 +32,9 @@ export function RegisterPage() {
     try {
       await register(form);
       navigate('/verify-email', { state: { email: form.email } });
-    } catch (err: any) {
-      if (err?.status === 409) {
+    } catch (err: unknown) {
+  const status = (err as { status?: number })?.status;
+  if (status === 409) {
         setError('Пользователь с таким email уже зарегистрирован.');
       } else {
         setError('Ошибка регистрации. Попробуйте позже.');

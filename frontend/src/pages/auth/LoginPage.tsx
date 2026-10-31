@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { useAuth } from '../../features/auth/AuthContext';
+import { useAuth } from '../../features/auth/useAuth';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Card } from '../../components/ui/Card';
@@ -9,7 +9,10 @@ export function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const from = (location.state as any)?.from?.pathname ?? '/';
+  interface LocationState {
+  from?: { pathname?: string };
+  }
+  const from = (location.state as LocationState | null)?.from?.pathname ?? '/';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -22,17 +25,16 @@ export function LoginPage() {
     try {
       await login({ email, password });
       navigate(from, { replace: true });
-    } catch (err: any) {
-      if (err?.status === 401) {
-        setError('Неверный email или пароль.');
-      } else if (err?.status === 403) {
-        setError('Учётная запись заблокирована или не подтверждена. Проверьте почту.');
-      } else {
-        setError('Не удалось войти. Попробуйте позже.');
-      }
-    } finally {
-      setLoading(false);
-    }
+    } catch (err: unknown) {
+  const status = (err as { status?: number })?.status;
+  if (status === 401) {
+    setError('Неверный email или пароль.');
+  } else if (status === 403) {
+    setError('Учётная запись заблокирована или не подтверждена. Проверьте почту.');
+  } else {
+    setError('Не удалось войти. Попробуйте позже.');
+  }
+}
   }
 
   return (

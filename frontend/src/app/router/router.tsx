@@ -1,9 +1,7 @@
-import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
+import { createBrowserRouter } from 'react-router-dom';
 import { HomePage } from '../../pages/public/HomePage/HomePage';
-import { AppShell } from '../../components/layout/AppShell';
 import { PlaceholderPage } from '../../pages/PlaceholderPage';
 import { ErrorState } from '../../components/feedback/States';
-import { AuthProvider } from '../../features/auth/AuthContext';
 import { ProtectedRoute } from '../../features/auth/ProtectedRoute';
 import { LoginPage } from '../../pages/auth/LoginPage';
 import { RegisterPage } from '../../pages/auth/RegisterPage';
@@ -11,14 +9,7 @@ import { VerifyEmailPage } from '../../pages/auth/VerifyEmailPage';
 import { ForgotPasswordPage } from '../../pages/auth/ForgotPasswordPage';
 import { ResetPasswordPage } from '../../pages/auth/ResetPasswordPage';
 import { AcceptInvitationPage } from '../../pages/auth/AcceptInvitationPage';
-
-function PublicLayout() {
-  return (
-    <AuthProvider>
-      <Outlet />
-    </AuthProvider>
-  );
-}
+import { PublicLayout } from './PublicLayout';
 
 const route = (path: string) => ({ path, element: <PlaceholderPage /> });
 
