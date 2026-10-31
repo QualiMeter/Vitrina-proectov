@@ -31,8 +31,9 @@ def ts(s):
         return '{ ' + ' '.join(json.dumps(k) + ('' if k in required else '?') + ': ' + ts(v) + ';' for k, v in s.get('properties', {}).items()) + ' }'
     return {'integer': 'number', 'number': 'number', 'string': 'string', 'boolean': 'boolean', 'null': 'null'}.get(t, 'unknown')
 
-# Generate only schemas required by the day 1 frontend adapter, including referenced schemas.
+# Generate student-facing schemas and their referenced dependencies.
 required = {'AuthSessionResponse','StudentProfilePrivate','StudentProfileUpdateRequest','StudentProfilePublic','ReferenceDataResponse','MyCaseParticipationListResponse','CsrfTokenResponse'}
+required.update({'CasePublicDetails','CaseTeamListResponse','CaseTeam','CaseTeamInvitation','CaptainTransfer','CaseApplicationListResponse','CaseApplication','TeamInvitationInboxResponse','StudentInviteCandidateList','CreateCaseApplicationRequest','UpdateCaseApplicationDraftRequest','CaseApplicationVersionCommand','CaseApplicationWithdrawRequest','NdaPolicy'})
 def collect(value):
     if isinstance(value, dict):
         if '$ref' in value:

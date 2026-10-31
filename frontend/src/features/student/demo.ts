@@ -1,3 +1,4 @@
+import { withParticipationDemo } from "./day2Demo";
 import { ApiError } from "../../api/client";
 import type * as C from "./contracts";
 import type { StudentGateway } from "./gateway";
@@ -50,7 +51,7 @@ export function createDemoGateway(): StudentGateway {
     },
   ];
   const clone = <T>(value: T): T => structuredClone(value);
-  return {
+  return withParticipationDemo({
     session: async () => ({
       user: {
         id: demoUserId,
@@ -99,5 +100,5 @@ export function createDemoGateway(): StudentGateway {
       pageSize: 20,
       total: items.length,
     }),
-  };
+  });
 }
