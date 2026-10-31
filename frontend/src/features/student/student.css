@@ -605,3 +605,29 @@ section.student-profile-section > .field {
   font-size: 1.1rem;
   margin-bottom: 10px;
 }
+
+.student-team-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  max-width: 440px;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+.student-filter-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  max-width: 520px;
+  gap: 8px;
+  margin-block: 20px;
+}
+.student-team-tabs .button,
+.student-filter-tabs .button {
+  min-width: 0;
+  min-height: 44px;
+  padding-inline: 8px;
+  font-size: 0.875rem;
+  white-space: normal;
+}
+.student-participation-actions .button small {
+  white-space: nowrap;
+}
