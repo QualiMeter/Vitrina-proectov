@@ -16,6 +16,7 @@ test("day 2 autosaves a draft, requires NDA and keeps withdrawal terminal", asyn
     page.getByRole("button", { name: "Отправить заявку" }),
   ).toBeDisabled();
   await page.getByRole("checkbox", { name: /Подтверждаю NDA/ }).check();
+  page.once("dialog", (dialog) => dialog.accept());
   await page.getByRole("button", { name: "Отправить заявку" }).click();
   page.once("dialog", (dialog) => dialog.accept());
   await page.getByRole("button", { name: "Отозвать заявку" }).click();
