@@ -16,3 +16,6 @@ backend/**/TestResults/
 .vs/
 *.user
 *.suo
+
+# Local environment for the OpenAPI type generator
+.venv-codegen/
