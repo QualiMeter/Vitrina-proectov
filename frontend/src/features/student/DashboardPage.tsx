@@ -40,7 +40,7 @@ function Signals({ items }: { items: C.MyCaseParticipation[] }) {
                 Показана первая страница приглашений.
               </p>
             )}
-            <ButtonLink variant="secondary" to={`${base}/invitations`}>
+            <ButtonLink variant="secondary" to={`${base}/teams/invitations`}>
               Посмотреть приглашения
             </ButtonLink>
           </Card>
@@ -155,7 +155,10 @@ export function DashboardPage() {
                   ) : (
                     <p>На этой странице черновиков нет.</p>
                   )}
-                  <ButtonLink variant="secondary" to={`${base}/participations`}>
+                  <ButtonLink
+                    variant="secondary"
+                    to={`${base}/participations?filter=drafts`}
+                  >
                     Открыть список заявок
                   </ButtonLink>
                 </Card>

@@ -251,11 +251,9 @@ function TeamEditor({
           >
             Обновить состав
           </Button>
-          {captain && (
-            <ButtonLink to={`${base}/cases/${team.caseId}/apply`}>
-              Открыть заявку
-            </ButtonLink>
-          )}
+          <ButtonLink to={`${base}/cases/${team.caseId}/apply`}>
+            {captain ? "Открыть заявку" : "Посмотреть заявку"}
+          </ButtonLink>
         </div>
       </Card>
     </>

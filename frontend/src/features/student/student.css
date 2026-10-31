@@ -560,3 +560,39 @@ section.student-profile-section > .field {
 .student-profile-form :is(input, select, textarea, summary) {
   scroll-margin-top: 140px;
 }
+
+.student-demo {
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 8px;
+}
+.student-demo .student-demo-badge {
+  font-size: 0.72rem;
+  line-height: 1.4;
+  white-space: normal;
+}
+.student-demo details {
+  flex: 0 0 auto;
+  position: relative;
+}
+.student-demo summary {
+  list-style: none;
+  font-size: 1rem;
+  min-width: 28px;
+  text-align: center;
+}
+.student-demo summary::-webkit-details-marker {
+  display: none;
+}
+.student-demo details p {
+  position: absolute;
+  z-index: 5;
+  right: 0;
+  top: 100%;
+  width: min(280px, calc(100vw - 32px));
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  box-shadow: 0 6px 24px #20133520;
+}

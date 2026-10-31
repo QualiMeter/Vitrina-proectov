@@ -2,7 +2,7 @@ import { useContext } from "react";
 import { Link, useParams } from "react-router-dom";
 import { DemoGatewayContext } from "./demoContext";
 import { liveStudentGateway } from "./gateway";
-import { ExternalLink, Load, StudentAvatar } from "./shared";
+import { DemoNotice, ExternalLink, Load, StudentAvatar } from "./shared";
 import { useLoad } from "./hooks";
 export function PublicProfilePage({ demo = false }: { demo?: boolean }) {
   const { id = "" } = useParams();
@@ -14,9 +14,7 @@ export function PublicProfilePage({ demo = false }: { demo?: boolean }) {
   return (
     <main className="student-public">
       <Link to="/">← На главную</Link>
-      {demo && (
-        <p className="student-demo">Демонстрационный публичный профиль</p>
-      )}
+      {demo && <DemoNotice />}
       <Load state={state}>
         {(profile) => (
           <>

@@ -1,3 +1,5 @@
+import { StudentRedirect } from "./StudentRedirect";
+import { TeamsPage, MyTeamsPage } from "./TeamsPage";
 import { InvitationsPage } from "./InvitationsPage";
 import { TeamPage } from "./TeamPage";
 import { ApplicationPage } from "./ApplicationPage";
@@ -14,10 +16,21 @@ const privatePages: RouteObject[] = [
   { index: true, element: <DashboardPage /> },
   { path: "profile", element: <ProfilePage /> },
   { path: "participations", element: <ParticipationsPage /> },
-  { path: "invitations", element: <InvitationsPage /> },
+  { path: "invitations", element: <StudentRedirect to="teams/invitations" /> },
+  {
+    path: "teams",
+    element: <TeamsPage />,
+    children: [
+      { index: true, element: <MyTeamsPage /> },
+      { path: "invitations", element: <InvitationsPage embedded /> },
+    ],
+  },
   { path: "teams/:teamId", element: <TeamPage /> },
   { path: "cases/:caseId/apply", element: <ApplicationPage /> },
-  { path: "drafts", element: <ParticipationsPage key="drafts" draftsOnly /> },
+  {
+    path: "drafts",
+    element: <StudentRedirect to="participations?filter=drafts" />,
+  },
   // Navigation sections required by FB-01; their business functions belong to later days.
   ...["portfolio", "projects", "cases/:caseId/workspace"].map((path) => ({
     path,

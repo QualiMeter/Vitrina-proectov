@@ -137,6 +137,25 @@ export function Pager({
   );
 }
 
+export function DemoNotice() {
+  return (
+    <aside className="student-demo" aria-label="Демонстрационный режим">
+      <span className="badge badge--brand student-demo-badge">
+        UI Ready · демонстрационные данные
+      </span>
+      <details>
+        <summary aria-label="О демонстрационном режиме">
+          <span aria-hidden="true">ⓘ</span>
+        </summary>
+        <p>
+          Учебные действия сохраняются до обновления страницы.{" "}
+          <Link to="/student">Рабочий кабинет</Link>
+        </p>
+      </details>
+    </aside>
+  );
+}
+
 export function StudentRoot({ demo = false }: { demo?: boolean }) {
   const demoApi = useContext(DemoGatewayContext);
   const api = demo && demoApi ? demoApi : liveStudentGateway;
@@ -187,8 +206,7 @@ export function StudentRoot({ demo = false }: { demo?: boolean }) {
     ["", "Обзор", false],
     ["/profile", "Мой профиль", false],
     ["/participations", "Мои участия", false],
-    ["/drafts", "Черновики", false],
-    ["/invitations", "Приглашения", false],
+    ["/teams", "Команды", false],
     ["/portfolio", "Портфолио", true],
     ["/projects", "Мои проекты", true],
   ];
@@ -228,19 +246,7 @@ export function StudentRoot({ demo = false }: { demo?: boolean }) {
           </svg>
         </button>
       </header>
-      {demo && (
-        <aside className="student-demo" aria-label="Демонстрационный режим">
-          <span>Демо · учебные данные</span>
-          <details>
-            <summary>Подробнее</summary>
-            <p>
-              Данные и действия учебные, сохраняются до обновления страницы.
-              Реальный API не подключён.{" "}
-              <Link to="/student">Рабочий кабинет</Link>
-            </p>
-          </details>
-        </aside>
-      )}
+      {demo && <DemoNotice />}
       <div className="student-shell">
         <nav
           ref={nav}

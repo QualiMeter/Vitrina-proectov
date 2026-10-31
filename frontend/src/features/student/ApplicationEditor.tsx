@@ -44,12 +44,12 @@ export function ApplicationEditor({
   const inFlight = useRef(false);
   const latestLetter = useRef(letter);
   latestLetter.current = letter;
-  const editable =
-    app.status === "DRAFT" &&
-    app.allowedActions.includes("edit") &&
-    (app.format === "SOLO"
+  const owner =
+    app.format === "SOLO"
       ? app.soloApplicantUserId === user.id
-      : team?.captainUserId === user.id);
+      : team?.captainUserId === user.id;
+  const editable =
+    app.status === "DRAFT" && app.allowedActions.includes("edit") && owner;
   const dirty = letter !== saved || saving;
   const blocker = useBlocker(editable && dirty);
   useEffect(() => {
@@ -140,6 +140,11 @@ export function ApplicationEditor({
       {team && (
         <p>
           Команда: <Link to={`${base}/teams/${team.id}`}>{team.name}</Link>
+        </p>
+      )}
+      {!owner && (
+        <p className="student-note">
+          Только просмотр: изменять заявку может капитан команды.
         </p>
       )}
       {editable ? (
@@ -271,7 +276,7 @@ export function ApplicationEditor({
               даже в другом составе.
             </p>
           )}
-          {app.allowedActions.includes("withdraw") && (
+          {owner && app.allowedActions.includes("withdraw") && (
             <Button
               variant="secondary"
               disabled={action.busy}

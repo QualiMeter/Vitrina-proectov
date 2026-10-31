@@ -5,14 +5,15 @@ import { Button } from "../../components/ui/Button";
 import { EmptyState } from "../../components/feedback/States";
 import { Load, Pager, Status } from "./shared";
 import { date, useAction, useLoad, useStudent } from "./hooks";
-export function InvitationsPage() {
+export function InvitationsPage({ embedded = false }: { embedded?: boolean }) {
+  const Heading = embedded ? "h2" : "h1";
   const { api, base } = useStudent();
   const [page, setPage] = useState(1);
   const action = useAction();
   const state = useLoad(() => api.invitations(page), `invitations-${page}`);
   return (
     <>
-      <h1>Приглашения в команды</h1>
+      <Heading>Приглашения в команды</Heading>
       <p className="student-lead">
         Участие подтверждаете только вы. История решений сохраняется.
       </p>
