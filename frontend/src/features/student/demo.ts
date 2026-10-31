@@ -51,6 +51,23 @@ export function createDemoGateway(): StudentGateway {
   ];
   const clone = <T>(value: T): T => structuredClone(value);
   return {
+    dashboardSignals: async () => ({
+      pending: [
+        {
+          id: "00000000-0000-4000-8000-000000000040",
+          title: "Демо-команда · Учебный кейс",
+          expiresAt: new Date(Date.now() + 2 * 86400000).toISOString(),
+        },
+      ],
+      pendingPageOnly: false,
+      deadlines: [
+        {
+          id: "00000000-0000-4000-8000-000000000011",
+          title: "Учебный кейс по веб-разработке",
+          at: new Date(Date.now() + 3 * 86400000).toISOString(),
+        },
+      ],
+    }),
     session: async () => ({
       user: {
         id: demoUserId,

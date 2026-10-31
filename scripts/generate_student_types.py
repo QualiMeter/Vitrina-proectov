@@ -32,7 +32,7 @@ def ts(s):
     return {'integer': 'number', 'number': 'number', 'string': 'string', 'boolean': 'boolean', 'null': 'null'}.get(t, 'unknown')
 
 # Generate only schemas required by the day 1 frontend adapter, including referenced schemas.
-required = {'AuthSessionResponse','StudentProfilePrivate','StudentProfileUpdateRequest','StudentProfilePublic','ReferenceDataResponse','MyCaseParticipationListResponse','CsrfTokenResponse'}
+required = {'AuthSessionResponse','StudentProfilePrivate','StudentProfileUpdateRequest','StudentProfilePublic','ReferenceDataResponse','MyCaseParticipationListResponse','CsrfTokenResponse','TeamInvitationInboxResponse','CasePublicDetails'}
 def collect(value):
     if isinstance(value, dict):
         if '$ref' in value:

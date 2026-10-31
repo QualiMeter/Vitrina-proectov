@@ -1,8 +1,13 @@
 import { apiRequest } from "../../api/client";
 import type * as C from "./contracts";
+import {
+  readDashboardSignals,
+  type DashboardSignals,
+} from "./dashboardSignals";
 
 /** Day 1 only. Use the cookie session owned by FE-C; no second login. */
 export interface StudentGateway {
+  dashboardSignals(caseIds: string[]): Promise<DashboardSignals>;
   session(): Promise<C.AuthSessionResponse>;
   profile(): Promise<C.StudentProfilePrivate>;
   updateProfile(
@@ -40,6 +45,7 @@ async function mutate<T>(
 const get = <T>(path: string) =>
   apiRequest<T>(`${root}${path}`, { cache: "no-store" });
 export const liveStudentGateway: StudentGateway = {
+  dashboardSignals: readDashboardSignals,
   session: () => get("/auth/me"),
   profile: () => get("/me/student-profile"),
   updateProfile: (body) => mutate("/me/student-profile", "PATCH", body),
