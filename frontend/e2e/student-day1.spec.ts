@@ -55,9 +55,12 @@ test("day 1 pages fit mobile and desktop widths", async ({ page }) => {
       "/demo/student",
       "/demo/student/profile",
       "/demo/student/participations",
+      "/demo/students/00000000-0000-4000-8000-000000000001",
     ]) {
       await page.goto(path);
       await expect(page.locator("h1")).toBeVisible();
+      await expect(page.getByText("Загрузка данных", {exact: true})).toHaveCount(0);
+      await page.evaluate(() => document.fonts.ready);
       if (width === 375 || width === 1280) {
         await page.screenshot({
           path: `test-results/screenshots/student-${width}-${path.split("/").pop()}.png`,
@@ -70,5 +73,32 @@ test("day 1 pages fit mobile and desktop widths", async ({ page }) => {
         ),
       ).toBe(true);
     }
+  }
+});
+
+test('mobile menu works from keyboard and has a review screenshot', async ({page}) => {
+  await page.setViewportSize({width:375,height:900}); await page.goto('/demo/student');
+  const menu=page.getByRole('button',{name:'Разделы'}); await menu.focus(); await page.keyboard.press('Enter');
+  await expect(page.getByRole('navigation',{name:'Кабинет студента'})).toBeVisible();
+  const profile=page.getByRole('link',{name:'Мой профиль',exact:true}); await profile.focus();
+  await page.screenshot({path:'test-results/screenshots/student-375-menu-keyboard.png',fullPage:true});
+  await page.keyboard.press('Enter'); await expect(page.getByRole('heading',{name:'Мой профиль'})).toBeVisible();
+  await expect(menu).toHaveAttribute('aria-expanded','false');
+});
+
+test('loading, empty and forbidden screens have real desktop/mobile captures', async ({page}) => {
+  const session={user:{id:'00000000-0000-4000-8000-000000000001',email:'demo@example.invalid',fullName:'Демо Студент',globalRoles:['STUDENT'],availableAreas:['student'],permissions:[],companyMemberships:[]},session:{expiresAt:'2099-01-01T00:00:00Z'}};
+  await page.route('**/api/v1/auth/me',route=>route.fulfill({status:200,json:session}));
+  let release:()=>void=()=>{};
+  let gate=Promise.resolve();let forbidden=false;
+  await page.route('**/api/v1/me/case-participations?*',async route=>{await gate;await route.fulfill(forbidden?{status:403,json:{}}:{status:200,json:{items:[],page:1,pageSize:20,total:0}});});
+  for(const width of [375,1280]){
+    await page.setViewportSize({width,height:900}); forbidden=false; gate=new Promise<void>(resolve=>{release=resolve;});
+    await page.goto('/student/participations'); await expect(page.getByText('Загрузка данных',{exact:true})).toBeVisible();
+    await page.screenshot({path:`test-results/screenshots/student-${width}-loading.png`,fullPage:true});
+    release(); await expect(page.getByText('Участий пока нет')).toBeVisible();
+    await page.screenshot({path:`test-results/screenshots/student-${width}-empty.png`,fullPage:true});
+    forbidden=true;await page.reload();await expect(page.getByText('Недостаточно прав. Данные и действия недоступны.')).toBeVisible();
+    await page.screenshot({path:`test-results/screenshots/student-${width}-forbidden.png`,fullPage:true});
   }
 });
