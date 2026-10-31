@@ -38,24 +38,28 @@ test("accepted invitations become discoverable teams and member applications are
 test("created teams are reachable before an application is created", async ({
   page,
 }) => {
+  const teamName = "ОченьДлинноеНазваниеКоманды".repeat(4);
+  await page.setViewportSize({ width: 320, height: 900 });
   await page.goto(application);
   await page.getByRole("radio", { name: "Командой" }).check();
-  await page.getByLabel("Название команды").fill("Команда без заявки");
+  await page.getByLabel("Название команды").fill(teamName);
   await page
     .getByRole("button", { name: "Создать команду", exact: true })
     .click();
   await expect(
     page.getByText("Команда создана", { exact: true }),
   ).toBeVisible();
+  await page.getByRole("button", { name: "Разделы" }).click();
   await page.getByRole("link", { name: "Команды", exact: true }).click();
   const card = page
     .getByRole("article")
-    .filter({ has: page.getByRole("heading", { name: "Команда без заявки" }) });
+    .filter({ has: page.getByRole("heading", { name: teamName }) });
   await expect(card.getByText("Заявка не создана")).toBeVisible();
   await expect(
     card.getByRole("link", { name: "Открыть команду" }),
   ).toBeVisible();
 });
+
 test("participation filters include later API pages", async ({ page }) => {
   const id = (n: number) =>
     `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;

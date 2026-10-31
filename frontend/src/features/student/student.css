@@ -596,3 +596,6 @@ section.student-profile-section > .field {
   background: var(--surface);
   box-shadow: 0 6px 24px #20133520;
 }
+
+.student-main h3, .student-list li { overflow-wrap: anywhere; }
+.student-main h3 { font-size: 1.1rem; margin-bottom: 10px; }
