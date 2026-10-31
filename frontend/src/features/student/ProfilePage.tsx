@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useBlocker } from "react-router-dom";
+import { ProfileLeaveDialog } from "./ProfileLeaveDialog";
 import { Load } from "./shared";
 import { useLoad, useStudent } from "./hooks";
 import { ProfileEditor } from "./ProfileEditor";
@@ -15,13 +17,32 @@ function ProfileContent({
   const [profile, setProfile] = useState(initial);
   const [dirty, setDirty] = useState(false);
   const [notice, setNotice] = useState("");
+  const blocker = useBlocker(dirty);
+  useEffect(() => {
+    if (blocker.state === "blocked" && !dirty) blocker.proceed();
+  }, [blocker, dirty]);
+  useEffect(() => {
+    if (!dirty) return;
+    const guard = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", guard);
+    return () => window.removeEventListener("beforeunload", guard);
+  }, [dirty]);
   return (
     <>
+      {blocker.state === "blocked" && (
+        <ProfileLeaveDialog
+          onStay={() => blocker.reset()}
+          onLeave={() => blocker.proceed()}
+        />
+      )}
       <ProfileEditor
         key={profile.version}
         profile={profile}
         reference={reference}
-        onDirty={() => setDirty(true)}
+        onDirty={setDirty}
         onSaved={(updated) => {
           setProfile(updated);
           setDirty(false);
