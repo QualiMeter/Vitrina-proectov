@@ -1,9 +1,9 @@
-import { useState } from 'react';
-import { Card } from '../../components/ui/Card';
-import { ButtonLink } from '../../components/ui/Button';
-import { EmptyState } from '../../components/feedback/States';
-import { Load, Pager, Status } from './shared';
-import { useLoad, useStudent } from './hooks';
+import { useState } from "react";
+import { Card } from "../../components/ui/Card";
+import { ButtonLink } from "../../components/ui/Button";
+import { EmptyState } from "../../components/feedback/States";
+import { Load, Pager, Status } from "./shared";
+import { useLoad, useStudent } from "./hooks";
 export function ParticipationsPage() {
   const { api, base } = useStudent();
   const [page, setPage] = useState(1);

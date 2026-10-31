@@ -35,6 +35,11 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck
+      - name: Check generated student types
+        run: |
+          python3 -m venv "$RUNNER_TEMP/student-codegen"
+          "$RUNNER_TEMP/student-codegen/bin/pip" install -r ../scripts/requirements-codegen.txt
+          "$RUNNER_TEMP/student-codegen/bin/python" ../scripts/generate_student_types.py --check
 
   unit-tests:
     name: unit-tests
@@ -98,7 +103,7 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        if: failure()
+        if: always()
         with:
           name: frontend-playwright-report
           path: |

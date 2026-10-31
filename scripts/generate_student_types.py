@@ -1,4 +1,5 @@
 """Generate compile-time schema types; JSON Schema constraints remain server validated."""
+import argparse
 import hashlib
 import json
 from pathlib import Path
@@ -45,5 +46,14 @@ def collect(value):
 for name in list(required): collect(schemas[name])
 
 out = root / 'frontend/src/features/student/contracts.ts'
-out.parent.mkdir(parents=True, exist_ok=True)
-out.write_text('// Generated from OpenAPI; do not edit by hand.\n// SHA256: ' + hashlib.sha256(source.read_bytes()).hexdigest() + '\n// Compile-time shapes only; conditional constraints are validated by the server.\n' + '\n'.join('export type ' + name + ' = ' + ts(schema) + ';' for name, schema in schemas.items() if name in required) + '\n')
+rendered = '// Generated from OpenAPI; do not edit by hand.\n// SHA256: ' + hashlib.sha256(source.read_bytes()).hexdigest() + '\n// Compile-time shapes only; conditional constraints are validated by the server.\n' + '\n'.join('export type ' + name + ' = ' + ts(schema) + ';' for name, schema in schemas.items() if name in required) + '\n'
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--check', action='store_true', help='Fail on drift without writing files')
+args = parser.parse_args()
+if args.check:
+    if not out.exists() or out.read_text(encoding='utf-8') != rendered:
+        raise SystemExit('Generated student types are stale. Run python3 scripts/generate_student_types.py')
+    print('Student types match OpenAPI')
+else:
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(rendered, encoding='utf-8')

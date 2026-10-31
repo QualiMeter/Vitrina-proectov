@@ -137,19 +137,21 @@ describe("Frontend B day 1", () => {
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(fetch.mock.calls[0][0]).toBe("/api/v1/auth/me");
     expect(screen.queryByLabelText("ФИО")).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", {name: "Войти через общий экран входа"})).not.toBeInTheDocument();
-    expect(screen.getByRole("link", {name: "Вернуться на главную"})).toHaveAttribute("href", "/");
+    expect(
+      screen.queryByRole("link", { name: "Войти через общий экран входа" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Вернуться на главную" }),
+    ).toHaveAttribute("href", "/");
   });
   it("does not grant a company account access to the student area", async () => {
     const session = await createDemoGateway().session();
-    const fetch = vi
-      .fn()
-      .mockResolvedValue(
-        Response.json({
-          ...session,
-          user: { ...session.user, availableAreas: ["company"] },
-        }),
-      );
+    const fetch = vi.fn().mockResolvedValue(
+      Response.json({
+        ...session,
+        user: { ...session.user, availableAreas: ["company"] },
+      }),
+    );
     vi.stubGlobal("fetch", fetch);
     demo("/student/profile");
     expect(
@@ -160,22 +162,20 @@ describe("Frontend B day 1", () => {
   it("ignores unexpected private fields returned by a public profile endpoint", async () => {
     vi.stubGlobal(
       "fetch",
-      vi
-        .fn()
-        .mockResolvedValue(
-          Response.json({
-            studentId: "id",
-            nickname: "public_nick",
-            avatarUrl: null,
-            achievements: [],
-            skillIds: [],
-            technologyIds: [],
-            publicLinks: [],
-            fullName: "PRIVATE NAME",
-            studyGroup: "PRIVATE GROUP",
-            course: 5,
-          }),
-        ),
+      vi.fn().mockResolvedValue(
+        Response.json({
+          studentId: "id",
+          nickname: "public_nick",
+          avatarUrl: null,
+          achievements: [],
+          skillIds: [],
+          technologyIds: [],
+          publicLinks: [],
+          fullName: "PRIVATE NAME",
+          studyGroup: "PRIVATE GROUP",
+          course: 5,
+        }),
+      ),
     );
     render(
       <MemoryRouter initialEntries={["/students/id"]}>

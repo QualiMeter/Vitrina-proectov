@@ -1,10 +1,10 @@
-import { Link } from 'react-router-dom';
-import { Card } from '../../components/ui/Card';
-import { ButtonLink } from '../../components/ui/Button';
-import { StudentProjectsBlock } from './StudentProjectsBlock';
-import { demoStudentProjects } from './projectExamples';
-import { Load } from './shared';
-import { useLoad, useStudent } from './hooks';
+import { Link } from "react-router-dom";
+import { Card } from "../../components/ui/Card";
+import { ButtonLink } from "../../components/ui/Button";
+import { StudentProjectsBlock } from "./StudentProjectsBlock";
+import { demoStudentProjects } from "./projectExamples";
+import { Load } from "./shared";
+import { useLoad, useStudent } from "./hooks";
 export function DashboardPage() {
   const { api, base, demo } = useStudent();
   const state = useLoad(
@@ -74,4 +74,3 @@ export function DashboardPage() {
     </>
   );
 }
-

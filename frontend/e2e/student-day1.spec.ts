@@ -58,6 +58,12 @@ test("day 1 pages fit mobile and desktop widths", async ({ page }) => {
     ]) {
       await page.goto(path);
       await expect(page.locator("h1")).toBeVisible();
+      if (width === 375 || width === 1280) {
+        await page.screenshot({
+          path: `test-results/screenshots/student-${width}-${path.split("/").pop()}.png`,
+          fullPage: true,
+        });
+      }
       expect(
         await page.evaluate(
           () => document.documentElement.scrollWidth <= window.innerWidth,

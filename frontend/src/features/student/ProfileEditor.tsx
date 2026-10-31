@@ -1,9 +1,9 @@
-import { useState, type FormEvent } from 'react';
-import { Link } from 'react-router-dom';
-import { Input } from '../../components/ui/Input';
-import { Button } from '../../components/ui/Button';
-import type * as C from './contracts';
-import { safeUrl, useAction, useStudent } from './hooks';
+import { useState, type FormEvent } from "react";
+import { Link } from "react-router-dom";
+import { Input } from "../../components/ui/Input";
+import { Button } from "../../components/ui/Button";
+import type * as C from "./contracts";
+import { safeUrl, useAction, useStudent } from "./hooks";
 export function ProfileEditor({
   profile,
   reference,
@@ -18,8 +18,10 @@ export function ProfileEditor({
   const { api, base, demo } = useStudent();
   const action = useAction();
   const [form, setForm] = useState(profile);
-  const patch = (values: Partial<C.StudentProfilePrivate>) =>
-    { setForm((prev) => ({ ...prev, ...values })); onDirty(); }
+  const patch = (values: Partial<C.StudentProfilePrivate>) => {
+    setForm((prev) => ({ ...prev, ...values }));
+    onDirty();
+  };
   async function save(event: FormEvent) {
     event.preventDefault();
     await action.run(async () => {
@@ -93,7 +95,9 @@ export function ProfileEditor({
               patch({ instituteId: e.target.value || undefined })
             }
           >
-            <option value="" disabled={Boolean(profile.instituteId)}>Не указан</option>
+            <option value="" disabled={Boolean(profile.instituteId)}>
+              Не указан
+            </option>
             {reference.institutes.map((x) => (
               <option key={x.id} value={x.id}>
                 {x.name}
@@ -101,7 +105,12 @@ export function ProfileEditor({
             ))}
           </select>
         </label>
-        {profile.instituteId && <p className="student-note">Институт можно изменить. Очистка станет доступна после согласования её поддержки сервером.</p>}
+        {profile.instituteId && (
+          <p className="student-note">
+            Институт можно изменить. Очистка станет доступна после согласования
+            её поддержки сервером.
+          </p>
+        )}
         <Input
           label="Курс"
           type="number"

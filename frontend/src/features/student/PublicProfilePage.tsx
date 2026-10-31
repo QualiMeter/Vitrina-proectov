@@ -1,9 +1,9 @@
-import { useContext } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { DemoGatewayContext } from './demoContext';
-import { liveStudentGateway } from './gateway';
-import { ExternalLink, Load, StudentAvatar } from './shared';
-import { useLoad } from './hooks';
+import { useContext } from "react";
+import { Link, useParams } from "react-router-dom";
+import { DemoGatewayContext } from "./demoContext";
+import { liveStudentGateway } from "./gateway";
+import { ExternalLink, Load, StudentAvatar } from "./shared";
+import { useLoad } from "./hooks";
 export function PublicProfilePage({ demo = false }: { demo?: boolean }) {
   const { id = "" } = useParams();
   const demoApi = useContext(DemoGatewayContext);
@@ -67,4 +67,3 @@ export function PublicProfilePage({ demo = false }: { demo?: boolean }) {
     </main>
   );
 }
-
