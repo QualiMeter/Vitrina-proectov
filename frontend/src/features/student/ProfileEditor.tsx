@@ -7,18 +7,19 @@ import { safeUrl, useAction, useStudent } from './hooks';
 export function ProfileEditor({
   profile,
   reference,
-  refresh,
+  onSaved,
+  onDirty,
 }: {
   profile: C.StudentProfilePrivate;
   reference: C.ReferenceDataResponse;
-  refresh: () => void;
+  onSaved: (profile: C.StudentProfilePrivate) => void;
+  onDirty: () => void;
 }) {
   const { api, base, demo } = useStudent();
   const action = useAction();
   const [form, setForm] = useState(profile);
-  const [avatarFile, setAvatarFile] = useState<File>();
   const patch = (values: Partial<C.StudentProfilePrivate>) =>
-    setForm((prev) => ({ ...prev, ...values }));
+    { setForm((prev) => ({ ...prev, ...values })); onDirty(); }
   async function save(event: FormEvent) {
     event.preventDefault();
     await action.run(async () => {
@@ -40,7 +41,7 @@ export function ProfileEditor({
         skillIds,
         technologyIds,
       } = form;
-      await api.updateProfile({
+      const updated = await api.updateProfile({
         expectedVersion: profile.version,
         fullName: fullName.trim(),
         nickname: nickname.trim(),
@@ -54,7 +55,7 @@ export function ProfileEditor({
         skillIds,
         technologyIds,
       });
-      refresh();
+      onSaved(updated);
     });
   }
   const toggle = (field: "skillIds" | "technologyIds", id: string) =>
@@ -294,54 +295,6 @@ export function ProfileEditor({
         <Button disabled={action.busy} type="submit">
           {action.busy ? "Сохранение…" : "Сохранить профиль"}
         </Button>
-      </form>
-      <hr className="student-divider" />
-      <form
-        className="student-form"
-        onSubmit={(e) => {
-          e.preventDefault();
-          void action.run(async () => {
-            if (!avatarFile) throw new Error("Выберите изображение.");
-            await api.avatar(avatarFile);
-            refresh();
-          });
-        }}
-      >
-        <h2>Аватар</h2>
-        <p className="student-note">
-          Изображение становится публичным после проверки сервером. Лимиты
-          размера и формата уточняются с backend.
-        </p>
-        <Input
-          label="Изображение профиля"
-          type="file"
-          accept="image/*"
-          onChange={(e) => setAvatarFile(e.target.files?.[0])}
-        />
-        <div className="student-actions">
-          <Button disabled={action.busy || !avatarFile || demo}>
-            Загрузить аватар
-          </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            disabled={action.busy || !profile.avatarUrl}
-            onClick={() =>
-              void action.run(async () => {
-                await api.avatar();
-                refresh();
-              })
-            }
-          >
-            Удалить аватар
-          </Button>
-        </div>
-        {demo && (
-          <p>
-            В демонстрации загрузка изображения недоступна: нужен сервер
-            обработки.
-          </p>
-        )}
       </form>
       <p>
         <Link to={`${demo ? "/demo" : ""}/students/${profile.userId}`}>
