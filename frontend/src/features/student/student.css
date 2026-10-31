@@ -419,7 +419,7 @@ section.student-profile-section {
 }
 .student-save-bar {
   position: sticky;
-  bottom: 12px;
+  top: 12px;
   z-index: 2;
   display: flex;
   justify-content: space-between;
@@ -501,7 +501,7 @@ section.student-profile-section {
     padding: 16px;
   }
   .student-save-bar {
-    bottom: 8px;
+    top: 8px;
     padding: 12px;
   }
   .student-save-bar .button {
@@ -510,4 +510,11 @@ section.student-profile-section {
   .student-participation-actions .button {
     width: 100%;
   }
+}
+
+section.student-profile-section > .field {
+  margin: 0;
+}
+.student-profile-form :is(input, select, textarea, summary) {
+  scroll-margin-top: 140px;
 }

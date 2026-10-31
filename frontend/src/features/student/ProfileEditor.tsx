@@ -79,6 +79,15 @@ export function ProfileEditor({
           if (details) details.open = true;
         }}
       >
+        <div className="student-save-bar">
+          <span role="status">
+            {dirty ? "Есть несохранённые изменения" : "Изменения сохранены"}
+          </span>
+          {action.feedback}
+          <Button disabled={action.busy || !dirty} type="submit">
+            {action.busy ? "Сохранение…" : "Сохранить профиль"}
+          </Button>
+        </div>
         <section
           className="student-profile-section"
           aria-labelledby="profile-personal"
@@ -317,15 +326,6 @@ export function ProfileEditor({
             Добавить достижение
           </Button>
         </details>
-        <div className="student-save-bar">
-          <span role="status">
-            {dirty ? "Есть несохранённые изменения" : "Изменения сохранены"}
-          </span>
-          {action.feedback}
-          <Button disabled={action.busy || !dirty} type="submit">
-            {action.busy ? "Сохранение…" : "Сохранить профиль"}
-          </Button>
-        </div>
       </form>
       <p>
         <Link to={`${demo ? "/demo" : ""}/students/${profile.userId}`}>
