@@ -73,6 +73,12 @@ test("320-400px cabinet has a compact keyboard menu and readable forms", async (
       await page.keyboard.press("Enter");
       await expect(menu).toHaveAttribute("aria-expanded", "true");
       const nav = page.getByRole("navigation", { name: "Кабинет студента" });
+      if (path === "/demo/student") {
+        await page.keyboard.press("Tab");
+        await expect(
+          nav.getByRole("link", { name: "Мой профиль", exact: true }),
+        ).toBeFocused();
+      }
       await expect(
         nav.getByRole("link", { name: "Каталог инициатив" }),
       ).toBeVisible();
