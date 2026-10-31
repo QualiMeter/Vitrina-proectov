@@ -40,6 +40,7 @@ export function ParticipationsPage({
       <Load state={state}>
         {(data) => (
           <>
+            <p className="student-note">Всего участий: {data.total}</p>
             <div className="student-grid">
               {data.items
                 .filter((x) => !drafts || x.applicationStatus === "DRAFT")
@@ -63,9 +64,13 @@ export function ParticipationsPage({
                         другом составе.
                       </p>
                     )}
-                    <div className="student-actions">
+                    <div className="student-actions student-participation-actions">
                       <ButtonLink
-                        variant="secondary"
+                        variant={
+                          item.applicationStatus === "DRAFT"
+                            ? "primary"
+                            : "secondary"
+                        }
                         to={`${base}/cases/${item.caseId}/apply`}
                       >
                         {item.applicationStatus === "DRAFT"
@@ -77,6 +82,7 @@ export function ParticipationsPage({
                           to={`${base}/cases/${item.caseId}/workspace`}
                         >
                           Рабочее пространство
+                          <small aria-hidden="true"> · Скоро</small>
                         </ButtonLink>
                       )}
                     </div>
