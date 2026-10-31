@@ -47,7 +47,7 @@ function TeamEditor({
             : "Состав можно менять до отправки заявки."}
         </p>
         <div className="student-table">
-          <table>
+          <table className="student-members">
             <caption>Подтверждённые участники</caption>
             <thead>
               <tr>
@@ -60,10 +60,14 @@ function TeamEditor({
             <tbody>
               {team.members.map((member) => (
                 <tr key={member.userId}>
-                  <td>{member.displayName}</td>
-                  <td>{member.isCaptain ? "Капитан" : "Участник"}</td>
-                  <td>Подтверждено {date(member.joinedAt)}</td>
-                  <td>
+                  <td data-label="Участник">{member.displayName}</td>
+                  <td data-label="Роль">
+                    {member.isCaptain ? "Капитан" : "Участник"}
+                  </td>
+                  <td data-label="Подтверждение">
+                    Подтверждено {date(member.joinedAt)}
+                  </td>
+                  <td data-label="Действия">
                     {open &&
                       !team.membershipLocked &&
                       !member.isCaptain &&

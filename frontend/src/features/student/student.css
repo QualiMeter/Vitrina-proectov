@@ -265,3 +265,45 @@
     display: none;
   }
 }
+
+@media (max-width: 600px) {
+  .student-members,
+  .student-members tbody,
+  .student-members tr {
+    display: block;
+    width: 100%;
+  }
+  .student-members caption {
+    display: block;
+    text-align: left;
+    font-weight: 600;
+    margin-block: 12px;
+  }
+  .student-members thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .student-members tr {
+    padding-block: 8px;
+    border-bottom: 1px solid var(--line);
+  }
+  .student-members td {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+    padding: 8px 0;
+    border: 0;
+    overflow-wrap: anywhere;
+  }
+  .student-members td::before {
+    content: attr(data-label);
+    color: var(--muted);
+    font-size: 0.875rem;
+  }
+  .student-members td:empty {
+    display: none;
+  }
+}

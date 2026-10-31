@@ -87,6 +87,17 @@ test("day 2 pages fit desktop/mobile and produce review screenshots", async ({
       await expect(
         page.getByText("Загрузка данных", { exact: true }),
       ).toHaveCount(0);
+      if (name === "application") {
+        await page
+          .getByRole("button", { name: "Создать черновик заявки" })
+          .click();
+        await page
+          .getByLabel(/Сопроводительное письмо/)
+          .fill("Учебное письмо для визуальной проверки автосохранения.");
+        await expect(
+          page.getByText("Черновик сохранён на сервере"),
+        ).toBeVisible();
+      }
       await page.evaluate(() => document.fonts.ready);
       await page.screenshot({
         path: `test-results/screenshots/day2-${width}-${name}.png`,
