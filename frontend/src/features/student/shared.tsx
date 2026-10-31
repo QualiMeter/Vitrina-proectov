@@ -104,10 +104,12 @@ export function StudentAvatar({
 export function Pager({
   page,
   total,
+  pageSize = 20,
   onPage,
 }: {
   page: number;
   total: number;
+  pageSize?: number;
   onPage: (value: number) => void;
 }) {
   return (
@@ -124,7 +126,7 @@ export function Pager({
       </span>
       <Button
         variant="secondary"
-        disabled={page * 20 >= total}
+        disabled={page * pageSize >= total}
         onClick={() => onPage(page + 1)}
       >
         Далее
@@ -167,6 +169,7 @@ export function StudentRoot({ demo = false }: { demo?: boolean }) {
     ["", "Обзор"],
     ["/profile", "Мой профиль"],
     ["/participations", "Мои участия"],
+    ["/drafts", "Черновики"],
     ["/invitations", "Приглашения"],
     ["/portfolio", "Портфолио"],
     ["/projects", "Мои проекты"],
