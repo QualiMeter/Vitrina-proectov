@@ -29,6 +29,7 @@ export function ParticipationsPage() {
       <Load state={state}>
         {(data) => (
           <>
+            <p className="student-note">Всего участий: {data.total}</p>
             <div className="student-grid">
               {data.items
                 .filter((x) => !drafts || x.applicationStatus === "DRAFT")
@@ -52,12 +53,13 @@ export function ParticipationsPage() {
                         другом составе.
                       </p>
                     )}
-                    <div className="student-actions">
+                    <div className="student-actions student-participation-actions">
                       {item.applicationStatus === "ADMITTED" && (
                         <ButtonLink
                           to={`${base}/cases/${item.caseId}/workspace`}
                         >
                           Рабочее пространство
+                          <small aria-hidden="true"> · Скоро</small>
                         </ButtonLink>
                       )}
                     </div>
@@ -72,7 +74,12 @@ export function ParticipationsPage() {
                 description="Откройте подходящий кейс и подайте заявку."
               />
             )}
-            <Pager page={page} total={data.total} onPage={setPage} />
+            <Pager
+              page={data.page}
+              pageSize={data.pageSize}
+              total={data.total}
+              onPage={setPage}
+            />
           </>
         )}
       </Load>
