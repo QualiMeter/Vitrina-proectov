@@ -59,7 +59,11 @@ test("320-400px cabinet has a compact keyboard menu and readable forms", async (
           );
       }
       await page.evaluate(() => document.fonts.ready);
-      await page.evaluate(() => window.scrollTo(0, 0));
+      await page.evaluate(() => {
+        (document.activeElement as HTMLElement | null)?.blur();
+        window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+      });
+      await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
       if (path.endsWith("profile")) {
         const field = await page.getByLabel("ФИО").boundingBox();
         const toolbar = await page.locator(".student-save-bar").boundingBox();
