@@ -21,18 +21,44 @@
 .cases-intro > .badge { flex: 0 0 auto; margin-top: 9px; }
 
 .case-filters {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
   margin-bottom: 28px;
   padding: 22px;
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
   background: var(--surface);
 }
-
-.case-filter { display: grid; gap: 7px; }
-.case-filter label { color: var(--brand-dark); font-size: .87rem; font-weight: 600; }
+.case-filters__primary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+}
+.case-filters__fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+.case-filters .case-filters__toggle { display: none; }
+.case-filters__count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--brand-pale);
+  color: var(--brand-dark);
+  font-size: .75rem;
+}
+.case-filters__reset { justify-self: start; }
+.case-filter {
+  display: grid;
+  gap: 7px;
+}
+.case-filter label {
+  color: var(--brand-dark);
+  font-size: .87rem;
+  font-weight: 600;
+}
 .case-filter input,
 .case-filter select {
   width: 100%;
@@ -43,7 +69,6 @@
   background: var(--surface);
   color: var(--ink);
 }
-.case-filter--search { grid-column: span 2; }
 .case-filter__check {
   display: flex;
   align-items: center;
@@ -69,23 +94,75 @@
 .case-card__details div { display: flex; justify-content: space-between; gap: 12px; }
 .case-card__details dt { color: var(--muted); font-size: .84rem; }
 .case-card__details dd { margin: 0; color: var(--ink); font-size: .84rem; font-weight: 600; text-align: right; }
-.case-card__reward { margin: 16px 0 0; padding: 11px 12px; border-radius: var(--radius-sm); background: var(--brand-pale); color: var(--brand-dark); font-size: .85rem; }
-.case-card__link { display: inline-flex; align-items: center; gap: 7px; margin-top: 18px; color: var(--brand-dark); font-weight: 700; text-decoration: none; }
+.case-card__reward {
+  margin: 16px 0 0;
+  padding: 11px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--brand-pale);
+  color: var(--brand-dark);
+  font-size: .85rem;
+}
+.case-card__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 18px;
+  color: var(--brand-dark);
+  font-weight: 700;
+  text-decoration: none;
+}
 .case-card__link:hover { text-decoration: underline; }
 .case-card__link:focus-visible,
 .case-detail__back:focus-visible { outline: 3px solid var(--brand); outline-offset: 3px; }
 .cases-pagination { display: flex; justify-content: center; align-items: center; gap: 18px; margin-top: 28px; }
 .cases-pagination span { color: var(--muted); font-size: .9rem; }
-.cases-api-note { margin: 36px 0 0; padding-top: 18px; border-top: 1px solid var(--line); color: var(--muted); font-size: .84rem; }
+.cases-api-note {
+  margin: 36px 0 0;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: .84rem;
+}
 .case-detail { max-width: 860px; }
 .case-detail__back { display: inline-block; margin-bottom: 28px; color: var(--brand-dark); font-weight: 600; }
 .case-detail article > h1 { margin: 12px 0; color: var(--brand-dark); font-size: clamp(2rem, 4vw, 3rem); line-height: 1.15; }
 .case-detail article > section { margin-top: 32px; }
 .case-detail article > section h2 { margin-bottom: 12px; color: var(--brand-dark); font-size: 1.35rem; }
+.case-detail__conditions {
+  margin-top: 28px;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+.case-detail__conditions h2 { color: var(--brand-dark); }
+.case-detail__application {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 22px;
+  padding: 18px;
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+.case-detail__application p,
+.case-detail__closed { margin: 0; color: var(--muted); font-size: .9rem; }
+.case-detail__closed { margin-top: 22px; }
 .case-detail .case-card__details { margin-top: 18px; }
 .company-detail { max-width: 1000px; }
 .company-detail__profile { display: grid; grid-template-columns: 112px minmax(0, 1fr); align-items: start; gap: 28px; }
-.company-detail__mark { display: grid; place-items: center; width: 112px; height: 112px; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--surface); color: var(--brand); font-size: 2.5rem; font-weight: 700; }
+.company-detail__mark {
+  display: grid;
+  place-items: center;
+  width: 112px;
+  height: 112px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--brand);
+  font-size: 2.5rem;
+  font-weight: 700;
+}
 .company-detail__profile h1 { margin: 10px 0; color: var(--brand-dark); font-size: clamp(2rem, 4vw, 3rem); line-height: 1.15; }
 .company-detail__profile p { max-width: 720px; color: var(--muted); }
 .company-detail__profile > div > a { color: var(--brand-dark); font-weight: 600; }
@@ -97,15 +174,23 @@
 
 @media (max-width: 900px) {
   .case-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .case-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .case-filter--search { grid-column: span 2; }
+  .case-filters__primary { grid-template-columns: minmax(0, 1fr) auto; align-items: end; }
+  .case-filters .case-filters__toggle { display: inline-flex; }
+  .case-filters__fields { display: none; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .case-filters__fields.is-open { display: grid; }
+  .case-filter__check { align-self: start; }
+  .case-filters__reset { width: 100%; }
 }
 
 @media (max-width: 600px) {
   .cases-intro { flex-direction: column; }
-  .case-grid,
-  .case-filters { grid-template-columns: 1fr; }
-  .case-filter--search { grid-column: auto; }
+  .case-grid { grid-template-columns: 1fr; }
+  .case-filters { padding: 14px; }
+  .case-filters__primary { gap: 10px; }
+  .case-filters__toggle { min-height: 44px; padding-inline: 12px; }
+  .case-filters__fields { grid-template-columns: 1fr; margin-top: 16px; }
+  .case-detail__conditions { padding: 16px; }
+  .case-detail__application { align-items: flex-start; flex-direction: column; }
   .cases-pagination { gap: 10px; }
   .cases-pagination span { font-size: .8rem; white-space: nowrap; }
   .company-detail__profile { grid-template-columns: 1fr; gap: 18px; }

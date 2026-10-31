@@ -6,7 +6,16 @@ import { mockPublicCases } from './mockCases';
 import { publicCaseStatuses } from './types';
 import { selectLocalPage } from './catalogue';
 
-const emptyFilters = { search: '', directionId: '', technologyId: '', format: '' as const, status: '' as const, course: '', hasReward: false };
+const emptyFilters = {
+  search: '',
+  directionId: '',
+  technologyId: '',
+  format: '' as const,
+  status: '' as const,
+  course: '',
+  hasReward: false
+};
+
 const renderPage = (loadCases?: () => Promise<typeof mockPublicCases>) => render(
   <MemoryRouter initialEntries={['/cases']}>
     <CasesPage loadCases={loadCases} />
@@ -22,8 +31,21 @@ describe('local catalogue selection', () => {
   });
 
   it('searches company, title, and reward terms, and returns an empty result', () => {
-    expect(selectLocalPage(mockPublicCases, { ...emptyFilters, search: 'АльфаТех' }, 1, 20).filtered).toHaveLength(1);
-    expect(selectLocalPage(mockPublicCases, { ...emptyFilters, search: 'нет такого кейса' }, 1, 20).filtered).toHaveLength(0);
+    const companySearch = selectLocalPage(
+      mockPublicCases,
+      { ...emptyFilters, search: 'АльфаТех' },
+      1,
+      20
+    );
+    const emptySearch = selectLocalPage(
+      mockPublicCases,
+      { ...emptyFilters, search: 'нет такого кейса' },
+      1,
+      20
+    );
+
+    expect(companySearch.filtered).toHaveLength(1);
+    expect(emptySearch.filtered).toHaveLength(0);
   });
 
   it('applies direction, technology, status, course, and reward filters together', () => {
