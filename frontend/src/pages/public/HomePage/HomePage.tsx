@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { PublicHeader } from '../../../components/layout/PublicHeader';
 import { ButtonLink } from '../../../components/ui/Button';
 import { Badge } from '../../../components/ui/Badge';
@@ -14,6 +16,14 @@ const opportunities = [
 const directions = ['Разработка цифровых продуктов', 'Данные и аналитика', 'Искусственный интеллект', 'Интерфейсы и пользовательский опыт', 'Инженерные ИТ-решения'];
 
 export function HomePage() {
+  const location = useLocation();
+
+  useEffect(() => {
+    if (!location.hash) return;
+    const targetId = decodeURIComponent(location.hash.slice(1));
+    requestAnimationFrame(() => document.getElementById(targetId)?.scrollIntoView());
+  }, [location.hash]);
+
   return <>
     <PublicHeader />
     <main>
