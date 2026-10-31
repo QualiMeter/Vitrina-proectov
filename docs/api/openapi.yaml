@@ -6549,7 +6549,10 @@ components:
           type: integer
           minimum: 1
         instituteId:
-          $ref: '#/components/schemas/Id'
+          anyOf:
+          - $ref: '#/components/schemas/Id'
+          - type: 'null'
+          description: UUID института; null означает отсутствие института.
         course:
           type: integer
           minimum: 1
@@ -6597,7 +6600,10 @@ components:
           items:
             $ref: '#/components/schemas/ProfileAchievement'
         instituteId:
-          $ref: '#/components/schemas/Id'
+          anyOf:
+          - $ref: '#/components/schemas/Id'
+          - type: 'null'
+          description: UUID задаёт институт; null очищает ранее выбранный институт; отсутствие поля сохраняет прежнее значение.
         course:
           type: integer
           minimum: 1

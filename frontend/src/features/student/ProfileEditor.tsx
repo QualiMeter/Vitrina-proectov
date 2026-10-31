@@ -47,7 +47,9 @@ export function ProfileEditor({
         expectedVersion: profile.version,
         fullName: fullName.trim(),
         nickname: nickname.trim(),
-        instituteId: instituteId ?? profile.instituteId,
+        ...(instituteId !== profile.instituteId
+          ? { instituteId: instituteId ?? null }
+          : {}),
         course: course ?? profile.course,
         studyGroup,
         description,
@@ -91,13 +93,9 @@ export function ProfileEditor({
           Институт / факультет
           <select
             value={form.instituteId ?? ""}
-            onChange={(e) =>
-              patch({ instituteId: e.target.value || undefined })
-            }
+            onChange={(e) => patch({ instituteId: e.target.value || null })}
           >
-            <option value="" disabled={Boolean(profile.instituteId)}>
-              Не указан
-            </option>
+            <option value="">Не указан</option>
             {reference.institutes.map((x) => (
               <option key={x.id} value={x.id}>
                 {x.name}
@@ -105,12 +103,6 @@ export function ProfileEditor({
             ))}
           </select>
         </label>
-        {profile.instituteId && (
-          <p className="student-note">
-            Институт можно изменить. Очистка станет доступна после согласования
-            её поддержки сервером.
-          </p>
-        )}
         <Input
           label="Курс"
           type="number"

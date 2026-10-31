@@ -24,12 +24,73 @@ function demo(path: string) {
   );
 }
 describe("Frontend B day 1", () => {
-  it("does not offer unsupported PATCH clearing of saved academic fields", async () => {
+  it("clears a saved institute, preserves the selection after remount and allows selecting it again", async () => {
+    const actor = userEvent.setup();
     demo("/demo/student/profile");
     const institute = await screen.findByLabelText("Институт / факультет");
-    expect(institute.querySelector('option[value=""]')).toBeDisabled();
+    const original = (institute as HTMLSelectElement).value;
+    expect(original).not.toBe("");
+    await actor.selectOptions(institute, "");
+    await actor.click(
+      screen.getByRole("button", { name: "Сохранить профиль" }),
+    );
+    await waitFor(() =>
+      expect(screen.getByLabelText("Институт / факультет")).toHaveValue(""),
+    );
+    await screen.findByText("Профиль сохранён");
+    await actor.click(screen.getByRole("link", { name: "Мои участия" }));
+    await screen.findByRole("heading", { name: "Мои участия" });
+    await actor.click(screen.getByRole("link", { name: "Мой профиль" }));
+    expect(await screen.findByLabelText("Институт / факультет")).toHaveValue(
+      "",
+    );
+    await actor.selectOptions(
+      await screen.findByLabelText("Институт / факультет"),
+      original,
+    );
+    await actor.click(
+      screen.getByRole("button", { name: "Сохранить профиль" }),
+    );
+    await waitFor(() =>
+      expect(screen.getByLabelText("Институт / факультет")).toHaveValue(
+        original,
+      ),
+    );
     expect(screen.getByLabelText("Курс")).toBeRequired();
-    expect(screen.getByText(/Очистка станет доступна/)).toBeInTheDocument();
+  });
+  it("retains omitted institute fields but clears explicit null in the typed demo", async () => {
+    const api = createDemoGateway();
+    const initial = await api.profile();
+    const unchanged = await api.updateProfile({
+      expectedVersion: initial.version,
+      nickname: "other_name",
+    });
+    expect(unchanged.instituteId).toBe(initial.instituteId);
+    const cleared = await api.updateProfile({
+      expectedVersion: unchanged.version,
+      instituteId: null,
+    });
+    expect(cleared.instituteId).toBeNull();
+    const retained = await api.updateProfile({
+      expectedVersion: cleared.version,
+      instituteId: undefined,
+    });
+    expect(retained.instituteId).toBeNull();
+  });
+  it("serializes explicit null in PATCH instead of dropping the institute field", async () => {
+    const fetch = vi
+      .fn()
+      .mockResolvedValueOnce(Response.json({ csrfToken: "csrf" }))
+      .mockResolvedValueOnce(Response.json({ version: 2, instituteId: null }));
+    vi.stubGlobal("fetch", fetch);
+    await liveStudentGateway.updateProfile({
+      expectedVersion: 1,
+      instituteId: null,
+    });
+    expect(JSON.parse(fetch.mock.calls[1][1].body)).toEqual({
+      expectedVersion: 1,
+      instituteId: null,
+    });
   });
   it("shows the dashboard and required navigation sections", async () => {
     demo("/demo/student");

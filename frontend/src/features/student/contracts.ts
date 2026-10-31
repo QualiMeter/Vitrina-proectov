@@ -1,5 +1,5 @@
 // Generated from OpenAPI; do not edit by hand.
-// SHA256: a817e3ecdccae6d5a8067d01f03dd1baa2548b4b70d8f640f258716d48aaa3ff
+// SHA256: 15a808765685798b1598e0a7090737546a9888f9963a4536fb2e28396a487078
 // Compile-time shapes only; conditional constraints are validated by the server.
 export type Id = string;
 export type Email = string;
@@ -16,8 +16,8 @@ export type CaseStatus = "DRAFT" | "MODERATION" | "REVISION" | "REJECTED" | "APP
 export type CaseApplicationStatus = "DRAFT" | "SUBMITTED" | "ADMITTED" | "REJECTED" | "WITHDRAWN";
 export type CaseApplicationFormat = "SOLO" | "TEAM";
 export type ProfileAchievement = { "title": string; "description"?: string; "url"?: string; };
-export type StudentProfilePrivate = { "userId": Id; "fullName": DisplayName; "nickname": Nickname; "avatarUrl"?: (string | null); "achievements": (ProfileAchievement)[]; "version": number; "instituteId"?: Id; "course"?: number; "studyGroup"?: string; "description"?: string; "publicSummary"?: string; "skillIds": (Id)[]; "technologyIds": (Id)[]; "publicLinks": (PublicStudentLink)[]; };
-export type StudentProfileUpdateRequest = { "expectedVersion": number; "fullName"?: DisplayName; "nickname"?: Nickname; "achievements"?: (ProfileAchievement)[]; "instituteId"?: Id; "course"?: number; "studyGroup"?: string; "description"?: string; "publicSummary"?: string; "skillIds"?: (Id)[]; "technologyIds"?: (Id)[]; "publicLinks"?: (PublicStudentLink)[]; };
+export type StudentProfilePrivate = { "userId": Id; "fullName": DisplayName; "nickname": Nickname; "avatarUrl"?: (string | null); "achievements": (ProfileAchievement)[]; "version": number; "instituteId"?: (Id | null); "course"?: number; "studyGroup"?: string; "description"?: string; "publicSummary"?: string; "skillIds": (Id)[]; "technologyIds": (Id)[]; "publicLinks": (PublicStudentLink)[]; };
+export type StudentProfileUpdateRequest = { "expectedVersion": number; "fullName"?: DisplayName; "nickname"?: Nickname; "achievements"?: (ProfileAchievement)[]; "instituteId"?: (Id | null); "course"?: number; "studyGroup"?: string; "description"?: string; "publicSummary"?: string; "skillIds"?: (Id)[]; "technologyIds"?: (Id)[]; "publicLinks"?: (PublicStudentLink)[]; };
 export type PublicStudentLink = { "label": string; "url": string; };
 export type StudentProfilePublic = { "studentId": Id; "nickname": Nickname; "avatarUrl": (string | null); "achievements": (ProfileAchievement)[]; "publicSummary"?: string; "skillIds": (Id)[]; "technologyIds": (Id)[]; "publicLinks": (PublicStudentLink)[]; };
 export type MyCaseParticipation = { "caseId": Id; "caseTitle": string; "caseStatus"?: CaseStatus; "applicationId"?: Id; "teamId"?: Id; "format": CaseApplicationFormat; "role": "SOLO" | "CAPTAIN" | "MEMBER"; "applicationStatus": CaseApplicationStatus; "teamExecutionStatus"?: "ACTIVE" | "ELIMINATED" | "EXCLUDED"; };
