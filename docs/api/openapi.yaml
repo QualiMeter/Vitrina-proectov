@@ -3321,6 +3321,31 @@ paths:
           $ref: '#/components/responses/NotFound'
         '429':
           $ref: '#/components/responses/TooManyRequests'
+  /api/v1/me/teams:
+    get:
+      tags:
+      - Teams
+      operationId: teamsListAllMine
+      summary: Мои подтверждённые команды во всех кейсах
+      description: Только команды текущего студента как капитана или подтверждённого участника. Созданная капитаном команда включается сразу, даже без заявки. Ожидающее приглашение не даёт членства и не включает команду в этот список. После accept команда появляется в списке; после выхода или исключения исчезает. Порядок стабилен по createdAt DESC и teamId ASC. Чужие команды и составы не раскрываются.
+      security:
+      - sessionCookie: []
+      parameters:
+      - $ref: '#/components/parameters/PageQuery'
+      - $ref: '#/components/parameters/PageSizeQuery'
+      responses:
+        '200':
+          description: Подтверждённые команды текущего пользователя
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MyCaseTeamListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
   /api/v1/me/case-participations:
     get:
       tags:
@@ -6691,6 +6716,63 @@ components:
           items:
             $ref: '#/components/schemas/PublicStudentLink'
       description: Никнейм, аватар и достижения видны всем; при отсутствии аватара UI показывает заглушку, при отсутствии достижений — пустое состояние. ФИО, курс и группа доступны только представителям компаний через отдельный защищённый API. Email, группа, членства и закрытые работы публично отсутствуют.
+    MyCaseTeamSummary:
+      type: object
+      additionalProperties: false
+      required:
+      - teamId
+      - caseId
+      - caseTitle
+      - teamName
+      - role
+      - members
+      - membershipLocked
+      properties:
+        teamId:
+          $ref: '#/components/schemas/Id'
+        caseId:
+          $ref: '#/components/schemas/Id'
+        caseTitle:
+          type: string
+        teamName:
+          type: string
+        role:
+          type: string
+          enum: [CAPTAIN, MEMBER]
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/CaseTeamMember'
+        membershipLocked:
+          type: boolean
+        applicationId:
+          oneOf:
+          - $ref: '#/components/schemas/Id'
+          - type: 'null'
+        applicationStatus:
+          oneOf:
+          - $ref: '#/components/schemas/CaseApplicationStatus'
+          - type: 'null'
+      description: Только подтверждённое членство. Поля заявки отсутствуют или null, пока заявка не создана. Обычный участник имеет право просмотра командной заявки, но не её изменения, отправки или отзыва.
+    MyCaseTeamListResponse:
+      type: object
+      additionalProperties: false
+      required: [items, page, pageSize, total]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/MyCaseTeamSummary'
+        page:
+          type: integer
+          minimum: 1
+        pageSize:
+          type: integer
+          minimum: 1
+          maximum: 100
+        total:
+          type: integer
+          minimum: 0
     MyCaseParticipation:
       type: object
       additionalProperties: false
