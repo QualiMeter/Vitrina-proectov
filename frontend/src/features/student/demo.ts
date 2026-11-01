@@ -1,3 +1,5 @@
+import { withExecutionDemo } from "./executionDemo";
+import { withParticipationDemo } from "./day2Demo";
 import { ApiError } from "../../api/client";
 import type * as C from "./contracts";
 import type { StudentGateway } from "./gateway";
@@ -50,77 +52,79 @@ export function createDemoGateway(): StudentGateway {
     },
   ];
   const clone = <T>(value: T): T => structuredClone(value);
-  return {
-    dashboardInvitations: async () => ({
-      items: [
-        {
-          id: "00000000-0000-4000-8000-000000000040",
-          title: "Демо-команда · Учебный кейс",
-          expiresAt: new Date(Date.now() + 2 * 86400000).toISOString(),
+  return withExecutionDemo(
+    withParticipationDemo({
+      dashboardInvitations: async () => ({
+        items: [
+          {
+            id: "00000000-0000-4000-8000-000000000040",
+            title: "Демо-команда · Учебный кейс",
+            expiresAt: new Date(Date.now() + 2 * 86400000).toISOString(),
+          },
+        ],
+        total: 1,
+      }),
+      dashboardDeadlines: async () => ({
+        unavailable: 0,
+        items: [
+          {
+            id: "00000000-0000-4000-8000-000000000011",
+            title: "Учебный кейс по веб-разработке",
+            at: new Date(Date.now() + 3 * 86400000).toISOString(),
+          },
+        ],
+      }),
+      session: async () => ({
+        user: {
+          id: demoUserId,
+          email: "demo@example.invalid",
+          fullName: profile.fullName,
+          globalRoles: ["STUDENT"],
+          availableAreas: ["student"],
+          permissions: [],
+          companyMemberships: [],
         },
-      ],
-      total: 1,
-    }),
-    dashboardDeadlines: async () => ({
-      unavailable: 0,
-      items: [
-        {
-          id: "00000000-0000-4000-8000-000000000011",
-          title: "Учебный кейс по веб-разработке",
-          at: new Date(Date.now() + 3 * 86400000).toISOString(),
-        },
-      ],
-    }),
-    session: async () => ({
-      user: {
-        id: demoUserId,
-        email: "demo@example.invalid",
-        fullName: profile.fullName,
-        globalRoles: ["STUDENT"],
-        availableAreas: ["student"],
-        permissions: [],
-        companyMemberships: [],
-      },
-      session: { expiresAt: new Date(Date.now() + 3600000).toISOString() },
-    }),
-    profile: async () => clone(profile),
-    updateProfile: async (body) => {
-      const { expectedVersion, ...values } = body;
-      if (expectedVersion !== profile.version)
-        throw new ApiError("conflict", 409);
-      const provided = Object.fromEntries(
-        Object.entries(values).filter(([, value]) => value !== undefined),
-      );
-      profile = { ...profile, ...provided, version: profile.version + 1 };
-      return clone(profile);
-    },
-    avatar: async (file) => {
-      if (file)
-        throw new Error(
-          "Загрузка аватара требует сервера обработки изображений.",
+        session: { expiresAt: new Date(Date.now() + 3600000).toISOString() },
+      }),
+      profile: async () => clone(profile),
+      updateProfile: async (body) => {
+        const { expectedVersion, ...values } = body;
+        if (expectedVersion !== profile.version)
+          throw new ApiError("conflict", 409);
+        const provided = Object.fromEntries(
+          Object.entries(values).filter(([, value]) => value !== undefined),
         );
-      profile.avatarUrl = null;
-      return clone(profile);
-    },
-    publicProfile: async (id) => {
-      if (id !== demoUserId) throw new ApiError("notFound", 404);
-      return clone({
-        studentId: profile.userId,
-        nickname: profile.nickname,
-        avatarUrl: profile.avatarUrl ?? null,
-        achievements: profile.achievements,
-        skillIds: profile.skillIds,
-        technologyIds: profile.technologyIds,
-        publicLinks: profile.publicLinks,
-        publicSummary: profile.publicSummary,
-      });
-    },
-    reference: async () => clone(reference),
-    participations: async (page) => ({
-      items: clone(items.slice((page - 1) * 20, page * 20)),
-      page,
-      pageSize: 20,
-      total: items.length,
+        profile = { ...profile, ...provided, version: profile.version + 1 };
+        return clone(profile);
+      },
+      avatar: async (file) => {
+        if (file)
+          throw new Error(
+            "Загрузка аватара требует сервера обработки изображений.",
+          );
+        profile.avatarUrl = null;
+        return clone(profile);
+      },
+      publicProfile: async (id) => {
+        if (id !== demoUserId) throw new ApiError("notFound", 404);
+        return clone({
+          studentId: profile.userId,
+          nickname: profile.nickname,
+          avatarUrl: profile.avatarUrl ?? null,
+          achievements: profile.achievements,
+          skillIds: profile.skillIds,
+          technologyIds: profile.technologyIds,
+          publicLinks: profile.publicLinks,
+          publicSummary: profile.publicSummary,
+        });
+      },
+      reference: async () => clone(reference),
+      participations: async (page) => ({
+        items: clone(items.slice((page - 1) * 20, page * 20)),
+        page,
+        pageSize: 20,
+        total: items.length,
+      }),
     }),
-  };
+  );
 }

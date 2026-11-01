@@ -40,9 +40,11 @@ export function StudentRoot({ demo = false }: { demo?: boolean }) {
     ["", "Обзор", false],
     ["/profile", "Мой профиль", false],
     ["/participations", "Мои участия", false],
-    ["/invitations", "Приглашения", true],
-    ["/portfolio", "Портфолио", true],
-    ["/projects", "Мои проекты", true],
+    ["/teams", "Команды", false],
+    ["/portfolio", "Портфолио", false],
+    ["/projects", "Мои проекты", false],
+    ["/favorites", "Избранное", !demo],
+    ["/notifications", "Уведомления", false],
   ];
   return (
     <div className="student-app">

@@ -1,3 +1,4 @@
+import { demoCaseId } from "./day2Demo";
 import { Card } from "../../components/ui/Card";
 import { Button, ButtonLink } from "../../components/ui/Button";
 import { StudentProjectsBlock } from "./StudentProjectsBlock";
@@ -7,7 +8,7 @@ import { date, useLoad, useStudent } from "./hooks";
 import type * as C from "./contracts";
 
 function Signals({ items }: { items: C.MyCaseParticipation[] }) {
-  const { api } = useStudent();
+  const { api, base } = useStudent();
   const ids = [
     ...new Set(
       items
@@ -53,9 +54,9 @@ function Signals({ items }: { items: C.MyCaseParticipation[] }) {
             </>
           )}
         </Load>
-        <Button variant="secondary" disabled>
-          Приглашения · Скоро
-        </Button>
+        <ButtonLink variant="secondary" to={`${base}/teams/invitations`}>
+          Посмотреть приглашения
+        </ButtonLink>
       </Card>
       <Card>
         <h2>Ближайшие сроки подачи</h2>
@@ -180,7 +181,10 @@ export function DashboardPage() {
                   ) : (
                     <p>На этой странице черновиков нет.</p>
                   )}
-                  <ButtonLink variant="secondary" to={`${base}/participations`}>
+                  <ButtonLink
+                    variant="secondary"
+                    to={`${base}/participations?filter=drafts`}
+                  >
                     Открыть список заявок
                   </ButtonLink>
                 </Card>
@@ -192,6 +196,13 @@ export function DashboardPage() {
                 </p>
               )}
               <Signals items={participations.items} />
+              {demo && (
+                <p>
+                  <ButtonLink to={`${base}/cases/${demoCaseId}/apply`}>
+                    Открыть учебный кейс
+                  </ButtonLink>
+                </p>
+              )}
               {demo && (
                 <StudentProjectsBlock
                   projects={demoStudentProjects}

@@ -1,3 +1,22 @@
+import { AuthorProjectsPage } from "./projects/AuthorProjectsPage";
+import { ProjectTeamPage } from "./projects/ProjectTeamPage";
+import { ProjectApplicationPage } from "./projects/ProjectApplicationPage";
+import { FavoritesPage, NotificationsPage } from "./projects/ActivityPages";
+import {
+  PortfolioPage,
+  PublicPortfolioPage,
+} from "./publications/PortfolioPage";
+import {
+  ProjectsCatalog,
+  ProjectDetails,
+} from "./publications/ProjectsCatalog";
+import { PublicationEditorPage } from "./publications/PublicationEditor";
+import { WorkspacePage } from "./WorkspacePage";
+import { StudentRedirect } from "./StudentRedirect";
+import { TeamsPage, MyTeamsPage } from "./TeamsPage";
+import { InvitationsPage } from "./InvitationsPage";
+import { TeamPage } from "./TeamPage";
+import { ApplicationPage } from "./ApplicationPage";
 import type { RouteObject } from "react-router-dom";
 import { StudentRoot } from "./StudentRoot";
 import {
@@ -6,24 +25,50 @@ import {
   ProfilePage,
   PublicProfilePage,
 } from "./ProfilePages";
-import { DemoProvider, LaterSection } from "./Day1Shell";
+import { DemoProvider } from "./Day1Shell";
 const privatePages: RouteObject[] = [
   { index: true, element: <DashboardPage /> },
   { path: "profile", element: <ProfilePage /> },
   { path: "participations", element: <ParticipationsPage /> },
-  // Navigation sections required by FB-01; their business functions belong to later days.
-  ...["invitations", "portfolio", "projects", "cases/:caseId/workspace"].map(
-    (path) => ({ path, element: <LaterSection /> }),
-  ),
+  { path: "invitations", element: <StudentRedirect to="teams/invitations" /> },
+  {
+    path: "teams",
+    element: <TeamsPage />,
+    children: [
+      { index: true, element: <MyTeamsPage /> },
+      { path: "invitations", element: <InvitationsPage embedded /> },
+    ],
+  },
+  { path: "teams/:teamId", element: <TeamPage /> },
+  { path: "cases/:caseId/apply", element: <ApplicationPage /> },
+  {
+    path: "drafts",
+    element: <StudentRedirect to="participations?filter=drafts" />,
+  },
+  { path: "cases/:caseId/workspace", element: <WorkspacePage /> },
+  { path: "portfolio", element: <PortfolioPage /> },
+  { path: "portfolio/new", element: <PublicationEditorPage kind="WORK" /> },
+  {
+    path: "portfolio/works/:publicationId/edit",
+    element: <PublicationEditorPage kind="WORK" />,
+  },
+  { path: "projects", element: <AuthorProjectsPage /> },
+  { path: "projects/:projectId/team", element: <ProjectTeamPage /> },
+  { path: "projects/:projectId/apply", element: <ProjectApplicationPage /> },
+  { path: "favorites", element: <FavoritesPage /> },
+  { path: "notifications", element: <NotificationsPage /> },
+  { path: "projects/new", element: <PublicationEditorPage kind="PROJECT" /> },
+  {
+    path: "projects/:publicationId/edit",
+    element: <PublicationEditorPage kind="PROJECT" />,
+  },
 ];
 export const studentRoutes: RouteObject[] = [
   { path: "/student", element: <StudentRoot />, children: privatePages },
   { path: "/students/:id", element: <PublicProfilePage /> },
-  ...[
-    "/students/:id/portfolio",
-    "/student-projects",
-    "/student-projects/:projectId",
-  ].map((path) => ({ path, element: <LaterSection /> })),
+  { path: "/students/:id/portfolio", element: <PublicPortfolioPage /> },
+  { path: "/student-projects", element: <ProjectsCatalog /> },
+  { path: "/student-projects/:projectId", element: <ProjectDetails /> },
   {
     path: "/demo",
     element: <DemoProvider />,
@@ -34,11 +79,9 @@ export const studentRoutes: RouteObject[] = [
         children: privatePages,
       },
       { path: "students/:id", element: <PublicProfilePage demo /> },
-      ...[
-        "students/:id/portfolio",
-        "student-projects",
-        "student-projects/:projectId",
-      ].map((path) => ({ path, element: <LaterSection /> })),
+      { path: "students/:id/portfolio", element: <PublicPortfolioPage demo /> },
+      { path: "student-projects", element: <ProjectsCatalog demo /> },
+      { path: "student-projects/:projectId", element: <ProjectDetails demo /> },
     ],
   },
 ];

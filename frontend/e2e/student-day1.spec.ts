@@ -23,7 +23,9 @@ test("day 1 provides participation navigation but no day 2/3 actions", async ({
   await page.goto("/demo/student/participations");
   await expect(page.getByText("Капитан", { exact: true })).toBeVisible();
   await page.getByRole("link", { name: "Рабочее пространство" }).click();
-  await expect(page.getByText("Раздел пока недоступен")).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Рабочее пространство кейса" }),
+  ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Отправить заявку" }),
   ).toHaveCount(0);

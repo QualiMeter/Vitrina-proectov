@@ -255,6 +255,48 @@
   }
 }
 
+@media (max-width: 600px) {
+  .student-members,
+  .student-members tbody,
+  .student-members tr {
+    display: block;
+    width: 100%;
+  }
+  .student-members caption {
+    display: block;
+    text-align: left;
+    font-weight: 600;
+    margin-block: 12px;
+  }
+  .student-members thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .student-members tr {
+    padding-block: 8px;
+    border-bottom: 1px solid var(--line);
+  }
+  .student-members td {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+    padding: 8px 0;
+    border: 0;
+    overflow-wrap: anywhere;
+  }
+  .student-members td::before {
+    content: attr(data-label);
+    color: var(--muted);
+    font-size: 0.875rem;
+  }
+  .student-members td:empty {
+    display: none;
+  }
+}
+
 /* Student cabinet review: shared tokens, compact navigation and readable forms. */
 .student-header-brand {
   display: flex;
@@ -509,6 +551,41 @@ section.student-profile-section > .field {
   display: none;
 }
 
+.student-main h3,
+.student-list li {
+  overflow-wrap: anywhere;
+}
+.student-main h3 {
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+}
+
+.student-team-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  max-width: 440px;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+.student-filter-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  max-width: 520px;
+  gap: 8px;
+  margin-block: 20px;
+}
+.student-team-tabs .button,
+.student-filter-tabs .button {
+  min-width: 0;
+  min-height: 44px;
+  padding-inline: 8px;
+  font-size: 0.875rem;
+  white-space: normal;
+}
+.student-participation-actions .button small {
+  white-space: nowrap;
+}
+
 /* Conflict resolution keeps long field values readable on narrow screens. */
 .student-profile-fields {
   display: contents;
@@ -535,4 +612,67 @@ section.student-profile-section > .field {
   overflow-wrap: anywhere;
   font-size: 0.85rem;
   margin-block: 6px;
+}
+
+.student-stage {
+  margin-block: 16px;
+  min-width: 0;
+}
+.student-stage h3 {
+  font-size: 1.05rem;
+  margin-block: 12px;
+}
+.student-stage h4 {
+  font-size: 1rem;
+  margin-block: 16px 10px;
+}
+.student-preserve-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.student-version-list {
+  display: grid;
+  gap: 12px;
+  padding-left: 24px;
+  margin-block: 16px;
+}
+.student-version-list details > summary {
+  cursor: pointer;
+  font-weight: 600;
+  min-height: 36px;
+  overflow-wrap: anywhere;
+}
+.student-submission-form {
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+.student-submission-form fieldset {
+  min-width: 0;
+}
+.student-result-actions {
+  display: grid;
+  gap: 12px;
+}
+.student-file-action .button {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+@media (max-width: 760px) {
+  .student-result-actions .button {
+    width: 100%;
+    min-height: 48px;
+  }
+}
+
+/* Result fields need the full form width inside the shared fieldset layout. */
+.student-submission-form fieldset > .field {
+  display: grid;
+  width: 100%;
+  gap: 8px;
+  margin: 12px 0;
+}
+.student-submission-form .student-file {
+  width: 100%;
+  min-width: 0;
 }

@@ -52,7 +52,7 @@ export function PublicProfilePage({ demo = false }: { demo?: boolean }) {
               <Link
                 to={
                   demo
-                    ? "/demo/student/portfolio"
+                    ? `/demo/students/${encodeURIComponent(profile.studentId)}/portfolio`
                     : `/students/${encodeURIComponent(id)}/portfolio`
                 }
               >
