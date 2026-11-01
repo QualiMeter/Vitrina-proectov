@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useBlocker } from "react-router-dom";
 import { ProfileLeaveDialog } from "./ProfileLeaveDialog";
 import { Load } from "./shared";
@@ -17,6 +17,11 @@ function ProfileContent({
   const [profile, setProfile] = useState(initial);
   const [dirty, setDirty] = useState(false);
   const [notice, setNotice] = useState("");
+  const [editorRevision, setEditorRevision] = useState(0);
+  const handleDirty = useCallback((value: boolean) => {
+    setDirty(value);
+    if (value) setNotice("");
+  }, []);
   const blocker = useBlocker(dirty);
   useEffect(() => {
     if (blocker.state === "blocked" && !dirty) blocker.proceed();
@@ -39,12 +44,17 @@ function ProfileContent({
         />
       )}
       <ProfileEditor
-        key={profile.version}
+        key={editorRevision}
         profile={profile}
         reference={reference}
-        onDirty={setDirty}
+        onDirty={handleDirty}
+        onRebased={(latest) => {
+          setProfile(latest);
+          setNotice("");
+        }}
         onSaved={(updated) => {
           setProfile(updated);
+          setEditorRevision((x) => x + 1);
           setDirty(false);
           setNotice("Профиль сохранён");
         }}
@@ -56,6 +66,7 @@ function ProfileContent({
         disabled={dirty}
         onSaved={(updated) => {
           setProfile(updated);
+          setEditorRevision((x) => x + 1);
           setDirty(false);
           setNotice("");
         }}

@@ -103,6 +103,10 @@ export function useAction() {
   return {
     busy,
     run,
+    clear: () => {
+      setMessage("");
+      setError(false);
+    },
     feedback: message ? (
       <p
         role={error ? "alert" : "status"}
