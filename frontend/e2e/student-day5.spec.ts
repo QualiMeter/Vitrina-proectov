@@ -75,7 +75,7 @@ test("day 5 candidate submits without external contact, protects a draft and wit
     .getByRole("combobox", { name: "Открытая роль", exact: true })
     .selectOption("00000000-0000-4000-8000-000000000308");
   await page
-    .getByLabel("Сопроводительное письмо", { exact: true })
+    .getByRole("textbox", { name: "Сопроводительное письмо", exact: true })
     .fill("Хочу разработать интерфейс");
   await page
     .getByRole("link", { name: "← Публичная карточка проекта", exact: true })
@@ -87,7 +87,7 @@ test("day 5 candidate submits without external contact, protects a draft and wit
   await expect(dialog).toBeVisible();
   await dialog.getByRole("button", { name: "Остаться", exact: true }).click();
   await expect(
-    page.getByLabel("Сопроводительное письмо", { exact: true }),
+    page.getByRole("textbox", { name: "Сопроводительное письмо", exact: true }),
   ).toHaveValue("Хочу разработать интерфейс");
   await page
     .getByRole("button", { name: "Отправить заявку в проект", exact: true })
