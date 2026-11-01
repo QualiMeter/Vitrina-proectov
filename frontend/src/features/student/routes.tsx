@@ -1,3 +1,13 @@
+import {
+  PortfolioPage,
+  MyProjectList,
+  PublicPortfolioPage,
+} from "./publications/PortfolioPage";
+import {
+  ProjectsCatalog,
+  ProjectDetails,
+} from "./publications/ProjectsCatalog";
+import { PublicationEditorPage } from "./publications/PublicationEditor";
 import { WorkspacePage } from "./WorkspacePage";
 import { StudentRedirect } from "./StudentRedirect";
 import { TeamsPage, MyTeamsPage } from "./TeamsPage";
@@ -12,7 +22,7 @@ import {
   ProfilePage,
   PublicProfilePage,
 } from "./ProfilePages";
-import { DemoProvider, LaterSection } from "./Day1Shell";
+import { DemoProvider } from "./Day1Shell";
 const privatePages: RouteObject[] = [
   { index: true, element: <DashboardPage /> },
   { path: "profile", element: <ProfilePage /> },
@@ -33,20 +43,25 @@ const privatePages: RouteObject[] = [
     element: <StudentRedirect to="participations?filter=drafts" />,
   },
   { path: "cases/:caseId/workspace", element: <WorkspacePage /> },
-  // Navigation sections required by FB-01; their business functions belong to later days.
-  ...["portfolio", "projects"].map((path) => ({
-    path,
-    element: <LaterSection />,
-  })),
+  { path: "portfolio", element: <PortfolioPage /> },
+  { path: "portfolio/new", element: <PublicationEditorPage kind="WORK" /> },
+  {
+    path: "portfolio/works/:publicationId/edit",
+    element: <PublicationEditorPage kind="WORK" />,
+  },
+  { path: "projects", element: <MyProjectList /> },
+  { path: "projects/new", element: <PublicationEditorPage kind="PROJECT" /> },
+  {
+    path: "projects/:publicationId/edit",
+    element: <PublicationEditorPage kind="PROJECT" />,
+  },
 ];
 export const studentRoutes: RouteObject[] = [
   { path: "/student", element: <StudentRoot />, children: privatePages },
   { path: "/students/:id", element: <PublicProfilePage /> },
-  ...[
-    "/students/:id/portfolio",
-    "/student-projects",
-    "/student-projects/:projectId",
-  ].map((path) => ({ path, element: <LaterSection /> })),
+  { path: "/students/:id/portfolio", element: <PublicPortfolioPage /> },
+  { path: "/student-projects", element: <ProjectsCatalog /> },
+  { path: "/student-projects/:projectId", element: <ProjectDetails /> },
   {
     path: "/demo",
     element: <DemoProvider />,
@@ -57,11 +72,9 @@ export const studentRoutes: RouteObject[] = [
         children: privatePages,
       },
       { path: "students/:id", element: <PublicProfilePage demo /> },
-      ...[
-        "students/:id/portfolio",
-        "student-projects",
-        "student-projects/:projectId",
-      ].map((path) => ({ path, element: <LaterSection /> })),
+      { path: "students/:id/portfolio", element: <PublicPortfolioPage demo /> },
+      { path: "student-projects", element: <ProjectsCatalog demo /> },
+      { path: "student-projects/:projectId", element: <ProjectDetails demo /> },
     ],
   },
 ];
