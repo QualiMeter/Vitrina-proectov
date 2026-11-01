@@ -1,0 +1,11 @@
+.project-application {
+  border-bottom: 1px solid var(--line);
+  padding-block: 1rem;
+  overflow-wrap: anywhere;
+}
+.project-application:last-child {
+  border-bottom: 0;
+}
+.project-notice {
+  overflow-wrap: anywhere;
+}
