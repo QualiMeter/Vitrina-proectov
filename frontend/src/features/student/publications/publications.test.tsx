@@ -272,8 +272,8 @@ it("handles 409 with explicit comparison, preserving both local and server-only 
   await screen.findByText(/Серверная версия: 2/);
   expect(api.save).toHaveBeenCalledTimes(1);
   await actor.click(
-    screen.getByRole("checkbox", {
-      name: "Оставить мои значения во всех показанных спорных полях",
+    screen.getByRole("radio", {
+      name: /Оставить моё значение/,
     }),
   );
   await actor.click(
@@ -369,4 +369,255 @@ it("resets the old search before applying consecutive catalog filters", async ()
   expect(params.get("q")).toBeNull();
   expect(params.get("development")).toBe("IN_PROGRESS");
   expect(params.get("interest")).toBe("SEEK_MENTOR");
+});
+
+it("resolves conflicting lists independently instead of replacing all fields globally", async () => {
+  const { resolvePublication } = await import("./conflict");
+  const base = validWork(),
+    image = {
+      id: "image",
+      name: "server.png",
+      purpose: "IMAGE" as const,
+      contentType: "image/png",
+      sizeBytes: 5,
+    };
+  const mine = {
+    ...base,
+    links: [{ label: "Моя ссылка", url: "https://example.com/mine" }],
+    media: [{ ...image, id: "mine", name: "mine.png" }],
+    coauthors: "Мои соавторы",
+  };
+  const server = {
+    ...base,
+    description: "Новый текст только на сервере",
+    links: [{ label: "Серверная ссылка", url: "https://example.com/server" }],
+    media: [image],
+    coauthors: "Серверные соавторы",
+  };
+  expect(() =>
+    resolvePublication(base, mine, server, { links: "mine" }),
+  ).toThrow(/каждого/);
+  const merged = resolvePublication(base, mine, server, {
+    links: "mine",
+    media: "server",
+    coauthors: "server",
+  });
+  expect(merged.links).toEqual(mine.links);
+  expect(merged.media).toEqual(server.media);
+  expect(merged.kind === "WORK" && merged.coauthors).toBe(server.coauthors);
+  expect(merged.description).toBe(server.description);
+  const project = validProject(),
+    local = {
+      ...project,
+      vacancies: [
+        {
+          id: "mine",
+          title: "Моя роль",
+          skills: "React",
+          tasks: "UI",
+          active: true,
+        },
+      ],
+    },
+    remote = {
+      ...project,
+      vacancies: [
+        {
+          id: "server",
+          title: "Серверная роль",
+          skills: "Python",
+          tasks: "API",
+          active: true,
+        },
+      ],
+    };
+  expect(
+    resolvePublication(project, local, remote, { vacancies: "server" }),
+  ).toEqual(remote);
+});
+it("requires a separate choice for every overlapping publication field", async () => {
+  const api = createPublicationDemo(),
+    save = api.save;
+  api.save = vi
+    .fn()
+    .mockImplementationOnce(async () => {
+      const old = await api.getOwned("WORK", publicationIds.returnedWork);
+      const { draftOf } = await import("./models");
+      const serverDraft = draftOf(old);
+      if (serverDraft.kind !== "WORK") throw new Error("Expected work");
+      await save(
+        {
+          ...serverDraft,
+          title: "Серверное название",
+          coauthors: "Серверные соавторы",
+          description: "Описание только с сервера",
+        },
+        old.id,
+        old.version,
+      );
+      throw new ApiError("conflict", 409);
+    })
+    .mockImplementation(save);
+  await mountEditor(api, "WORK", publicationIds.returnedWork);
+  const actor = userEvent.setup();
+  await actor.clear(screen.getByLabelText("Название"));
+  await actor.type(screen.getByLabelText("Название"), "Моё название");
+  await actor.type(screen.getByLabelText("Соавторы"), "Мои соавторы");
+  await actor.click(screen.getByRole("button", { name: "Сохранить черновик" }));
+  await actor.click(
+    await screen.findByRole("button", { name: "Сравнить версии" }),
+  );
+  const title = await screen.findByRole("group", { name: "Название" }),
+    coauthors = screen.getByRole("group", { name: "Соавторы" });
+  await actor.click(
+    within(title).getByRole("radio", { name: /Оставить моё значение/ }),
+  );
+  expect(
+    screen.getByRole("button", { name: "Применить сравнение к форме" }),
+  ).toBeDisabled();
+  await actor.click(
+    within(coauthors).getByRole("radio", {
+      name: /Принять серверное значение/,
+    }),
+  );
+  await actor.click(
+    screen.getByRole("button", { name: "Применить сравнение к форме" }),
+  );
+  expect(api.save).toHaveBeenCalledTimes(1);
+  expect(screen.getByLabelText("Соавторы")).toHaveValue("Серверные соавторы");
+  expect(screen.getByLabelText("Подробное описание")).toHaveValue(
+    "Описание только с сервера",
+  );
+  await actor.click(screen.getByRole("button", { name: "Сохранить черновик" }));
+  await screen.findByText("Черновик сохранён");
+  expect((api.save as ReturnType<typeof vi.fn>).mock.calls.at(-1)?.[2]).toBe(2);
+});
+it("uses the same mandatory-field validation for list moderation as the editor", async () => {
+  const api = createPublicationDemo(),
+    student = createDemoGateway(),
+    user = (await student.session()).user;
+  const draft = await api.save(emptyDraft("WORK")),
+    submit = vi.spyOn(api, "submitForModeration");
+  render(
+    <RouterProvider
+      router={createMemoryRouter([
+        {
+          path: "/",
+          element: (
+            <PublicationContext.Provider value={api}>
+              <StudentContext.Provider
+                value={{
+                  api: student,
+                  user,
+                  demo: true,
+                  base: "/demo/student",
+                }}
+              >
+                <PortfolioPage />
+              </StudentContext.Provider>
+            </PublicationContext.Provider>
+          ),
+        },
+      ])}
+    />,
+  );
+  await screen.findByRole("heading", { name: "Готовые работы" });
+  const actor = userEvent.setup();
+  const buttons = await screen.findAllByRole("button", {
+    name: "На публичную модерацию",
+  });
+  await actor.click(buttons.at(-1)!);
+  expect(
+    await screen.findByText(
+      /Укажите название. Опишите полученный результат. Опишите личный вклад./,
+    ),
+  ).toBeVisible();
+  expect(submit).not.toHaveBeenCalled();
+  expect((await api.getOwned("WORK", draft.id)).moderation).toBe("DRAFT");
+});
+for (const error of [new ApiError("network"), new ApiError("forbidden", 403)])
+  it(`retains publication input and permits another explicit save after ${error.kind}`, async () => {
+    const api = createPublicationDemo(),
+      save = api.save;
+    api.save = vi.fn().mockRejectedValueOnce(error).mockImplementation(save);
+    await mountEditor(api);
+    const actor = userEvent.setup();
+    await actor.type(screen.getByLabelText("Название"), "Мой текст сохранится");
+    await actor.click(
+      screen.getByRole("button", { name: "Сохранить черновик" }),
+    );
+    await screen.findByRole("alert");
+    expect(screen.getByLabelText("Название")).toHaveValue(
+      "Мой текст сохранится",
+    );
+    expect(screen.getByLabelText("Название")).not.toBeDisabled();
+    await actor.click(
+      screen.getByRole("button", { name: "Сохранить черновик" }),
+    );
+    await screen.findByText("Черновик сохранён");
+  });
+for (const status of [401, 403])
+  it(`does not reveal public portfolio data or fallback records after ${status}`, async () => {
+    const api = createPublicationDemo();
+    api.publicPortfolio = vi
+      .fn()
+      .mockRejectedValue(
+        new ApiError(status === 401 ? "unauthorized" : "forbidden", status),
+      );
+    render(
+      <RouterProvider
+        router={createMemoryRouter(
+          [
+            {
+              path: "/students/:id/portfolio",
+              element: (
+                <PublicationContext.Provider value={api}>
+                  <PublicPortfolioPage demo />
+                </PublicationContext.Provider>
+              ),
+            },
+          ],
+          { initialEntries: [`/students/${publicationDemoUserId}/portfolio`] },
+        )}
+      />,
+    );
+    await screen.findByText(
+      status === 401
+        ? "Сессия завершилась. Войдите снова."
+        : "Недостаточно прав. Данные и действия недоступны.",
+    );
+    expect(
+      screen.queryByText("Интерфейс студенческого сервиса"),
+    ).not.toBeInTheDocument();
+  });
+it("fails closed if a public reader unexpectedly receives a private publication DTO", async () => {
+  const api = createPublicationDemo(),
+    { readPublicProject, readPublicPortfolio, readPublicCatalog } =
+      await import("./publicReads");
+  const privateProject = await api.getOwned(
+    "PROJECT",
+    publicationIds.privateProject,
+  );
+  api.publicProject = vi.fn().mockResolvedValue(privateProject);
+  await expect(readPublicProject(api, privateProject.id)).rejects.toMatchObject(
+    { status: 404 },
+  );
+  const publicPortfolio = await api.publicPortfolio(publicationDemoUserId);
+  api.publicPortfolio = vi
+    .fn()
+    .mockResolvedValue({ ...publicPortfolio, projects: [privateProject] });
+  await expect(
+    readPublicPortfolio(api, publicationDemoUserId),
+  ).rejects.toMatchObject({ status: 404 });
+  api.catalog = vi
+    .fn()
+    .mockResolvedValue({
+      items: [privateProject],
+      page: 1,
+      pageSize: 6,
+      total: 1,
+    });
+  await expect(readPublicCatalog(api, emptyQuery, 1)).rejects.toMatchObject({
+    status: 404,
+  });
 });
