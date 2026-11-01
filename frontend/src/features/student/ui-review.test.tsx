@@ -4,7 +4,6 @@ import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
 import { Pager } from "./shared";
 import { studentRoutes } from "./routes";
-import { readDashboardSignals } from "./dashboardSignals";
 const open = (path: string) =>
   render(
     <RouterProvider
@@ -82,56 +81,9 @@ it("allows leaving after saving and closes the menu with Escape", async () => {
   expect(menu).toHaveAttribute("aria-expanded", "false");
   expect(menu).toHaveFocus();
 });
-it("filters expired and decided invitations from dashboard signals", async () => {
-  const fetch = vi
-    .fn()
-    .mockResolvedValueOnce(
-      Response.json({
-        items: [
-          {
-            id: "pending",
-            teamName: "Команда",
-            caseTitle: "Кейс",
-            status: "PENDING",
-            expiresAt: "2099-01-01T00:00:00Z",
-          },
-          {
-            id: "expired",
-            status: "PENDING",
-            expiresAt: "2000-01-01T00:00:00Z",
-          },
-          {
-            id: "accepted",
-            status: "ACCEPTED",
-            expiresAt: "2099-01-01T00:00:00Z",
-          },
-        ],
-        page: 1,
-        pageSize: 20,
-        total: 21,
-      }),
-    )
-    .mockResolvedValueOnce(
-      Response.json({
-        id: "case",
-        title: "Кейс",
-        status: "REGISTRATION_OPEN",
-        registrationDeadline: "2099-01-01T00:00:00Z",
-      }),
-    );
-  vi.stubGlobal("fetch", fetch);
-  try {
-    const data = await readDashboardSignals(["case"]);
-    expect(data.pending.map((x) => x.id)).toEqual(["pending"]);
-    expect(data.pendingPageOnly).toBe(true);
-    expect(data.deadlines.map((x) => x.id)).toEqual(["case"]);
-  } finally {
-    vi.unstubAllGlobals();
-  }
-});
-
 it("labels demonstration data with the shared UI Ready badge", async () => {
   open("/demo/student");
+  await screen.findByRole("heading", { name: "Активные кейсы" });
   expect(
     screen.getByText("UI Ready · демонстрационные данные"),
   ).toBeInTheDocument();

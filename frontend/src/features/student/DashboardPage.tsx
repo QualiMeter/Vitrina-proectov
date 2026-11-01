@@ -1,5 +1,5 @@
 import { Card } from "../../components/ui/Card";
-import { ButtonLink } from "../../components/ui/Button";
+import { Button, ButtonLink } from "../../components/ui/Button";
 import { StudentProjectsBlock } from "./StudentProjectsBlock";
 import { demoStudentProjects } from "./projectExamples";
 import { Load, Status } from "./shared";
@@ -7,65 +7,91 @@ import { date, useLoad, useStudent } from "./hooks";
 import type * as C from "./contracts";
 
 function Signals({ items }: { items: C.MyCaseParticipation[] }) {
-  const { api, base } = useStudent();
-  const ids = items
-    .filter((x) => x.caseStatus === "REGISTRATION_OPEN")
-    .slice(0, 6)
-    .map((x) => x.caseId);
-  const state = useLoad(
-    () => api.dashboardSignals(ids),
-    `signals-${ids.join(",")}`,
+  const { api } = useStudent();
+  const ids = [
+    ...new Set(
+      items
+        .filter((x) => x.caseStatus === "REGISTRATION_OPEN")
+        .map((x) => x.caseId),
+    ),
+  ].slice(0, 6);
+  const invitations = useLoad(
+    () => api.dashboardInvitations(),
+    "pending-invitations",
+  );
+  const deadlines = useLoad(
+    () => api.dashboardDeadlines(ids),
+    `deadlines-${ids.join(",")}`,
   );
   return (
-    <Load state={state}>
-      {(data) => (
-        <div className="student-grid">
-          <Card>
-            <h2>Ожидающие приглашения</h2>
-            {data.pending.length ? (
-              <ul className="student-dashboard-list">
-                {data.pending.map((x) => (
-                  <li key={x.id}>
-                    <strong>{x.title}</strong>
-                    <span>Ответить до {date(x.expiresAt)}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="student-note">Нет приглашений, ожидающих ответа.</p>
-            )}
-            {data.pendingPageOnly && (
-              <p className="student-note">
-                Показана первая страница приглашений.
-              </p>
-            )}
-            <ButtonLink variant="secondary" to={`${base}/invitations`}>
-              Посмотреть приглашения
-            </ButtonLink>
-          </Card>
-          <Card>
-            <h2>Ближайшие сроки подачи</h2>
-            {data.deadlines.length ? (
-              <ul className="student-dashboard-list">
-                {data.deadlines.map((x) => (
-                  <li key={x.id}>
-                    <strong>{x.title}</strong>
-                    <time dateTime={x.at}>{date(x.at)}</time>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="student-note">
-                Для загруженных кейсов нет предстоящих сроков подачи.
-              </p>
-            )}
-            <p className="student-note">
-              Сроки набора для первых шести открытых кейсов на странице участий.
-            </p>
-          </Card>
-        </div>
-      )}
-    </Load>
+    <div className="student-grid">
+      <Card>
+        <h2>Ожидающие приглашения</h2>
+        <Load state={invitations}>
+          {(data) => (
+            <>
+              <p>Ожидают ответа: {data.total}</p>
+              {data.items.length ? (
+                <ul className="student-dashboard-list">
+                  {data.items.map((x) => (
+                    <li key={x.id}>
+                      <strong>{x.title}</strong>
+                      <span>Ответить до {date(x.expiresAt)}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="student-note">
+                  Нет действующих приглашений на этой странице.
+                </p>
+              )}
+              {data.total > 20 && (
+                <p className="student-note">
+                  Показаны первые 20 ожидающих приглашений.
+                </p>
+              )}
+            </>
+          )}
+        </Load>
+        <Button variant="secondary" disabled>
+          Приглашения · Скоро
+        </Button>
+      </Card>
+      <Card>
+        <h2>Ближайшие сроки подачи</h2>
+        <Load state={deadlines}>
+          {(data) => (
+            <>
+              {data.items.length ? (
+                <ul className="student-dashboard-list">
+                  {data.items.map((x) => (
+                    <li key={x.id}>
+                      <strong>{x.title}</strong>
+                      <time dateTime={x.at}>{date(x.at)}</time>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="student-note">
+                  Для загруженных кейсов нет предстоящих сроков подачи.
+                </p>
+              )}
+              {data.unavailable > 0 && (
+                <p role="status">
+                  Не удалось загрузить кейсов: {data.unavailable}.{" "}
+                  <Button variant="ghost" onClick={deadlines.reload}>
+                    Повторить загрузку сроков
+                  </Button>
+                </p>
+              )}
+            </>
+          )}
+        </Load>
+        <p className="student-note">
+          Сроки набора для первых шести открытых кейсов на странице участий.
+        </p>
+      </Card>
+    </div>
   );
 }
 export function DashboardPage() {
