@@ -125,7 +125,7 @@ describe("Frontend B day 1", () => {
     expect(screen.queryByText("Демо Студент")).not.toBeInTheDocument();
     expect(screen.queryByText("ДЕМО-201")).not.toBeInTheDocument();
   });
-  it("renders participation roles and a workspace transition without implementing later-day work", async () => {
+  it("renders participation roles and opens the active workspace", async () => {
     const user = userEvent.setup();
     demo("/demo/student/participations");
     expect(
@@ -138,7 +138,9 @@ describe("Frontend B day 1", () => {
       screen.getByRole("link", { name: "Рабочее пространство" }),
     );
     expect(
-      await screen.findByText("Раздел пока недоступен"),
+      await screen.findByRole("heading", {
+        name: "Рабочее пространство кейса",
+      }),
     ).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Отправить заявку" }),
