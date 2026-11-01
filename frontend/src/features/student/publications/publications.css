@@ -154,3 +154,12 @@
     font-size: 0.8rem;
   }
 }
+.publication-conflict .publication-conflict-option {
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
+  gap: 8px;
+}
+.publication-conflict-option > span {
+  min-width: 0;
+}

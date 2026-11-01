@@ -1,3 +1,4 @@
+import { PublicationConflictFields } from "./PublicationConflictFields";
 import { useEffect, useState, type FormEvent } from "react";
 import { Link, useBlocker, useParams } from "react-router-dom";
 import { ApiError } from "../../../api/client";
@@ -17,7 +18,11 @@ import {
   type Reference,
 } from "./models";
 import { editable, publicationErrors } from "./rules";
-import { comparePublication } from "./conflict";
+import {
+  comparePublication,
+  resolvePublication,
+  type PublicationChoices,
+} from "./conflict";
 function Editor({
   kind,
   initial,
@@ -41,7 +46,7 @@ function Editor({
     );
   const [conflict, setConflict] = useState(false),
     [latest, setLatest] = useState<Publication>(),
-    [ack, setAck] = useState(false),
+    [choices, setChoices] = useState<PublicationChoices>({}),
     [uploadBusy, setUploadBusy] = useState(false),
     [pendingFile, setPendingFile] = useState(false);
   const dirty =
@@ -83,7 +88,7 @@ function Editor({
         if (error instanceof ApiError && error.status === 409) {
           setConflict(true);
           setLatest(undefined);
-          setAck(false);
+          setChoices({});
         }
         throw error;
       }
@@ -154,7 +159,7 @@ function Editor({
                 void compare.run(async () => {
                   if (!document) return;
                   setLatest(await api.getOwned(kind, document.id));
-                  setAck(false);
+                  setChoices({});
                 }, "Актуальная версия загружена")
               }
             >
@@ -167,32 +172,28 @@ function Editor({
                   Серверная версия: {latest.version}. Поля, изменённые только на
                   сервере, будут сохранены.
                 </p>
-                {comparison.conflicts.map((f) => (
-                  <div key={f.key}>
-                    <h3>{f.label}</h3>
-                    <p>Ваша версия:</p>
-                    <pre>{f.mine}</pre>
-                    <p>Серверная версия:</p>
-                    <pre>{f.server}</pre>
-                  </div>
-                ))}
-                {comparison.conflicts.length > 0 && (
-                  <label className="publication-check">
-                    <input
-                      type="checkbox"
-                      checked={ack}
-                      onChange={(e) => setAck(e.target.checked)}
-                    />
-                    Оставить мои значения во всех показанных спорных полях
-                  </label>
-                )}
+                <PublicationConflictFields
+                  comparison={comparison}
+                  choices={choices}
+                  reference={reference}
+                  onChoose={(field, choice) =>
+                    setChoices((previous) => ({ ...previous, [field]: choice }))
+                  }
+                />
                 <Button
                   type="button"
-                  disabled={!!comparison.conflicts.length && !ack}
+                  disabled={comparison.conflicts.some((f) => !choices[f.key])}
                   onClick={() => {
                     setDocument(latest);
                     setBaseline(draftOf(latest));
-                    setDraft(comparison.merged);
+                    setDraft(
+                      resolvePublication(
+                        baseline,
+                        draft,
+                        draftOf(latest),
+                        choices,
+                      ),
+                    );
                     setConflict(false);
                     save.clear();
                   }}
@@ -214,7 +215,7 @@ function Editor({
             draft={draft}
             onChange={(next) => {
               setDraft(next);
-              setAck(false);
+              setChoices({});
             }}
             reference={reference}
           />
@@ -223,7 +224,7 @@ function Editor({
             items={draft.media}
             onChange={(media) => {
               setDraft((previous) => ({ ...previous, media }));
-              setAck(false);
+              setChoices({});
             }}
             onBusy={setUploadBusy}
             onPending={setPendingFile}
@@ -257,7 +258,7 @@ function Editor({
                 if (error instanceof ApiError && error.status === 409) {
                   setConflict(true);
                   setLatest(undefined);
-                  setAck(false);
+                  setChoices({});
                 }
                 throw error;
               }

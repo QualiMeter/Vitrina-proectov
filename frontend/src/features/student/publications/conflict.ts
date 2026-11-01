@@ -46,3 +46,23 @@ export function comparePublication(base: Draft, local: Draft, server: Draft) {
     } as Draft,
   };
 }
+export type PublicationChoices = Record<string, "mine" | "server">;
+export function resolvePublication(
+  base: Draft,
+  local: Draft,
+  server: Draft,
+  choices: PublicationChoices,
+): Draft {
+  const compared = comparePublication(base, local, server);
+  if (compared.conflicts.some((f) => !choices[f.key]))
+    throw new Error("Выберите версию каждого спорного поля.");
+  const remote = Object.fromEntries(Object.entries(server));
+  return {
+    ...compared.merged,
+    ...Object.fromEntries(
+      compared.conflicts
+        .filter((f) => choices[f.key] === "server")
+        .map((f) => [f.key, remote[f.key]]),
+    ),
+  } as Draft;
+}
