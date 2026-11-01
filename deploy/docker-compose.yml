@@ -1,0 +1,95 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks: [vitrina-internal]
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory", "256mb", "--maxmemory-policy", "allkeys-lru"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    networks: [vitrina-internal]
+
+  minio:
+    image: minio/minio:RELEASE.2025-09-07T16-13-09Z
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    volumes:
+      - minio_data:/data
+    networks: [vitrina-internal]
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: ""
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:4173:80"
+    networks: [vitrina-internal]
+
+  api:
+    build:
+      context: ../backend
+      dockerfile: Vitrina.Api/Dockerfile
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__Default: Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      Cors__Origins__0: ${FRONTEND_ORIGIN}
+      Email__Host: ${SMTP_HOST}
+      Email__Port: ${SMTP_PORT}
+      Email__UserName: ${SMTP_USERNAME}
+      Email__Password: ${SMTP_PASSWORD}
+      Email__From: ${SMTP_FROM}
+      Email__FrontendBaseUrl: ${FRONTEND_BASE_URL}
+      Email__UseSsl: ${SMTP_USE_SSL}
+      Storage__Endpoint: minio:9000
+      Storage__AccessKey: ${MINIO_ROOT_USER}
+      Storage__SecretKey: ${MINIO_ROOT_PASSWORD}
+      Storage__Bucket: vitrina
+      Storage__UseSsl: "false"
+      Storage__MaxFileSizeBytes: ${STORAGE_MAX_FILE_SIZE_BYTES:-26214400}
+      ConnectionStrings__Redis: redis:6379,abortConnect=false
+      Database__BootstrapSchema: ${DATABASE_BOOTSTRAP_SCHEMA:-false}
+      Database__AllowProductionBootstrap: ${DATABASE_ALLOW_PRODUCTION_BOOTSTRAP:-false}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${APP_PORT}:8080"
+    networks: [vitrina-internal]
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
+
+networks:
+  vitrina-internal:
+    driver: bridge
