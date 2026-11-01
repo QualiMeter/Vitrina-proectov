@@ -6,11 +6,13 @@ import { ErrorState } from '../../components/feedback/States';
 import { CasesPage } from '../../pages/public/Cases/CasesPage';
 import { CaseDetailsPage } from '../../pages/public/Cases/CaseDetailsPage';
 import { CompanyDetailsPage } from '../../pages/public/Cases/CompanyDetailsPage';
+import { studentRoutes } from '../../features/student/routes';
 
 const route = (path: string) => ({ path, element: <PlaceholderPage /> });
 
 export const router = createBrowserRouter([
   { path: '/', element: <HomePage /> },
+  ...studentRoutes,
   { path: '/cases', element: <CasesPage /> },
   { path: '/cases/:caseId', element: <CaseDetailsPage /> },
   { path: '/companies/:companyId', element: <CompanyDetailsPage /> },
