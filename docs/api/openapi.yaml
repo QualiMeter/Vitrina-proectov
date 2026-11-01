@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: 'Витрина ИТ-проектов УУНиТ — P0: авторизация, студенты, кейсы, выполнение и итоги'
   version: 0.1.5-draft
-  description: Единый проектный контракт, не реализованный backend. Auth/Companies (0.1), Teams/Applications (0.1.1),
+  description: Единый проектный контракт; backend реализуется поэтапно, см. backend/API-COVERAGE.md. Auth/Companies (0.1), Teams/Applications (0.1.1),
     Execution/Files (0.1.2), Evaluations/Results (0.1.3), StudentProfiles/ReferenceData (0.1.4), TL decisions (0.1.5). Утверждённые правила и предложения разделяются в docs/decisions/001-auth-and-permissions.md
     и docs/architecture/case-evaluation-results.md. Результаты и отзывы не публикуются до ручного подтверждения
     компанией. Без автоматического ранжирования по баллам; совместные места — только если разрешены опубликованными
@@ -3368,6 +3368,51 @@ paths:
         '429':
           $ref: '#/components/responses/TooManyRequests'
 
+  /api/v1/notifications:
+    get:
+      summary: Получить уведомления текущего пользователя
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1, default: 1 }
+        - in: query
+          name: pageSize
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+        - in: query
+          name: unreadOnly
+          schema: { type: boolean }
+      responses:
+        '200':
+          description: Страница уведомлений
+        '401':
+          description: Требуется авторизация
+  /api/v1/notifications/unread-count:
+    get:
+      summary: Получить количество непрочитанных уведомлений
+      responses:
+        '200':
+          description: Количество непрочитанных уведомлений
+        '401':
+          description: Требуется авторизация
+  /api/v1/notifications/{notificationId}/read:
+    post:
+      summary: Отметить уведомление прочитанным
+      parameters:
+        - in: path
+          name: notificationId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Уведомление отмечено прочитанным
+        '404':
+          description: Уведомление не найдено
+  /api/v1/notifications/read-all:
+    post:
+      summary: Отметить все уведомления прочитанными
+      responses:
+        '200':
+          description: Уведомления обновлены
 components:
   securitySchemes:
     sessionCookie:
