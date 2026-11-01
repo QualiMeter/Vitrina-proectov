@@ -3,11 +3,17 @@ import { HomePage } from '../../pages/public/HomePage/HomePage';
 import { AppShell } from '../../components/layout/AppShell';
 import { PlaceholderPage } from '../../pages/PlaceholderPage';
 import { ErrorState } from '../../components/feedback/States';
+import { CompanyCaseEditor, CompanyCasesPage, CompanyDemoLayout } from '../../pages/company/cases/CompanyCasesPage';
 
 const route = (path: string) => ({ path, element: <PlaceholderPage /> });
 
 export const router = createBrowserRouter([
   { path: '/', element: <HomePage /> },
+  { path: '/company/cases', element: <CompanyDemoLayout />, children: [
+    { index: true, element: <CompanyCasesPage /> },
+    { path: 'new', element: <CompanyCaseEditor /> },
+    { path: ':caseId/edit', element: <CompanyCaseEditor /> }
+  ] },
   { path: '/university', element: <AppShell area="university" />, children: [
     { index: true, element: <PlaceholderPage /> }, route('moderation'), route('moderation/:kind/:id'), route('companies'), route('companies/new'), route('companies/:id'), route('curators'), route('projects'), route('reports')
   ] },
