@@ -664,3 +664,15 @@ section.student-profile-section > .field {
     min-height: 48px;
   }
 }
+
+/* Result fields need the full form width inside the shared fieldset layout. */
+.student-submission-form fieldset > .field {
+  display: grid;
+  width: 100%;
+  gap: 8px;
+  margin: 12px 0;
+}
+.student-submission-form .student-file {
+  width: 100%;
+  min-width: 0;
+}
