@@ -132,3 +132,25 @@
 .publication-title {
   overflow-wrap: anywhere;
 }
+.publication-public > a {
+  display: inline-flex;
+  margin: 12px 16px 12px 0;
+}
+@media (max-width: 760px) {
+  .publication-public .student-pager {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 6px;
+  }
+  .publication-public .student-pager > .button {
+    min-width: 0;
+    min-height: 44px;
+    padding-inline: 10px;
+    font-size: 0.85rem;
+  }
+  .publication-public .student-pager > span {
+    text-align: center;
+    white-space: nowrap;
+    font-size: 0.8rem;
+  }
+}

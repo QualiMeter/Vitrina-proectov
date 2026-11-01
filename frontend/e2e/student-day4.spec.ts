@@ -18,7 +18,9 @@ test("day 4 creates a work, protects unsaved input and submits it for moderation
     .getByRole("link", { name: "Добавить готовую работу", exact: true })
     .click();
   await expect(
-    page.getByLabel("Категория", { exact: true }).locator("option"),
+    page
+      .getByRole("combobox", { name: "Категория", exact: true })
+      .locator("option"),
   ).toHaveCount(9);
   await page
     .getByLabel("Название", { exact: true })
@@ -37,6 +39,27 @@ test("day 4 creates a work, protects unsaved input and submits it for moderation
     "Исследование без репозитория",
   );
   await page
+    .getByLabel("Файл публикации", { exact: true })
+    .setInputFiles({
+      name: "preview.png",
+      mimeType: "image/png",
+      buffer: Buffer.from(
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGOIln0BAAI3AWFbJeubAAAAAElFTkSuQmCC",
+        "base64",
+      ),
+    });
+  await page
+    .getByRole("button", { name: "Добавить файл", exact: true })
+    .click();
+  await expect(page.getByAltText("preview.png", { exact: true })).toBeVisible();
+  await expect
+    .poll(() =>
+      page
+        .getByAltText("preview.png", { exact: true })
+        .evaluate((image) => (image as HTMLImageElement).naturalWidth),
+    )
+    .toBe(1);
+  await page
     .getByRole("button", { name: "Сохранить черновик", exact: true })
     .click();
   await expect(
@@ -53,6 +76,9 @@ test("day 4 creates a work, protects unsaved input and submits it for moderation
   await page
     .getByRole("link", { name: "Посмотреть публичное портфолио", exact: true })
     .click();
+  await expect(
+    page.getByRole("heading", { name: "student_demo", exact: true }),
+  ).toBeVisible();
   await expect(
     page.getByText("Исследование без репозитория", { exact: true }),
   ).toHaveCount(0);
@@ -80,10 +106,10 @@ test("public catalog searches all pages, combines filters, resets and opens a fu
     .getByRole("button", { name: "Сбросить фильтры", exact: true })
     .click();
   await page
-    .getByLabel("Статус разработки", { exact: true })
+    .getByRole("combobox", { name: "Статус разработки", exact: true })
     .selectOption("IN_PROGRESS");
   await page
-    .getByLabel("Интересы проекта", { exact: true })
+    .getByRole("combobox", { name: "Интересы проекта", exact: true })
     .selectOption("SEEK_MENTOR");
   await expect(
     page.getByText("Найдено проектов: 4", { exact: true }),
@@ -136,7 +162,7 @@ test("creates an initiative with separate development status and never publishes
     .getByLabel("Цели", { exact: true })
     .fill("Создать полезный сервис");
   await page
-    .getByLabel("Статус разработки", { exact: true })
+    .getByRole("combobox", { name: "Статус разработки", exact: true })
     .selectOption("RECRUITING");
   await page
     .getByRole("checkbox", { name: "Ищу команду", exact: true })
@@ -161,7 +187,9 @@ test("creates an initiative with separate development status and never publishes
     })
     .click();
   await expect(page.getByText("На проверке", { exact: true })).toBeVisible();
-  await expect(page.locator(".student-tags").getByText("Поиск команды", { exact: true })).toBeVisible();
+  await expect(
+    page.locator(".student-tags").getByText("Поиск команды", { exact: true }),
+  ).toBeVisible();
   await page
     .getByRole("link", { name: "← К моим проектам", exact: true })
     .click();
@@ -239,6 +267,16 @@ test("day 4 layouts keep full-width fields and avoid horizontal scrolling", asyn
           () => document.documentElement.scrollWidth <= innerWidth,
         ),
       ).toBe(true);
+      if (name === "catalog" && width === 320) {
+        const pager = page.getByRole("navigation", { name: "Страницы списка" });
+        const previous = await pager
+          .getByRole("button", { name: "Назад", exact: true })
+          .boundingBox();
+        const next = await pager
+          .getByRole("button", { name: "Далее", exact: true })
+          .boundingBox();
+        expect(Math.abs(previous!.y - next!.y)).toBeLessThanOrEqual(1);
+      }
       if (width === 320 || width === 1280)
         await page.screenshot({
           path: `test-results/screenshots/day4-${width}-${name}.png`,
