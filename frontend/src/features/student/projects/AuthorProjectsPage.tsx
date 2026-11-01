@@ -38,34 +38,36 @@ export function AuthorProjectsPage() {
             );
           return (
             <>
-              <label className="field">
-                Модерация
-                <select
-                  value={filter}
-                  onChange={(e) => {
-                    setFilter(e.target.value);
-                    setPage(1);
-                  }}
-                >
-                  <option value="">Все проекты</option>
-                  {[...new Set(items.map((p) => p.moderation))].map(
-                    (status) => (
-                      <option key={status} value={status}>
-                        {
+              <div className="student-filter">
+                <label className="field">
+                  Модерация
+                  <select
+                    value={filter}
+                    onChange={(e) => {
+                      setFilter(e.target.value);
+                      setPage(1);
+                    }}
+                  >
+                    <option value="">Все проекты</option>
+                    {[...new Set(items.map((p) => p.moderation))].map(
+                      (status) => (
+                        <option key={status} value={status}>
                           {
-                            DRAFT: "Черновики",
-                            PUBLISHED: "Опубликованные",
-                            RETURNED: "На доработке",
-                            PENDING_MODERATION: "На проверке",
-                            HIDDEN: "Скрытые",
-                            REJECTED: "Отклонённые",
-                          }[status]
-                        }
-                      </option>
-                    ),
-                  )}
-                </select>
-              </label>
+                            {
+                              DRAFT: "Черновики",
+                              PUBLISHED: "Опубликованные",
+                              RETURNED: "На доработке",
+                              PENDING_MODERATION: "На проверке",
+                              HIDDEN: "Скрытые",
+                              REJECTED: "Отклонённые",
+                            }[status]
+                          }
+                        </option>
+                      ),
+                    )}
+                  </select>
+                </label>
+              </div>
               <p role="status">Проектов: {filtered.length}</p>
               <div className="student-grid">
                 {filtered.slice((actual - 1) * 6, actual * 6).map((p) => (
@@ -78,12 +80,14 @@ export function AuthorProjectsPage() {
               </div>
               {!filtered.length && <p>Проектов по выбранному фильтру нет.</p>}
               {filtered.length > 6 && (
-                <Pager
-                  page={actual}
-                  pageSize={6}
-                  total={filtered.length}
-                  onPage={setPage}
-                />
+                <div className="project-pagination">
+                  <Pager
+                    page={actual}
+                    pageSize={6}
+                    total={filtered.length}
+                    onPage={setPage}
+                  />
+                </div>
               )}
             </>
           );
@@ -117,20 +121,22 @@ function ProjectCard({
       <p>
         <Link to={`${base}/projects/${p.id}/edit`}>Редактировать описание</Link>
       </p>
-      <label className="field">
-        Статус разработки
-        <select
-          value={value}
-          disabled={action.busy || conflict || !editable(p.moderation)}
-          onChange={(e) => setValue(e.target.value as Development)}
-        >
-          {Object.entries(developmentLabels).map(([id, label]) => (
-            <option key={id} value={id}>
-              {label}
-            </option>
-          ))}
-        </select>
-      </label>
+      <div className="student-form">
+        <label className="field">
+          Статус разработки
+          <select
+            value={value}
+            disabled={action.busy || conflict || !editable(p.moderation)}
+            onChange={(e) => setValue(e.target.value as Development)}
+          >
+            {Object.entries(developmentLabels).map(([id, label]) => (
+              <option key={id} value={id}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
       <p className="student-note">
         Изменение разработки не публикует проект. В учебном примере правка
         опубликованной записи потребует повторной модерации.
