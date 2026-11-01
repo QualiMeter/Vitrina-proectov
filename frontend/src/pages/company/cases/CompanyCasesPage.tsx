@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useId, useMemo, useRef, useState, type FormEvent } from 'react';
 import { Link, Outlet, useNavigate, useOutletContext, useParams } from 'react-router-dom';
 import { Button, ButtonLink } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
@@ -80,6 +80,7 @@ export function CompanyCasesPage() {
 }
 
 export function CompanyCaseEditor() {
+  const formId = useId();
   const { repository, companyId, canCreate } = useOutletContext<DemoContext>();
   const { caseId } = useParams();
   const navigate = useNavigate();
@@ -157,16 +158,16 @@ export function CompanyCaseEditor() {
           {technologies.map((item) => <label key={item.id}><input type="checkbox" checked={fields.technologyIds?.includes(item.id) ?? false}
             onChange={(event) => change('technologyIds', toggleId(fields.technologyIds, item.id, event.target.checked))} />{item.name}</label>)}
         </fieldset>
-        <label className="field">Формат
-          <select value={fields.participationFormat ?? ''} onChange={(event) => change('participationFormat', event.target.value as DraftFields['participationFormat'] || undefined)}>
+        <div className="field"><label htmlFor={`${formId}-format`}>Формат</label>
+          <select id={`${formId}-format`} value={fields.participationFormat ?? ''} onChange={(event) => change('participationFormat', event.target.value as DraftFields['participationFormat'] || undefined)}>
             <option value="">Не выбран</option><option value="SOLO">Соло</option><option value="TEAM">Команда</option><option value="BOTH">Оба</option>
           </select>
-        </label>
-        <label className="field">Приём участников
-          <select value={fields.admissionMode ?? ''} onChange={(event) => change('admissionMode', event.target.value as DraftFields['admissionMode'] || undefined)}>
+        </div>
+        <div className="field"><label htmlFor={`${formId}-admission`}>Приём участников</label>
+          <select id={`${formId}-admission`} value={fields.admissionMode ?? ''} onChange={(event) => change('admissionMode', event.target.value as DraftFields['admissionMode'] || undefined)}>
             <option value="">Не выбран</option><option value="OPEN">Свободный</option><option value="SELECTIVE">Ручной отбор</option>
           </select>
-        </label>
+        </div>
         <Input label="Срок набора (местное время)" type="datetime-local"
           value={fields.registrationDeadline ? localDate(fields.registrationDeadline) : ''}
           onChange={(event) => {

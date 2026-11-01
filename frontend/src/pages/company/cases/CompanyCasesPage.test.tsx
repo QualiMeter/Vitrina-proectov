@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router-dom';
 import { expect, it } from 'vitest';
 import { CompanyCaseEditor, CompanyCasesPage, CompanyDemoLayout } from './CompanyCasesPage';
@@ -13,17 +13,27 @@ it('requires explicit demo, saves and reopens an edited draft through routes', a
   expect(screen.queryByLabelText('Название')).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Открыть демонстрацию' }));
   fireEvent.change(screen.getByLabelText('Название'), { target: { value: 'Сохранённый кейс' } });
+  const format = screen.getByLabelText('Формат', { exact: true });
+  expect(format).toHaveAccessibleName('Формат');
+  fireEvent.change(format, { target: { value: 'BOTH' } });
+  const admission = screen.getByLabelText('Приём участников', { exact: true });
+  expect(admission).toHaveAccessibleName('Приём участников');
+  fireEvent.change(admission, { target: { value: 'SELECTIVE' } });
   fireEvent.change(screen.getByLabelText('Лимит команд'), { target: { value: '0' } });
   fireEvent.change(screen.getByLabelText('Лимит соло'), { target: { value: '2' } });
   fireEvent.click(screen.getByLabelText('Веб-разработка'));
   fireEvent.click(screen.getByLabelText('Анализ данных'));
   fireEvent.click(screen.getByRole('button', { name: 'Сохранить демочерновик' }));
   await waitFor(() => expect(router.state.location.pathname).toMatch(/\/cases\/[0-9a-f-]+\/edit$/));
-  await waitFor(() => expect(screen.getByLabelText('Название')).toHaveValue('Сохранённый кейс'));
-  expect(await screen.findByLabelText('Лимит команд')).toHaveValue(0);
-  expect(screen.getByLabelText('Веб-разработка')).toBeChecked();
-  expect(screen.getByLabelText('Анализ данных')).toBeChecked();
-  fireEvent.click(screen.getByRole('link', { name: /Мои кейсы/ }));
+  await waitFor(() => {
+    expect(screen.getByLabelText('Название')).toHaveValue('Сохранённый кейс');
+    expect(screen.getByLabelText('Лимит команд')).toHaveValue(0);
+    expect(screen.getByLabelText('Формат', { exact: true })).toHaveValue('BOTH');
+    expect(screen.getByLabelText('Приём участников', { exact: true })).toHaveValue('SELECTIVE');
+    expect(screen.getByLabelText('Веб-разработка')).toBeChecked();
+    expect(screen.getByLabelText('Анализ данных')).toBeChecked();
+  });
+  await act(async () => { await router.navigate('/company/cases'); });
   expect(await screen.findByRole('heading', { name: 'Сохранённый кейс' })).toBeVisible();
 });
 
