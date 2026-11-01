@@ -161,7 +161,7 @@ test("creates an initiative with separate development status and never publishes
     })
     .click();
   await expect(page.getByText("На проверке", { exact: true })).toBeVisible();
-  await expect(page.getByText("Поиск команды", { exact: true })).toBeVisible();
+  await expect(page.locator(".student-tags").getByText("Поиск команды", { exact: true })).toBeVisible();
   await page
     .getByRole("link", { name: "← К моим проектам", exact: true })
     .click();
