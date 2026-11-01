@@ -5,6 +5,7 @@ import { CasesPage } from './CasesPage';
 import { mockPublicCases } from './mockCases';
 import { publicCaseStatuses } from './types';
 import { selectLocalPage } from './catalogue';
+import { MockAuthProvider } from '../../../test/MockAuthProvider';
 
 const emptyFilters = {
   search: '',
@@ -18,7 +19,7 @@ const emptyFilters = {
 
 const renderPage = (loadCases?: () => Promise<typeof mockPublicCases>) => render(
   <MemoryRouter initialEntries={['/cases']}>
-    <CasesPage loadCases={loadCases} />
+    <MockAuthProvider><CasesPage loadCases={loadCases} /></MockAuthProvider>
   </MemoryRouter>
 );
 

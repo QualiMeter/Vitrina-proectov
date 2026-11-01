@@ -43,11 +43,10 @@ test('home page has accessible headings and navigation', async ({ page }) => {
   });
 });
 
-test('protected cabinet route shells work on direct navigation and reload', async ({ page }) => {
+test('protected company and service cabinet routes work on direct navigation and reload', async ({ page }) => {
   await mockSession(page);
   await assertNoPageErrors(page, async () => {
     for (const [path, heading] of [
-      ['/student', 'Кабинет студента'],
       ['/company', 'Кабинет компании'],
       ['/university', 'Кабинет сотрудника университета'],
       ['/mentor', 'Кабинет куратора'],

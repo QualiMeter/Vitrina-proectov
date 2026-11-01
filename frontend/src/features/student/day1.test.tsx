@@ -267,11 +267,10 @@ describe("Frontend B day 1", () => {
     expect(options).toMatchObject({
       method: "PATCH",
       credentials: "same-origin",
-      headers: {
-        "X-CSRF-Token": "csrf-test",
-        "Content-Type": "application/json",
-      },
     });
+    const headers = new Headers(options.headers);
+    expect(headers.get("X-CSRF-Token")).toBe("csrf-test");
+    expect(headers.get("Content-Type")).toBe("application/json");
     expect(JSON.parse(options.body)).toEqual({
       expectedVersion: 1,
       nickname: "new_name",

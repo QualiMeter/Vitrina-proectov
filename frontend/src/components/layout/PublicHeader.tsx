@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Brand } from './Brand';
 import { Button, ButtonLink } from '../ui/Button';
 import { useAuth } from '../../features/auth/useAuth';
@@ -8,10 +8,23 @@ const areaPaths = ['student', 'company', 'university', 'mentor', 'admin'] as con
 
 export function PublicHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const toggleRef = useRef<HTMLButtonElement>(null);
   const { session, isLoading, logout } = useAuth();
   const navigate = useNavigate();
   const firstArea = areaPaths.find(area => session?.user.availableAreas.includes(area));
   const [logoutError, setLogoutError] = useState(false);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setMenuOpen(false);
+        toggleRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [menuOpen]);
 
   async function handleLogout() {
     setLogoutError(false);
@@ -25,12 +38,13 @@ export function PublicHeader() {
 
   return <header className="public-header"><div className="container public-header__inner">
     <Brand />
+    <Button ref={toggleRef} variant="ghost" className="public-header__menu" aria-controls="public-navigation" aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)} aria-label="Открыть меню">☰</Button>
     <nav id="public-navigation" className={menuOpen ? 'is-open' : ''} aria-label="Основная навигация">
-      <a href="#about" onClick={() => setMenuOpen(false)}>О платформе</a>
-      <a href="#directions" onClick={() => setMenuOpen(false)}>Направления</a>
-      <a href="#projects" onClick={() => setMenuOpen(false)}>Примеры проектов</a>
+      <Link to="/#about" onClick={() => setMenuOpen(false)}>О платформе</Link>
+      <Link to="/cases" onClick={() => setMenuOpen(false)}>Каталог кейсов</Link>
+      <Link to="/#directions" onClick={() => setMenuOpen(false)}>Направления</Link>
+      <Link to="/#projects" onClick={() => setMenuOpen(false)}>Примеры проектов</Link>
     </nav>
-    <Button variant="ghost" className="public-header__menu" aria-controls="public-navigation" aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)} aria-label="Открыть меню">☰</Button>
     {isLoading ? <span className="public-header__status" role="status">Проверяем вход…</span> : session ? (
       <div className="public-header__account">
         <span className="public-header__name">{session.user.fullName}</span>

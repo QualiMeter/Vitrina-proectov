@@ -66,7 +66,7 @@ export async function apiRequest<T>(path: string, options: RequestInit = {}): Pr
   if (options.body && !isFormData && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json');
   }
-  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method) && !headers.has('X-CSRF-Token')) {
     headers.set('X-CSRF-Token', await requestCsrfToken());
   }
   let response: Response;

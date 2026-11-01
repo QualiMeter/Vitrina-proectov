@@ -15,10 +15,10 @@ for (const width of [320, 375, 400]) {
     await expect(nav).toBeHidden();
     await expect(toggle).toBeFocused();
     await page.keyboard.press('Tab');
-    await expect(page.getByRole('button', { name: 'Войти', exact: true })).toBeFocused();
+    await expect(page.getByRole('link', { name: 'Войти', exact: true })).toBeFocused();
     await toggle.click();
-    for (let i = 0; i < 4; i++) await page.keyboard.press('Tab');
-    await expect(page.getByRole('button', { name: 'Войти', exact: true })).toBeFocused();
+    for (let i = 0; i < 5; i++) await page.keyboard.press('Tab');
+    await expect(page.getByRole('link', { name: 'Войти', exact: true })).toBeFocused();
     await nav.getByRole('link', { name: 'О платформе' }).click();
     await expect(nav).toBeHidden();
     await expect(toggle).toHaveAttribute('aria-expanded', 'false');

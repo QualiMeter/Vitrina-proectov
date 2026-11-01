@@ -10,11 +10,16 @@ import { ForgotPasswordPage } from '../../pages/auth/ForgotPasswordPage';
 import { ResetPasswordPage } from '../../pages/auth/ResetPasswordPage';
 import { AcceptInvitationPage } from '../../pages/auth/AcceptInvitationPage';
 import { PublicLayout } from './PublicLayout';
+import { studentRoutes } from '../../features/student/routes';
+import { CasesPage } from '../../pages/public/Cases/CasesPage';
+import { CaseDetailsPage } from '../../pages/public/Cases/CaseDetailsPage';
+import { CompanyDetailsPage } from '../../pages/public/Cases/CompanyDetailsPage';
 import '../../pages/auth/Auth.css';
 
 const route = (path: string) => ({ path, element: <PlaceholderPage /> });
 
 export const router = createBrowserRouter([
+  ...studentRoutes,
   {
   element: <PublicLayout />,
   children: [
@@ -25,10 +30,9 @@ export const router = createBrowserRouter([
     { path: 'forgot-password', element: <ForgotPasswordPage /> },
     { path: 'reset-password', element: <ResetPasswordPage /> },
     { path: 'accept-invitation', element: <AcceptInvitationPage /> },
-
-    { path: 'student', element: <ProtectedRoute allowedArea="student" />, children: [
-      { index: true, element: <PlaceholderPage /> },
-    ] },
+    { path: 'cases', element: <CasesPage /> },
+    { path: 'cases/:caseId', element: <CaseDetailsPage /> },
+    { path: 'companies/:companyId', element: <CompanyDetailsPage /> },
     { path: 'company', element: <ProtectedRoute allowedArea="company" />, children: [
       { index: true, element: <PlaceholderPage /> },
     ] },
