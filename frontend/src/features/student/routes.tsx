@@ -1,5 +1,5 @@
 import type { RouteObject } from "react-router-dom";
-import { StudentRoot } from "./shared";
+import { StudentRoot } from "./StudentRoot";
 import {
   DashboardPage,
   ParticipationsPage,

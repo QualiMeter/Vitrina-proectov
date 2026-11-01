@@ -1,13 +1,8 @@
-import { useContext, useEffect, useRef, useState, type ReactNode } from "react";
-import { Link, Outlet, useLocation } from "react-router-dom";
-import { ApiError } from "../../api/client";
-import { Brand } from "../../components/layout/Brand";
+import { useState, type ReactNode } from "react";
+import { Link } from "react-router-dom";
 import { Button } from "../../components/ui/Button";
 import { LoadingState, ErrorState } from "../../components/feedback/States";
-import { DemoGatewayContext } from "./demoContext";
-import { liveStudentGateway } from "./gateway";
-import { StudentContext, errorMessage, safeUrl, useLoad } from "./hooks";
-import "./student.css";
+import { errorMessage, safeUrl, useLoad } from "./hooks";
 
 export function Load<T>({
   state,
@@ -61,7 +56,7 @@ const labels: Record<string, string> = {
   EXECUTING: "Выполняется",
   REGISTRATION_OPEN: "Набор открыт",
   REGISTRATION_CLOSED: "Набор закрыт",
-  FINAL_CLOSED: "Приём завершён",
+  FINAL_CLOSED: "Приём финальных работ завершён",
   EVALUATING: "Подведение итогов",
   COMPLETED: "Завершён",
   CANCELED: "Отменён",
@@ -153,155 +148,5 @@ export function DemoNotice() {
         </p>
       </details>
     </aside>
-  );
-}
-
-export function StudentRoot({ demo = false }: { demo?: boolean }) {
-  const demoApi = useContext(DemoGatewayContext);
-  const api = demo && demoApi ? demoApi : liveStudentGateway;
-  const location = useLocation();
-  const session = useLoad(() => api.session(), `session-${location.pathname}`);
-  const { data: sessionData, reload: reloadSession } = session;
-  const base = demo ? "/demo/student" : "/student";
-  const [menu, setMenu] = useState(false);
-  const menuButton = useRef<HTMLButtonElement>(null);
-  const nav = useRef<HTMLElement>(null);
-  useEffect(() => {
-    if (!menu) return;
-    const close = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setMenu(false);
-        menuButton.current?.focus();
-      }
-    };
-    window.addEventListener("keydown", close);
-    nav.current
-      ?.querySelector<HTMLAnchorElement>('a[aria-current="page"]')
-      ?.focus();
-    return () => window.removeEventListener("keydown", close);
-  }, [menu]);
-  useEffect(() => {
-    if (demo) return;
-    const verify = () => {
-      void api.session().then((next) => {
-        if (
-          next.user.id !== sessionData?.user.id ||
-          next.user.availableAreas.join(",") !==
-            sessionData?.user.availableAreas.join(",")
-        )
-          reloadSession();
-      }, reloadSession);
-    };
-    window.addEventListener("vitrina:session-expired", reloadSession);
-    window.addEventListener("focus", verify);
-    return () => {
-      window.removeEventListener("vitrina:session-expired", reloadSession);
-      window.removeEventListener("focus", verify);
-    };
-  }, [api, demo, sessionData, reloadSession]);
-  useEffect(() => {
-    setMenu(false);
-  }, [location.pathname]);
-  const links: [string, string, boolean][] = [
-    ["", "Обзор", false],
-    ["/profile", "Мой профиль", false],
-    ["/participations", "Мои участия", false],
-    ["/invitations", "Приглашения", true],
-    ["/portfolio", "Портфолио", true],
-    ["/projects", "Мои проекты", true],
-  ];
-  return (
-    <div className="student-app">
-      <header className="student-header">
-        <div className="student-header-brand">
-          <Brand compact />
-          <span className="student-header-context">Кабинет студента</span>
-        </div>
-        <Link
-          className="button button--secondary student-header-profile"
-          to={`${base}/profile`}
-        >
-          Профиль
-        </Link>
-        <button
-          ref={menuButton}
-          className="button button--secondary student-menu-toggle"
-          aria-label="Разделы"
-          aria-expanded={menu}
-          aria-controls="student-nav"
-          onClick={() => setMenu(!menu)}
-        >
-          <svg
-            width="22"
-            height="22"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <path
-              d={menu ? "M6 6l12 12M18 6L6 18" : "M4 6h16M4 12h16M4 18h16"}
-            />
-          </svg>
-        </button>
-      </header>
-      {demo && <DemoNotice />}
-      <div className="student-shell">
-        <nav
-          ref={nav}
-          id="student-nav"
-          aria-label="Кабинет студента"
-          className={menu ? "student-nav is-open" : "student-nav"}
-        >
-          {links.map(([to, title, upcoming]) => (
-            <Link
-              key={to}
-              aria-current={
-                location.pathname === base + to ||
-                (to && location.pathname.startsWith(base + to + "/"))
-                  ? "page"
-                  : undefined
-              }
-              to={base + to}
-            >
-              <span>{title}</span>
-              {upcoming && <small aria-hidden="true">Скоро</small>}
-            </Link>
-          ))}
-          <Link to={demo ? "/demo/student-projects" : "/student-projects"}>
-            <span>
-              Каталог инициатив{" "}
-              <span className="student-nav-arrow" aria-hidden="true">
-                ↗
-              </span>
-            </span>
-          </Link>
-        </nav>
-        <main className="student-main">
-          <Load state={session}>
-            {(data) =>
-              data.user.availableAreas.includes("student") ? (
-                <StudentContext.Provider
-                  value={{ api, demo, base, user: data.user }}
-                >
-                  <Outlet />
-                </StudentContext.Provider>
-              ) : (
-                <ErrorState title="Кабинет студента недоступен" />
-              )
-            }
-          </Load>
-          {session.error instanceof ApiError &&
-            session.error.status === 401 && (
-              <p role="status">
-                Общий экран входа ещё не подключён.{" "}
-                <Link to="/">Вернуться на главную</Link> или повторите проверку
-                сессии после входа через доступный экран команды.
-              </p>
-            )}
-        </main>
-      </div>
-    </div>
   );
 }
