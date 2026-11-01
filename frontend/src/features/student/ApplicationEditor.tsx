@@ -1,3 +1,5 @@
+import { useApplicationDraft } from "./useApplicationDraft";
+import { ApplicationDraftRecovery } from "./ApplicationDraftRecovery";
 import { useEffect, useRef, useState } from "react";
 import { Link, useBlocker } from "react-router-dom";
 import { Card } from "../../components/ui/Card";
@@ -5,7 +7,7 @@ import { Input } from "../../components/ui/Input";
 import { Button } from "../../components/ui/Button";
 import type * as C from "./contracts";
 import { Status } from "./shared";
-import { errorMessage, useAction, useStudent } from "./hooks";
+import { useAction, useStudent } from "./hooks";
 import { appendPortfolioLink, submissionBlocks } from "./applicationRules";
 export function ApplicationEditor({
   initial,
@@ -22,11 +24,20 @@ export function ApplicationEditor({
 }) {
   const { api, user, base } = useStudent();
   const action = useAction();
-  const [app, setApp] = useState(initial);
-  const [letter, setLetter] = useState(initial.coverLetter ?? "");
-  const [saved, setSaved] = useState(initial.coverLetter ?? "");
-  const [saving, setSaving] = useState(false);
-  const [saveError, setSaveError] = useState("");
+  const draft = useApplicationDraft(initial, api, user.id, team?.captainUserId);
+  const {
+    app,
+    setApp,
+    letter,
+    setLetter,
+    saved,
+    saving,
+    current,
+    owner,
+    editable,
+    dirty,
+  } = draft;
+  const saveError = draft.failure?.message ?? "";
   const [ndaAccepted, setNdaAccepted] = useState(false);
   const [portfolioLink, setPortfolioLink] = useState("");
   const keys = useRef(new Map<string, string>());
@@ -39,19 +50,7 @@ export function ApplicationEditor({
     }
     return key;
   };
-  const current = useRef(app);
-  current.current = app;
-  const inFlight = useRef(false);
-  const latestLetter = useRef(letter);
-  latestLetter.current = letter;
-  const owner =
-    app.format === "SOLO"
-      ? app.soloApplicantUserId === user.id
-      : team?.captainUserId === user.id;
-  const editable =
-    app.status === "DRAFT" && app.allowedActions.includes("edit") && owner;
-  const dirty = letter !== saved || saving;
-  const blocker = useBlocker(editable && dirty);
+  const blocker = useBlocker(dirty);
   useEffect(() => {
     if (blocker.state === "blocked" && !dirty && !saveError) blocker.proceed();
   }, [blocker, dirty, saveError]);
@@ -64,31 +63,6 @@ export function ApplicationEditor({
     window.addEventListener("beforeunload", guard);
     return () => window.removeEventListener("beforeunload", guard);
   }, [dirty]);
-  // Debounced server draft; serialize saves and keep edits typed during an in-flight request.
-  useEffect(() => {
-    if (!editable || letter === saved || saving || saveError) return;
-    const timer = window.setTimeout(async () => {
-      if (inFlight.current) return;
-      inFlight.current = true;
-      setSaving(true);
-      const snapshot = latestLetter.current;
-      try {
-        const updated = await api.saveApplication(app.id, {
-          expectedVersion: current.current.version,
-          coverLetter: snapshot,
-        });
-        current.current = updated;
-        setApp(updated);
-        setSaved(snapshot);
-      } catch (e) {
-        setSaveError(errorMessage(e));
-      } finally {
-        inFlight.current = false;
-        setSaving(false);
-      }
-    }, 800);
-    return () => window.clearTimeout(timer);
-  }, [api, app.id, editable, letter, saved, saving, saveError]);
   const blocks = submissionBlocks(details, profile, team);
   if (
     (details.coverLetterRequired || details.admissionMode === "SELECTIVE") &&
@@ -101,6 +75,8 @@ export function ApplicationEditor({
     blocks.push("Дождитесь сохранения черновика.");
   const submit = () =>
     action.run(async () => {
+      if (draft.failure || draft.dirty)
+        throw new Error("Сначала сохраните черновик.");
       const freshBlocks = submissionBlocks(details, profile, team);
       if (freshBlocks.length) throw new Error(freshBlocks.join(" "));
       const updated = await api.submitApplication(
@@ -161,6 +137,7 @@ export function ApplicationEditor({
                 details.coverLetterRequired ||
                 details.admissionMode === "SELECTIVE"
               }
+              readOnly={draft.failure?.kind === "access"}
               value={letter}
               onChange={(e) => setLetter(e.target.value)}
             />
@@ -172,46 +149,33 @@ export function ApplicationEditor({
                 ? "Черновик сохранён на сервере"
                 : "Есть несохранённые изменения"}
           </p>
-          {saveError && (
-            <div role="alert">
-              <p className="student-error">{saveError}</p>
-              <Button
-                variant="secondary"
-                onClick={() =>
-                  void action.run(async () => {
-                    if (
-                      !window.confirm(
-                        "Загрузить серверный черновик и заменить введённый текст? Скопируйте свои изменения перед продолжением.",
-                      )
-                    )
-                      return;
-                    const updated = await api.application(app.id);
-                    setApp(updated);
-                    setSaved(updated.coverLetter ?? "");
-                    setLetter(updated.coverLetter ?? "");
-                    setSaveError("");
-                  }, "Загружен актуальный черновик")
-                }
-              >
-                Загрузить актуальный черновик
-              </Button>
-              <p>
-                Загрузка заменит введённый текст актуальной серверной версией.
-                Скопируйте свой текст перед действием.
-              </p>
-            </div>
+          {draft.failure && (
+            <ApplicationDraftRecovery
+              key={draft.failure.kind}
+              failure={draft.failure}
+              letter={letter}
+              saving={saving}
+              onRetry={draft.retry}
+              onCompare={draft.compare}
+              onResolve={draft.resolve}
+            />
           )}
           <Input
             label="Ссылка на портфолио"
             type="url"
             maxLength={2048}
+            disabled={draft.failure?.kind === "access"}
             value={portfolioLink}
             onChange={(e) => setPortfolioLink(e.target.value)}
             hint="По нажатию ссылка будет добавлена в текст письма и сохранена вместе с ним."
           />
           <Button
             variant="secondary"
-            disabled={!portfolioLink.trim() || action.busy}
+            disabled={
+              !portfolioLink.trim() ||
+              action.busy ||
+              draft.failure?.kind === "access"
+            }
             onClick={() =>
               void action.run(async () => {
                 setLetter(appendPortfolioLink(letter, portfolioLink));
@@ -235,8 +199,10 @@ export function ApplicationEditor({
                   onChange={(e) => setNdaAccepted(e.target.checked)}
                   disabled={!nda.version || !nda.documentText}
                 />
-                Подтверждаю NDA версии {nda.version ?? "—"} как капитан команды
-                или индивидуальный заявитель.
+                Подтверждаю NDA версии {nda.version ?? "—"}{" "}
+                {app.format === "TEAM"
+                  ? "как капитан команды."
+                  : "как индивидуальный заявитель."}
               </label>
             </section>
           )}
