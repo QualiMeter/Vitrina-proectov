@@ -113,12 +113,11 @@ export function ParticipationsPage() {
                             ? "Продолжить заявку"
                             : "Посмотреть заявку"}
                         </ButtonLink>
-                        {isActive(item) && (
+                        {item.applicationStatus === "ADMITTED" && (
                           <ButtonLink
                             to={`${base}/cases/${item.caseId}/workspace`}
                           >
                             Рабочее пространство
-                            <small aria-hidden="true"> · Скоро</small>
                           </ButtonLink>
                         )}
                       </div>

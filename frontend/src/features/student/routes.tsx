@@ -1,3 +1,4 @@
+import { WorkspacePage } from "./WorkspacePage";
 import { StudentRedirect } from "./StudentRedirect";
 import { TeamsPage, MyTeamsPage } from "./TeamsPage";
 import { InvitationsPage } from "./InvitationsPage";
@@ -31,8 +32,9 @@ const privatePages: RouteObject[] = [
     path: "drafts",
     element: <StudentRedirect to="participations?filter=drafts" />,
   },
+  { path: "cases/:caseId/workspace", element: <WorkspacePage /> },
   // Navigation sections required by FB-01; their business functions belong to later days.
-  ...["portfolio", "projects", "cases/:caseId/workspace"].map((path) => ({
+  ...["portfolio", "projects"].map((path) => ({
     path,
     element: <LaterSection />,
   })),

@@ -4,7 +4,9 @@ import { Button } from "../../components/ui/Button";
 export function ProfileLeaveDialog({
   onStay,
   onLeave,
+  title = "Несохранённые изменения профиля",
 }: {
+  title?: string;
   onStay: () => void;
   onLeave: () => void;
 }) {
@@ -32,7 +34,7 @@ export function ProfileLeaveDialog({
         onStay();
       }}
     >
-      <h2 id="leave-profile-title">Несохранённые изменения профиля</h2>
+      <h2 id="leave-profile-title">{title}</h2>
       <p id="leave-profile-description">
         Останьтесь, чтобы сохранить изменения. При уходе введённые данные будут
         потеряны.

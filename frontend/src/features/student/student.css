@@ -613,3 +613,54 @@ section.student-profile-section > .field {
   font-size: 0.85rem;
   margin-block: 6px;
 }
+
+.student-stage {
+  margin-block: 16px;
+  min-width: 0;
+}
+.student-stage h3 {
+  font-size: 1.05rem;
+  margin-block: 12px;
+}
+.student-stage h4 {
+  font-size: 1rem;
+  margin-block: 16px 10px;
+}
+.student-preserve-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.student-version-list {
+  display: grid;
+  gap: 12px;
+  padding-left: 24px;
+  margin-block: 16px;
+}
+.student-version-list details > summary {
+  cursor: pointer;
+  font-weight: 600;
+  min-height: 36px;
+  overflow-wrap: anywhere;
+}
+.student-submission-form {
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+.student-submission-form fieldset {
+  min-width: 0;
+}
+.student-result-actions {
+  display: grid;
+  gap: 12px;
+}
+.student-file-action .button {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+@media (max-width: 760px) {
+  .student-result-actions .button {
+    width: 100%;
+    min-height: 48px;
+  }
+}
