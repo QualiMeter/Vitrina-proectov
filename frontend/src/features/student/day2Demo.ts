@@ -216,8 +216,14 @@ export function withParticipationDemo(base: Day1Gateway): StudentGateway {
   };
   return {
     ...base,
-    dashboardSignals: async (caseIds) => ({
-      pending: invites
+    dashboardInvitations: async () => ({
+      total: invites.filter(
+        (x) =>
+          x.inviteeUserId === me &&
+          x.status === "PENDING" &&
+          Date.parse(x.expiresAt) > Date.now(),
+      ).length,
+      items: invites
         .filter(
           (x) =>
             x.inviteeUserId === me &&
@@ -232,8 +238,11 @@ export function withParticipationDemo(base: Day1Gateway): StudentGateway {
             expiresAt: x.expiresAt,
           };
         }),
-      pendingPageOnly: false,
-      deadlines: caseIds
+    }),
+    dashboardDeadlines: async (caseIds) => ({
+      unavailable: 0,
+      items: [...new Set(caseIds)]
+        .slice(0, 6)
         .map(detail)
         .filter(
           (x) =>

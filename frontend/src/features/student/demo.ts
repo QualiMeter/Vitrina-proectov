@@ -52,16 +52,19 @@ export function createDemoGateway(): StudentGateway {
   ];
   const clone = <T>(value: T): T => structuredClone(value);
   return withParticipationDemo({
-    dashboardSignals: async () => ({
-      pending: [
+    dashboardInvitations: async () => ({
+      items: [
         {
           id: "00000000-0000-4000-8000-000000000040",
           title: "Демо-команда · Учебный кейс",
           expiresAt: new Date(Date.now() + 2 * 86400000).toISOString(),
         },
       ],
-      pendingPageOnly: false,
-      deadlines: [
+      total: 1,
+    }),
+    dashboardDeadlines: async () => ({
+      unavailable: 0,
+      items: [
         {
           id: "00000000-0000-4000-8000-000000000011",
           title: "Учебный кейс по веб-разработке",
