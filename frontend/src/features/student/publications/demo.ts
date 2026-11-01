@@ -21,6 +21,7 @@ export const publicationIds = {
 };
 export function createPublicationDemo(
   actorId = publicationDemoUserId,
+  membersForPublic?: (id: string) => PublicProject["members"] | undefined,
 ): PublicationGateway {
   const now = () => new Date().toISOString(),
     clone = <T>(v: T): T => structuredClone(v);
@@ -71,6 +72,7 @@ export function createPublicationDemo(
     records.push({
       ...(emptyDraft("PROJECT") as ProjectDraft),
       ...meta,
+      authorId: i === 8 ? uid(2) : publicationDemoUserId,
       id: i === 0 ? publicationIds.project : uid(120 + i),
       title:
         i === 0
@@ -155,7 +157,13 @@ export function createPublicationDemo(
       ...baseFields(d),
       kind: "PROJECT",
       id: d.id,
-      author: { id: d.authorId, nickname: "student_demo" },
+      author: {
+        id: d.authorId,
+        nickname:
+          d.authorId === publicationDemoUserId
+            ? "student_demo"
+            : "project_author",
+      },
       summary: d.summary,
       problem: d.problem,
       goals: d.goals,
@@ -163,9 +171,12 @@ export function createPublicationDemo(
       publicContactUrl: d.publicContactUrl,
       interests: clone(d.interests),
       vacancies: clone(d.vacancies.filter((x) => x.active)),
-      members: [
+      members: membersForPublic?.(d.id) ?? [
         {
-          nickname: "student_demo",
+          nickname:
+            d.authorId === publicationDemoUserId
+              ? "student_demo"
+              : "project_author",
           role: "Автор",
           competencies: ["Веб-разработка"],
         },
