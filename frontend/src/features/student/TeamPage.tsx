@@ -160,8 +160,7 @@ function TeamEditor({
           <ul className="student-list">
             {team.pendingInvitations.map((invite) => (
               <li key={invite.id}>
-                Участник {invite.inviteeUserId} ·{" "}
-                <Status value={invite.status} />
+                Приглашённый студент · <Status value={invite.status} />
                 {canEdit && invite.status === "PENDING" && (
                   <Button
                     variant="ghost"
