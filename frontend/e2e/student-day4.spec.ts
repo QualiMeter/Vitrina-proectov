@@ -38,16 +38,14 @@ test("day 4 creates a work, protects unsaved input and submits it for moderation
   await expect(page.getByLabel("Название", { exact: true })).toHaveValue(
     "Исследование без репозитория",
   );
-  await page
-    .getByLabel("Файл публикации", { exact: true })
-    .setInputFiles({
-      name: "preview.png",
-      mimeType: "image/png",
-      buffer: Buffer.from(
-        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGOIln0BAAI3AWFbJeubAAAAAElFTkSuQmCC",
-        "base64",
-      ),
-    });
+  await page.getByLabel("Файл публикации", { exact: true }).setInputFiles({
+    name: "preview.png",
+    mimeType: "image/png",
+    buffer: Buffer.from(
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGOIln0BAAI3AWFbJeubAAAAAElFTkSuQmCC",
+      "base64",
+    ),
+  });
   await page
     .getByRole("button", { name: "Добавить файл", exact: true })
     .click();
@@ -105,12 +103,18 @@ test("public catalog searches all pages, combines filters, resets and opens a fu
   await page
     .getByRole("button", { name: "Сбросить фильтры", exact: true })
     .click();
+  await expect(page.getByLabel("Поиск проектов", { exact: true })).toHaveValue(
+    "",
+  );
+  await expect(page).toHaveURL(/\/demo\/student-projects$/);
   await page
     .getByRole("combobox", { name: "Статус разработки", exact: true })
     .selectOption("IN_PROGRESS");
   await page
     .getByRole("combobox", { name: "Интересы проекта", exact: true })
     .selectOption("SEEK_MENTOR");
+  await expect(page).toHaveURL(/development=IN_PROGRESS/);
+  await expect(page).toHaveURL(/interest=SEEK_MENTOR/);
   await expect(
     page.getByText("Найдено проектов: 4", { exact: true }),
   ).toBeVisible();
@@ -139,7 +143,7 @@ test("public catalog searches all pages, combines filters, resets and opens a fu
     page.getByRole("button", { name: "Подать заявку · Скоро", exact: true }),
   ).toBeDisabled();
   await expect(
-    page.getByRole("link", { name: "Связаться с автором", exact: true }),
+    page.getByRole("link", { name: /^Связаться с автором/ }),
   ).toHaveAttribute("rel", "noopener noreferrer");
 });
 test("creates an initiative with separate development status and never publishes it automatically", async ({

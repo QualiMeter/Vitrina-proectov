@@ -1,3 +1,4 @@
+import { ProjectsCatalog } from "./ProjectsCatalog";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, it, vi } from "vitest";
@@ -334,4 +335,38 @@ it("accepts demo attachments, rejects unsupported files and foreign media refere
   await expect(
     api.save({ ...validWork(), media: [{ ...media, id: "foreign" }] }),
   ).rejects.toMatchObject({ status: 403 });
+});
+
+it("resets the old search before applying consecutive catalog filters", async () => {
+  const api = createPublicationDemo();
+  const router = createMemoryRouter(
+    [
+      {
+        path: "/catalog",
+        element: (
+          <PublicationContext.Provider value={api}>
+            <ProjectsCatalog demo />
+          </PublicationContext.Provider>
+        ),
+      },
+    ],
+    { initialEntries: ["/catalog?q=инициатива+9"] },
+  );
+  render(<RouterProvider router={router} />);
+  await screen.findByText("Найдено проектов: 1");
+  const actor = userEvent.setup();
+  await actor.click(screen.getByRole("button", { name: "Сбросить фильтры" }));
+  await actor.selectOptions(
+    await screen.findByRole("combobox", { name: "Статус разработки" }),
+    "IN_PROGRESS",
+  );
+  await actor.selectOptions(
+    await screen.findByRole("combobox", { name: "Интересы проекта" }),
+    "SEEK_MENTOR",
+  );
+  await screen.findByText("Найдено проектов: 4");
+  const params = new URLSearchParams(router.state.location.search);
+  expect(params.get("q")).toBeNull();
+  expect(params.get("development")).toBe("IN_PROGRESS");
+  expect(params.get("interest")).toBe("SEEK_MENTOR");
 });

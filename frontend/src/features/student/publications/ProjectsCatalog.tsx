@@ -44,7 +44,7 @@ export function ProjectsCatalog({ demo = false }: { demo?: boolean }) {
     if (value) next.set(key, value);
     else next.delete(key);
     next.delete("page");
-    setParams(next);
+    setParams(next, { flushSync: true });
   };
   return (
     <PublicFrame demo={demo}>
@@ -67,7 +67,10 @@ export function ProjectsCatalog({ demo = false }: { demo?: boolean }) {
           placeholder="Название или описание"
           onChange={(e) => change("q", e.target.value)}
         />
-        <Button variant="secondary" onClick={() => setParams({})}>
+        <Button
+          variant="secondary"
+          onClick={() => setParams({}, { flushSync: true })}
+        >
           Сбросить фильтры
         </Button>
       </div>
@@ -183,7 +186,7 @@ export function ProjectsCatalog({ demo = false }: { demo?: boolean }) {
               onPage={(next) => {
                 const p = new URLSearchParams(params);
                 p.set("page", String(next));
-                setParams(p);
+                setParams(p, { flushSync: true });
               }}
             />
           </>
