@@ -370,38 +370,32 @@ it("enforces demo file settings, rejects foreign attachments and replays success
 it("blocks unscanned attachments until metadata is READY", async () => {
   const { api } = await fixture();
   const id = "00000000-0000-4000-8000-000000000090";
-  api.uploadSubmissionFile = vi
-    .fn()
-    .mockResolvedValue({
-      fileId: id,
-      status: "SCANNING",
-      createdAt: new Date().toISOString(),
-      stagedUntil: "2099-01-01T00:00:00Z",
-    });
-  api.fileMetadata = vi
-    .fn()
-    .mockResolvedValue({
-      id,
-      status: "READY",
-      displayName: "result.pdf",
-      contentType: "application/pdf",
-      sizeBytes: 3,
-      purpose: "SUBMISSION_ATTACHMENT",
-      createdAt: new Date().toISOString(),
-    });
-  const submit = vi
-    .fn()
-    .mockResolvedValue({
-      id: "saved",
-      checkpointId: executionIds.checkpoint,
-      applicationId: executionIds.application,
-      version: 2,
-      submittedByUserId: "me",
-      submittedAt: new Date().toISOString(),
-      isLate: true,
-      links: [],
-      attachments: [],
-    });
+  api.uploadSubmissionFile = vi.fn().mockResolvedValue({
+    fileId: id,
+    status: "SCANNING",
+    createdAt: new Date().toISOString(),
+    stagedUntil: "2099-01-01T00:00:00Z",
+  });
+  api.fileMetadata = vi.fn().mockResolvedValue({
+    id,
+    status: "READY",
+    displayName: "result.pdf",
+    contentType: "application/pdf",
+    sizeBytes: 3,
+    purpose: "SUBMISSION_ATTACHMENT",
+    createdAt: new Date().toISOString(),
+  });
+  const submit = vi.fn().mockResolvedValue({
+    id: "saved",
+    checkpointId: executionIds.checkpoint,
+    applicationId: executionIds.application,
+    version: 2,
+    submittedByUserId: "me",
+    submittedAt: new Date().toISOString(),
+    isLate: true,
+    links: [],
+    attachments: [],
+  });
   api.submitVersion = submit;
   await mount(api);
   const actor = userEvent.setup();
@@ -467,4 +461,36 @@ it("rechecks closed intake after 409 without losing the local draft", async () =
   expect(
     screen.getByRole("button", { name: "Отправить новую версию" }),
   ).toBeDisabled();
+});
+
+it("can cancel a rejected file selection without discarding the typed result", async () => {
+  const { api } = await fixture();
+  api.uploadSubmissionFile = vi
+    .fn()
+    .mockRejectedValue(new Error("Файл не прошёл проверку"));
+  await mount(api);
+  const actor = userEvent.setup();
+  await actor.type(
+    await screen.findByLabelText("Описание результата"),
+    "Текст без файла",
+  );
+  await actor.upload(
+    screen.getByLabelText("Выберите файл"),
+    new File(["bad"], "bad.pdf", { type: "application/pdf" }),
+  );
+  await actor.click(screen.getByRole("button", { name: "Загрузить файл" }));
+  await screen.findByText("Файл не прошёл проверку");
+  expect(
+    screen.getByRole("button", { name: "Отправить новую версию" }),
+  ).toBeDisabled();
+  await actor.click(
+    screen.getByRole("button", { name: "Отменить выбор файла" }),
+  );
+  expect(screen.getByLabelText("Описание результата")).toHaveValue(
+    "Текст без файла",
+  );
+  await actor.click(
+    screen.getByRole("button", { name: "Отправить новую версию" }),
+  );
+  await screen.findByText("Новая версия результата отправлена");
 });

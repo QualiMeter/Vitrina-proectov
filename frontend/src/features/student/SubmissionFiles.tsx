@@ -77,6 +77,19 @@ export function SubmissionFiles({
       >
         Загрузить файл
       </Button>
+      {file && (
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={() => {
+            setFile(undefined);
+            if (input.current) input.current.value = "";
+            action.clear();
+          }}
+        >
+          Отменить выбор файла
+        </Button>
+      )}
       {action.feedback}
       <ul className="student-list">
         {items.map((item) => (
