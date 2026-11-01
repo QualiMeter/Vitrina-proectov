@@ -37,9 +37,13 @@ describe("Frontend B day 1", () => {
     await waitFor(() =>
       expect(screen.getByLabelText("Институт / факультет")).toHaveValue(""),
     );
+    await screen.findByText("Профиль сохранён");
     await actor.click(screen.getByRole("link", { name: "Мои участия" }));
     await screen.findByRole("heading", { name: "Мои участия" });
     await actor.click(screen.getByRole("link", { name: "Мой профиль" }));
+    expect(await screen.findByLabelText("Институт / факультет")).toHaveValue(
+      "",
+    );
     await actor.selectOptions(
       await screen.findByLabelText("Институт / факультет"),
       original,
