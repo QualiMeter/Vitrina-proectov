@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { Link, Outlet, useNavigate, useOutletContext, useParams } from 'react-router-dom';
 import { Button, ButtonLink } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
@@ -31,13 +31,15 @@ export function CompanyDemoLayout() {
       <select value={mode} onChange={(event) => setMode(event.target.value as DemoMode)}>
         <option value="normal">Обычный</option><option value="empty">Пустой список</option>
         <option value="error">Ошибка</option><option value="denied">Нет прав</option>
+        <option value="read-only">Только просмотр</option><option value="save-error">Ошибка сохранения</option>
+        <option value="conflict">Конфликт версии</option>
       </select>
     </label>
     {!active ? <section><h1>Кабинет компании</h1>
       <p>Реальные кейсы доступны только авторизованным представителям своей компании.</p>
       <Button onClick={() => setActive(true)}>Открыть демонстрацию</Button>
     </section> : mode === 'denied' ? <ErrorState title="Доступ запрещён" description="Нет членства и прав на эту компанию. Приватные данные не загружаются." />
-      : <Outlet context={{ repository, companyId: demoCompanyId, canCreate: true } satisfies DemoContext} />}
+      : <Outlet context={{ repository, companyId: demoCompanyId, canCreate: mode !== 'read-only' } satisfies DemoContext} />}
   </main>;
 }
 
@@ -70,9 +72,9 @@ export function CompanyCasesPage() {
         : <div className="company-cases__list">{visible.map((item) => <Card key={item.id}>
           <h2>{item.title}</h2><p>{statusLabels[item.status]} · версия {item.version}</p>
           {['DRAFT', 'REVISION'].includes(item.status) && item.allowedActions.includes('edit') && <ButtonLink to={`${item.id}/edit`}>Редактировать</ButtonLink>}
-          <Button disabled title="Нужны backend, серверная валидация и объектные права">Отправить на модерацию</Button>
-          <Button disabled title="Нужны APPROVED, backend и право компании">Открыть набор</Button>
-          <p>Переходы статусов доступны после подключения API. Имена allowedActions требуют согласования.</p>
+          {['DRAFT', 'REVISION'].includes(item.status) && item.allowedActions.includes('submit-moderation') && <Button disabled aria-describedby={`actions-${item.id}`}>Отправить на модерацию</Button>}
+          {item.status === 'APPROVED' && item.allowedActions.includes('open-registration') && <Button disabled aria-describedby={`actions-${item.id}`}>Открыть набор</Button>}
+          <p id={`actions-${item.id}`}>{item.allowedActions.length ? 'Отправка на модерацию и открытие набора пока недоступны в демонстрации.' : 'Доступен только просмотр.'}</p>
         </Card>)}</div>}
   </section>;
 }
@@ -88,6 +90,8 @@ export function CompanyCaseEditor() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [retry, setRetry] = useState(0);
+  const errorRef = useRef<HTMLDivElement>(null);
+  useEffect(() => { if (error) errorRef.current?.focus(); }, [error]);
   useEffect(() => {
     let alive = true;
     setError(''); setDraft(null); setFields({ title: '' }); setLoading(Boolean(caseId));
@@ -104,6 +108,11 @@ export function CompanyCaseEditor() {
     event.preventDefault(); setError(''); setSuccess('');
     if (!editable || saving) return;
     const errors = validateDraft(fields);
+    if (draft) {
+      for (const key of ['description', 'registrationDeadline', 'minCourse', 'maxCourse', 'minTeamSize', 'maxTeamSize'] as const) {
+        if (draft[key] !== undefined && fields[key] === undefined) errors.push('Очистка ранее заполненного описания, срока или числового условия пока не поддерживается. Измените значение.');
+      }
+    }
     if (errors.length) { setError(errors.join(' ')); return; }
     setSaving(true);
     try {
@@ -131,25 +140,23 @@ export function CompanyCaseEditor() {
   return <section><Link to="/company/cases">← Мои кейсы</Link>
     <h1>{caseId ? 'Редактировать черновик' : 'Создать черновик'}</h1>
     <p>Для минимального черновика достаточно названия. Полные условия проверит сервер при отправке на модерацию.</p>
-    <p>Навыки и сроки выполнения: Blocked — полей нет в согласованном API. Срок ниже относится только к набору.</p>
+    <p>Поля навыков и сроков выполнения появятся после согласования условий. Ниже указывается срок набора участников.</p>
     {!editable && <ErrorState title="Редактирование запрещено" />}
     <form onSubmit={save} className="company-cases__form">
       <fieldset disabled={!editable || saving}><legend>Условия кейса</legend>
         <Input label="Название" required maxLength={200} value={fields.title} onChange={(event) => change('title', event.target.value)} />
         {(['description', 'publicTaskDescription', 'rewardTerms', 'resultRightsTerms'] as const).map((key) => <label className="field" key={key}>
           {textLabels[key]}<textarea value={fields[key] ?? ''} maxLength={key.endsWith('Terms') ? 5000 : 20000}
-            onChange={(event) => change(key, event.target.value || undefined)} />
+            onChange={(event) => change(key, key === 'description' ? event.target.value || undefined : event.target.value)} />
         </label>)}
-        <label className="field">Направление
-          <select value={fields.directionIds?.[0] ?? ''} onChange={(event) => change('directionIds', event.target.value ? [event.target.value] : [])}>
-            <option value="">Не выбрано</option>{directions.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
-          </select>
-        </label>
-        <label className="field">Технология
-          <select value={fields.technologyIds?.[0] ?? ''} onChange={(event) => change('technologyIds', event.target.value ? [event.target.value] : [])}>
-            <option value="">Не выбрано</option>{technologies.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
-          </select>
-        </label>
+        <fieldset className="company-cases__choices"><legend>Направления</legend>
+          {directions.map((item) => <label key={item.id}><input type="checkbox" checked={fields.directionIds?.includes(item.id) ?? false}
+            onChange={(event) => change('directionIds', toggleId(fields.directionIds, item.id, event.target.checked))} />{item.name}</label>)}
+        </fieldset>
+        <fieldset className="company-cases__choices"><legend>Технологии</legend>
+          {technologies.map((item) => <label key={item.id}><input type="checkbox" checked={fields.technologyIds?.includes(item.id) ?? false}
+            onChange={(event) => change('technologyIds', toggleId(fields.technologyIds, item.id, event.target.checked))} />{item.name}</label>)}
+        </fieldset>
         <label className="field">Формат
           <select value={fields.participationFormat ?? ''} onChange={(event) => change('participationFormat', event.target.value as DraftFields['participationFormat'] || undefined)}>
             <option value="">Не выбран</option><option value="SOLO">Соло</option><option value="TEAM">Команда</option><option value="BOTH">Оба</option>
@@ -162,13 +169,20 @@ export function CompanyCaseEditor() {
         </label>
         <Input label="Срок набора (местное время)" type="datetime-local"
           value={fields.registrationDeadline ? localDate(fields.registrationDeadline) : ''}
-          onChange={(event) => change('registrationDeadline', event.target.value ? new Date(event.target.value).toISOString() : undefined)} />
+          onChange={(event) => {
+            const value = event.target.value;
+            const timestamp = value ? new Date(value).getTime() : NaN;
+            change('registrationDeadline', Number.isFinite(timestamp) ? new Date(timestamp).toISOString() : undefined);
+          }} />
         <div className="company-cases__numbers">{numberKeys.map((key) => <Input key={key} label={numberLabels[key]} type="number"
           min={key.startsWith('maxAdmitted') ? 0 : 1} step={1} value={fields[key] ?? ''}
           hint={key.startsWith('maxAdmitted') ? 'Пусто — без ограничения; 0 — нет мест. Лимиты независимы.' : undefined}
           onChange={(event) => change(key, event.target.value === '' ? (key.startsWith('maxAdmitted') ? null : undefined) : Number(event.target.value))} />)}</div>
       </fieldset>
-      {error && <div role="alert" className="field-error">{error}</div>}
+      {error && <div role="alert" tabIndex={-1} ref={errorRef} className="field-error">{error}
+        {error.includes('409') && <p>Ваша версия остаётся в форме. Скопируйте нужный текст перед загрузкой обновлённой версии.
+          <Button type="button" variant="secondary" onClick={() => setRetry((value) => value + 1)}>Загрузить актуальную версию</Button></p>}
+      </div>}
       {success && <p role="status">{success}</p>}
       <Button type="submit" disabled={!editable || saving}>{saving ? 'Сохранение…' : 'Сохранить демочерновик'}</Button>
     </form>
@@ -181,4 +195,8 @@ const numberLabels = { minCourse: 'Минимальный курс', maxCourse: 
 function localDate(iso: string) {
   const date = new Date(iso);
   return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+}
+
+function toggleId(current: string[] | undefined, id: string, checked: boolean): string[] {
+  return checked ? [...new Set([...(current ?? []), id])] : (current ?? []).filter((value) => value !== id);
 }

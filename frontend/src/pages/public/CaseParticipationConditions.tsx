@@ -24,7 +24,7 @@ export function CaseParticipationConditions({ item, registrationOpen, loginAvail
     </dl>
     {item.resultRightsTerms && <><h2>Права на результат</h2><p>{item.resultRightsTerms}</p></>}
     {registrationOpen ? loginAvailable ? <ButtonLink to="/login">Войти для подачи заявки</ButtonLink>
-      : <><Button disabled>Войти для подачи заявки</Button><p>Ожидается общий вход FE-C и API заявок.</p></>
+      : <><Button disabled>Войти для подачи заявки</Button><p>Вход и подача заявок пока недоступны.</p></>
       : <p>Набор закрыт.</p>}
   </section>;
 }
