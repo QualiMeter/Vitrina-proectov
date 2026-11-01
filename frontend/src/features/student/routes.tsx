@@ -4,7 +4,7 @@ import { InvitationsPage } from "./InvitationsPage";
 import { TeamPage } from "./TeamPage";
 import { ApplicationPage } from "./ApplicationPage";
 import type { RouteObject } from "react-router-dom";
-import { StudentRoot } from "./shared";
+import { StudentRoot } from "./StudentRoot";
 import {
   DashboardPage,
   ParticipationsPage,
