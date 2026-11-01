@@ -1,3 +1,5 @@
+import { readPublicPortfolio } from "./publicReads";
+import { publicationErrors } from "./rules";
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Card } from "../../../components/ui/Card";
@@ -68,16 +70,13 @@ function Works({ initial }: { initial: Publication[] }) {
                   <Button
                     disabled={action.busy}
                     onClick={() =>
-                      void action.run(
-                        async () =>
-                          update(
-                            await api.submitForModeration(
-                              item.id,
-                              item.version,
-                            ),
-                          ),
-                        "Работа отправлена на проверку",
-                      )
+                      void action.run(async () => {
+                        const errors = publicationErrors(item);
+                        if (errors.length) throw new Error(errors.join(" "));
+                        update(
+                          await api.submitForModeration(item.id, item.version),
+                        );
+                      }, "Работа отправлена на проверку")
                     }
                   >
                     На публичную модерацию
@@ -235,7 +234,7 @@ export function PublicPortfolioPage({ demo = false }: { demo?: boolean }) {
   const { id = "" } = useParams(),
     api = usePublications(demo);
   const state = useLoad(
-    () => api.publicPortfolio(id),
+    () => readPublicPortfolio(api, id),
     `public-portfolio-${id}`,
   );
   return (

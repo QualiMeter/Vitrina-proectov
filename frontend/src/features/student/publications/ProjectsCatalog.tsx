@@ -1,3 +1,4 @@
+import { readPublicCatalog, readPublicProject } from "./publicReads";
 import { useSearchParams, useParams, Link } from "react-router-dom";
 import { Card } from "../../../components/ui/Card";
 import { Input } from "../../../components/ui/Input";
@@ -35,7 +36,7 @@ export function ProjectsCatalog({ demo = false }: { demo?: boolean }) {
   const state = useLoad(
     async () => ({
       reference: await api.reference(),
-      result: await api.catalog(query, page),
+      result: await readPublicCatalog(api, query, page),
     }),
     `catalog-${params.toString()}-${demo}`,
   );
@@ -201,7 +202,7 @@ export function ProjectDetails({ demo = false }: { demo?: boolean }) {
     { projectId = "" } = useParams();
   const state = useLoad(
     async () => ({
-      project: await api.publicProject(projectId),
+      project: await readPublicProject(api, projectId),
       reference: await api.reference(),
     }),
     `project-${projectId}-${demo}`,
