@@ -34,6 +34,7 @@ def ts(s):
 # Generate student-facing schemas and their referenced dependencies.
 required = {'MyCaseTeamListResponse','AuthSessionResponse','StudentProfilePrivate','StudentProfileUpdateRequest','StudentProfilePublic','ReferenceDataResponse','MyCaseParticipationListResponse','CsrfTokenResponse'}
 required.update({'CasePublicDetails','CaseTeamListResponse','CaseTeam','CaseTeamInvitation','CaptainTransfer','CaseApplicationListResponse','CaseApplication','TeamInvitationInboxResponse','StudentInviteCandidateList','CreateCaseApplicationRequest','UpdateCaseApplicationDraftRequest','CaseApplicationVersionCommand','CaseApplicationWithdrawRequest','NdaPolicy'})
+required.update({'CaseParticipantWorkspace','SubmissionVersionList','SubmitVersionRequest','FileUploadResult','CaseFileMetadata','MyCheckpointSelectionResult'})
 def collect(value):
     if isinstance(value, dict):
         if '$ref' in value:

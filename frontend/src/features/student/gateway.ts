@@ -1,3 +1,8 @@
+import { mutate } from "./mutations";
+import {
+  liveExecutionGateway,
+  type ExecutionGateway,
+} from "./executionGateway";
 import { apiRequest } from "../../api/client";
 import type * as C from "./contracts";
 import {
@@ -8,7 +13,7 @@ import {
 } from "./dashboardSignals";
 
 /** Student API uses the cookie session owned by FE-C; no second login. */
-export interface StudentGateway {
+export interface StudentGateway extends ExecutionGateway {
   dashboardInvitations(): Promise<DashboardInvitations>;
   dashboardDeadlines(caseIds: string[]): Promise<DashboardDeadlines>;
   session(): Promise<C.AuthSessionResponse>;
@@ -65,34 +70,10 @@ export interface StudentGateway {
   nda(caseId: string): Promise<C.NdaPolicy>;
 }
 const root = "/api/v1";
-async function mutate<T>(
-  path: string,
-  method: string,
-  body?: unknown,
-  idempotencyKey?: string,
-): Promise<T> {
-  const token = await apiRequest<C.CsrfTokenResponse>(`${root}/auth/csrf`, {
-    cache: "no-store",
-  });
-  const headers: Record<string, string> = { "X-CSRF-Token": token.csrfToken };
-  if (idempotencyKey) headers["Idempotency-Key"] = idempotencyKey;
-  if (body !== undefined && !(body instanceof FormData))
-    headers["Content-Type"] = "application/json";
-  return apiRequest<T>(`${root}${path}`, {
-    method,
-    headers,
-    body:
-      body instanceof FormData
-        ? body
-        : body === undefined
-          ? undefined
-          : JSON.stringify(body),
-    cache: "no-store",
-  });
-}
 const get = <T>(path: string) =>
   apiRequest<T>(`${root}${path}`, { cache: "no-store" });
 export const liveStudentGateway: StudentGateway = {
+  ...liveExecutionGateway,
   dashboardInvitations: readPendingInvitations,
   dashboardDeadlines: readCaseDeadlines,
   session: () => get("/auth/me"),
@@ -183,3 +164,5 @@ export type Day1Gateway = Pick<
   | "reference"
   | "participations"
 >;
+
+export type Day2Gateway = Omit<StudentGateway, keyof ExecutionGateway>;

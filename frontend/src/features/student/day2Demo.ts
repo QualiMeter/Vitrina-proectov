@@ -1,6 +1,6 @@
 import { ApiError } from "../../api/client";
 import type * as C from "./contracts";
-import type { Day1Gateway, StudentGateway } from "./gateway";
+import type { Day1Gateway, Day2Gateway } from "./gateway";
 
 const uid = (n: number) =>
   `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
@@ -19,7 +19,7 @@ const paged = <T>(items: T[], page: number) => ({
 });
 
 /** In-memory examples only, with UUID identifiers and server-like workflow checks. */
-export function withParticipationDemo(base: Day1Gateway): StudentGateway {
+export function withParticipationDemo(base: Day1Gateway): Day2Gateway {
   const teams: C.CaseTeam[] = [
     {
       id: uid(30),
