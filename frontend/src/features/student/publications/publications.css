@@ -1,0 +1,134 @@
+.publication-public {
+  max-width: 1400px;
+}
+.publication-public h1 {
+  margin-block: 24px 16px;
+  font-size: clamp(1.6rem, 3vw, 2.15rem);
+}
+.publication-public h2 {
+  margin-block: 20px 12px;
+}
+.publication-public h3 {
+  margin-block: 16px 10px;
+}
+.publication-public p {
+  margin-block: 12px;
+}
+.publication-public .card {
+  padding: 24px;
+  min-width: 0;
+}
+.publication-public :is(h1, h2, h3, p, a, strong) {
+  overflow-wrap: anywhere;
+}
+.publication-catalog-search {
+  display: flex;
+  gap: 16px;
+  align-items: end;
+  flex-wrap: wrap;
+  margin-block: 24px;
+}
+.publication-catalog-search > .field {
+  flex: 1;
+  min-width: min(100%, 260px);
+}
+.publication-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+  gap: 16px;
+  margin-block: 24px;
+}
+.publication-filter {
+  max-width: 320px;
+  margin-block: 20px;
+}
+:is(.publication-filters, .publication-filter) select {
+  min-height: 44px;
+  padding: 10px;
+  max-width: 100%;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink);
+}
+.publication-section {
+  display: grid;
+  gap: 16px;
+}
+.publication-form .publication-editor-fields {
+  border: 0;
+  padding: 0;
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+.publication-form .field {
+  display: grid;
+  width: 100%;
+  gap: 8px;
+  margin: 12px 0;
+}
+.publication-form fieldset {
+  min-width: 0;
+}
+.publication-form .publication-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-block: 10px;
+}
+.publication-form .publication-check input {
+  margin-top: 4px;
+  flex: 0 0 auto;
+}
+.publication-form .student-file {
+  width: 100%;
+  min-width: 0;
+}
+.publication-review {
+  padding-block: 12px;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.publication-review-actions {
+  margin-top: 28px;
+}
+.publication-media-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+.publication-media-item {
+  display: grid;
+  gap: 8px;
+  overflow-wrap: anywhere;
+}
+.publication-media-item img {
+  width: 100%;
+  max-height: 240px;
+  object-fit: contain;
+}
+.publication-conflict pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 0.85rem;
+}
+@media (max-width: 760px) {
+  .publication-public {
+    padding: 24px 16px;
+  }
+  .publication-public .card {
+    padding: 18px;
+  }
+  .publication-review-actions > .button {
+    width: 100%;
+    min-height: 48px;
+  }
+  .publication-catalog-search > .button {
+    width: 100%;
+  }
+}
+.publication-title {
+  overflow-wrap: anywhere;
+}
