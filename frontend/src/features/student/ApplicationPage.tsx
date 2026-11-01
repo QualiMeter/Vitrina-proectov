@@ -1,3 +1,4 @@
+import { FavoriteCaseButton } from "./projects/FavoriteCaseButton";
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Card } from "../../components/ui/Card";
@@ -56,6 +57,7 @@ export function ApplicationPage() {
                   {details.maxTeamSize ?? "без ограничения"} участников.
                 </p>
                 <Status value={details.status} />
+                <FavoriteCaseButton caseId={caseId} />
               </Card>
               {app ? (
                 <ApplicationEditor

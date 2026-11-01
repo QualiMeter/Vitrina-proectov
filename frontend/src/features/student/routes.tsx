@@ -1,6 +1,9 @@
+import { AuthorProjectsPage } from "./projects/AuthorProjectsPage";
+import { ProjectTeamPage } from "./projects/ProjectTeamPage";
+import { ProjectApplicationPage } from "./projects/ProjectApplicationPage";
+import { FavoritesPage, NotificationsPage } from "./projects/ActivityPages";
 import {
   PortfolioPage,
-  MyProjectList,
   PublicPortfolioPage,
 } from "./publications/PortfolioPage";
 import {
@@ -49,7 +52,11 @@ const privatePages: RouteObject[] = [
     path: "portfolio/works/:publicationId/edit",
     element: <PublicationEditorPage kind="WORK" />,
   },
-  { path: "projects", element: <MyProjectList /> },
+  { path: "projects", element: <AuthorProjectsPage /> },
+  { path: "projects/:projectId/team", element: <ProjectTeamPage /> },
+  { path: "projects/:projectId/apply", element: <ProjectApplicationPage /> },
+  { path: "favorites", element: <FavoritesPage /> },
+  { path: "notifications", element: <NotificationsPage /> },
   { path: "projects/new", element: <PublicationEditorPage kind="PROJECT" /> },
   {
     path: "projects/:publicationId/edit",

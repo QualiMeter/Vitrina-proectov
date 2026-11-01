@@ -281,10 +281,14 @@ export function ProjectDetails({ demo = false }: { demo?: boolean }) {
               ) : (
                 <p>Открытых ролей пока нет.</p>
               )}
-              <Button disabled>Подать заявку · Скоро</Button>
+              <ButtonLink
+                to={`${demo ? "/demo" : ""}/student/projects/${p.id}/apply`}
+              >
+                Подать заявку
+              </ButtonLink>
               <p className="student-note">
-                Форма заявки появится в следующем обновлении. Связаться с
-                автором можно отдельно.
+                Заявку рассматривает автор проекта. Связаться по публичному
+                контакту можно отдельно.
               </p>
             </Card>
             <Card>

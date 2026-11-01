@@ -140,8 +140,8 @@ test("public catalog searches all pages, combines filters, resets and opens a fu
       page.getByRole("heading", { name: title, exact: true }),
     ).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "Подать заявку · Скоро", exact: true }),
-  ).toBeDisabled();
+    page.getByRole("link", { name: "Подать заявку", exact: true }),
+  ).toBeVisible();
   await expect(
     page.getByRole("link", { name: /^Связаться с автором/ }),
   ).toHaveAttribute("rel", "noopener noreferrer");
