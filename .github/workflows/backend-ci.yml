@@ -27,4 +27,4 @@ jobs:
       - name: Build
         run: dotnet build Vitrina.slnx --configuration Release --no-restore
       - name: Test
-        run: dotnet test Vitrina.slnx --configuration Release
+        run: dotnet test --solution Vitrina.slnx --configuration Release
