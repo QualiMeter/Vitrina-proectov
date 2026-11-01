@@ -3154,7 +3154,7 @@ paths:
       - StudentProfiles
       operationId: studentsUpdateMyProfile
       summary: Редактировать свой профиль студента
-      description: 'Оптимистическая блокировка expectedVersion; нельзя менять чужой профиль, email, глобальные роли и права.'
+      description: 'Оптимистическая блокировка expectedVersion; нельзя менять чужой профиль, email, глобальные роли и права. Для instituteId UUID означает установить, null — очистить, отсутствие поля — оставить прежнее значение.'
       security:
       - sessionCookie: []
       parameters:
@@ -6549,7 +6549,10 @@ components:
           type: integer
           minimum: 1
         instituteId:
-          $ref: '#/components/schemas/Id'
+          oneOf:
+          - $ref: '#/components/schemas/Id'
+          - type: 'null'
+          description: UUID института или null, если институт не указан.
         course:
           type: integer
           minimum: 1
@@ -6597,7 +6600,10 @@ components:
           items:
             $ref: '#/components/schemas/ProfileAchievement'
         instituteId:
-          $ref: '#/components/schemas/Id'
+          oneOf:
+          - $ref: '#/components/schemas/Id'
+          - type: 'null'
+          description: UUID — выбрать институт; null — очистить ранее выбранный; отсутствие поля — не изменять.
         course:
           type: integer
           minimum: 1
@@ -6626,6 +6632,7 @@ components:
           items:
             $ref: '#/components/schemas/PublicStudentLink'
       description: Изменяется только собственный профиль; отсутствие поля означает сохранить прежнее значение.
+        Для instituteId явный null означает очистку.
     PublicStudentLink:
       type: object
       additionalProperties: false
