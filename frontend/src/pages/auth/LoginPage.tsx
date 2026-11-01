@@ -10,7 +10,7 @@ export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   interface LocationState {
-  from?: { pathname?: string };
+    from?: { pathname?: string };
   }
   const from = (location.state as LocationState | null)?.from?.pathname ?? '/';
   const [email, setEmail] = useState('');
@@ -26,15 +26,13 @@ export function LoginPage() {
       await login({ email, password });
       navigate(from, { replace: true });
     } catch (err: unknown) {
-  const status = (err as { status?: number })?.status;
-  if (status === 401) {
-    setError('Неверный email или пароль.');
-  } else if (status === 403) {
-    setError('Учётная запись заблокирована или не подтверждена. Проверьте почту.');
-  } else {
-    setError('Не удалось войти. Попробуйте позже.');
-  }
-}
+      const status = (err as { status?: number })?.status;
+      setError(status === 401 || status === 403
+        ? 'Не удалось войти. Проверьте email и пароль, а также подтверждение адреса.'
+        : 'Не удалось войти. Попробуйте позже.');
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (

@@ -1,28 +1,40 @@
-import { apiRequest } from './client';
-import type { Permission, ObjectPermissions } from '../types/permissions';
+import { apiRequest, refreshCsrfToken } from './client';
 
-/** Shape to adapt when the identity contract is published. No auth request is made yet. */
-export interface AuthSession {
-  userId: string;
-  displayName: string;
-  email: string;
-  roles: string[];
-  permissions: readonly Permission[];
+export type GlobalRole = 'STUDENT' | 'UNIVERSITY_STAFF' | 'PLATFORM_ADMIN';
+export type AvailableArea = 'student' | 'company' | 'university' | 'mentor' | 'admin';
+export type CompanyMembershipRole = 'OWNER' | 'MEMBER';
+
+export interface CompanyMembership {
+  companyId: string;
+  companyName: string;
+  membershipRole: CompanyMembershipRole;
 }
 
-export interface ResourceAccess { resourceId: string; actions: ObjectPermissions; }
+/** AuthSessionResponse from docs/api/openapi.yaml. */
+export interface AuthSession {
+  user: {
+    id: string;
+    email: string;
+    fullName: string;
+    nickname?: string;
+    globalRoles: GlobalRole[];
+    availableAreas: AvailableArea[];
+    permissions: string[];
+    companyMemberships: CompanyMembership[];
+  };
+  session: { expiresAt: string };
+}
 
 export interface LoginPayload {
   email: string;
   password: string;
 }
 
-export interface RegisterPayload {
-  email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
-  consentPd: boolean;
+export interface RegisterPayload extends LoginPayload {
+  fullName: string;
+  nickname: string;
+  privacyAccepted: true;
+  privacyPolicyVersion: string;
 }
 
 export interface ResetPasswordPayload {
@@ -30,87 +42,90 @@ export interface ResetPasswordPayload {
   newPassword: string;
 }
 
-/** Запрос CSRF-токена перед любым изменяющим запросом. */
+/** The version must match the published privacy policy accepted by the user. */
+export const PRIVACY_POLICY_VERSION = 'v1';
+
+/** Fetch the request token used by apiRequest for all state-changing methods. */
 export async function fetchCsrfToken(): Promise<string> {
-  const { token } = await apiRequest<{ token: string }>('/api/auth/csrf');
-  return token;
+  const { csrfToken } = await apiRequest<{ csrfToken: string }>('/api/v1/auth/csrf');
+  return csrfToken;
 }
 
-/** Вход. Установка HttpOnly cookie на стороне сервера. */
+async function rotateCsrfToken(): Promise<void> {
+  try {
+    await refreshCsrfToken();
+  } catch {
+    // The next mutation retries the fetch; do not report a completed auth action as failed.
+  }
+}
+
+/** Sign in and rotate the anonymous CSRF token after the session changes. */
 export async function login(payload: LoginPayload): Promise<AuthSession> {
-  return apiRequest<AuthSession>('/api/auth/login', {
+  const session = await apiRequest<AuthSession>('/api/v1/auth/login', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
+  await rotateCsrfToken();
+  return session;
 }
 
-/** Регистрация студента. */
 export async function register(payload: RegisterPayload): Promise<void> {
-  await apiRequest('/api/auth/register', {
+  await apiRequest('/api/v1/auth/register', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
 }
 
-/** Подтверждение email по токену из письма. */
-export async function verifyEmail(token: string): Promise<void> {
-  await apiRequest('/api/auth/verify-email', {
+export async function verifyEmail(token: string): Promise<AuthSession> {
+  const session = await apiRequest<AuthSession>('/api/v1/auth/email-verification/confirm', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ token }),
   });
+  await rotateCsrfToken();
+  return session;
 }
 
-/** Повторная отправка письма подтверждения. */
 export async function resendVerification(email: string): Promise<void> {
-  await apiRequest('/api/auth/respond-verification', {
+  await apiRequest('/api/v1/auth/email-verification/resend', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email }),
   });
 }
 
-/** Запрос сброса пароля. */
 export async function forgotPassword(email: string): Promise<void> {
-  await apiRequest('/api/auth/forgot-password', {
+  await apiRequest('/api/v1/auth/password/forgot', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email }),
   });
 }
 
-/** Сброс пароля по одноразовому токену. */
 export async function resetPassword(payload: ResetPasswordPayload): Promise<void> {
-  await apiRequest('/api/auth/reset-password', {
+  await apiRequest('/api/v1/auth/password/reset', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
 }
 
-/** Получение текущей сессии. */
 export async function me(): Promise<AuthSession | null> {
   try {
-    return await apiRequest<AuthSession>('/api/auth/me');
-  } catch (e: unknown) {
-  if (typeof e === 'object' && e !== null && 'status' in e) {
-    const status = (e as { status?: number }).status;
-    if (status === 401) return null;
+    return await apiRequest<AuthSession>('/api/v1/auth/me');
+  } catch (error: unknown) {
+    if (typeof error === 'object' && error !== null && 'status' in error
+      && (error as { status?: number }).status === 401) return null;
+    throw error;
   }
-  throw e;
-}
 }
 
-/** Выход. */
 export async function logout(): Promise<void> {
-  await apiRequest('/api/auth/logout', { method: 'POST' });
+  await apiRequest('/api/v1/auth/logout', { method: 'POST' });
+  await rotateCsrfToken();
 }
 
-/** Принятие приглашения компании по токену. */
-export async function acceptInvitation(token: string): Promise<void> {
-  await apiRequest(`/api/company-invitations/${token}/accept`, {
+export async function acceptInvitation(token: string): Promise<AuthSession> {
+  const session = await apiRequest<AuthSession>('/api/v1/company-invitations/accept', {
     method: 'POST',
+    body: JSON.stringify({ mode: 'existing', token }),
   });
+  await rotateCsrfToken();
+  return session;
 }

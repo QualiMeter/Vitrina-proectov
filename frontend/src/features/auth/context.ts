@@ -7,8 +7,7 @@ export interface AuthContextValue {
   login: (payload: LoginPayload) => Promise<void>;
   logout: () => Promise<void>;
   refreshSession: () => Promise<void>;
-  csrfToken: string | null;
-  ensureCsrf: () => Promise<string>;
+  adoptSession: (session: AuthSession) => void;
 }
 
 export const AuthContext = createContext<AuthContextValue | undefined>(undefined);

@@ -1,7 +1,14 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../../features/auth/useAuth';
+import type { AvailableArea } from '../../api/auth';
 
-export function ProtectedRoute({ allowedRoles }: { allowedRoles?: string[] }) {
+export function ProtectedRoute({
+  allowedArea,
+  requiredPermissions = [],
+}: {
+  allowedArea: AvailableArea;
+  requiredPermissions?: string[];
+}) {
   const { session, isLoading } = useAuth();
   const location = useLocation();
 
@@ -13,7 +20,8 @@ export function ProtectedRoute({ allowedRoles }: { allowedRoles?: string[] }) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (allowedRoles && !allowedRoles.some(r => session.roles.includes(r))) {
+  if (!session.user.availableAreas.includes(allowedArea)
+    || !requiredPermissions.every(permission => session.user.permissions.includes(permission))) {
     return <Navigate to="/403" replace />;
   }
 

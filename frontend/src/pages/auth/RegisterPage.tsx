@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { register } from '../../api/auth';
+import { PRIVACY_POLICY_VERSION, register } from '../../api/auth';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Card } from '../../components/ui/Card';
@@ -10,9 +10,9 @@ export function RegisterPage() {
   const [form, setForm] = useState({
     email: '',
     password: '',
-    firstName: '',
-    lastName: '',
-    consentPd: false,
+    fullName: '',
+    nickname: '',
+    privacyAccepted: false,
   });
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -23,14 +23,21 @@ export function RegisterPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.consentPd) {
+    if (!form.privacyAccepted) {
       setError('Необходимо согласие на обработку персональных данных.');
       return;
     }
     setError(null);
     setLoading(true);
     try {
-      await register(form);
+      await register({
+        email: form.email,
+        password: form.password,
+        fullName: form.fullName,
+        nickname: form.nickname,
+        privacyAccepted: true,
+        privacyPolicyVersion: PRIVACY_POLICY_VERSION,
+      });
       navigate('/verify-email', { state: { email: form.email } });
     } catch (err: unknown) {
   const status = (err as { status?: number })?.status;
@@ -51,15 +58,15 @@ export function RegisterPage() {
         <form onSubmit={handleSubmit}>
           <Input label="Email" type="email" value={form.email} onChange={e => update('email', e.target.value)} required />
           <Input label="Пароль" type="password" value={form.password} onChange={e => update('password', e.target.value)} required minLength={8} />
-          <Input label="Имя" value={form.firstName} onChange={e => update('firstName', e.target.value)} required />
-          <Input label="Фамилия" value={form.lastName} onChange={e => update('lastName', e.target.value)} required />
+          <Input label="ФИО" value={form.fullName} onChange={e => update('fullName', e.target.value)} required minLength={2} maxLength={200} autoComplete="name" />
+          <Input label="Никнейм" value={form.nickname} onChange={e => update('nickname', e.target.value)} required minLength={2} maxLength={32} autoComplete="nickname" />
           <label className="auth-checkbox">
             <input
               type="checkbox"
-              checked={form.consentPd}
-              onChange={e => update('consentPd', e.target.checked)}
+              checked={form.privacyAccepted}
+              onChange={e => update('privacyAccepted', e.target.checked)}
             />
-            Согласен на обработку персональных данных
+            Я принимаю политику обработки персональных данных (версия {PRIVACY_POLICY_VERSION})
           </label>
           {error && <p className="auth-error">{error}</p>}
           <Button type="submit" disabled={loading}>{loading ? 'Регистрация…' : 'Зарегистрироваться'}</Button>

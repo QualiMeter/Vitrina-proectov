@@ -3,12 +3,14 @@ import { useLocation, useSearchParams, Link } from 'react-router-dom';
 import { verifyEmail, resendVerification } from '../../api/auth';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
+import { useAuth } from '../../features/auth/useAuth';
 
 export function VerifyEmailPage() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
   const location = useLocation();
   const emailFromState = (location.state as { email?: string } | null)?.email;
+  const { adoptSession } = useAuth();
   const [status, setStatus] = useState<'idle' | 'verifying' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
 
@@ -16,15 +18,16 @@ export function VerifyEmailPage() {
     if (!token) return;
     setStatus('verifying');
     verifyEmail(token)
-      .then(() => {
+      .then((session) => {
+        adoptSession(session);
         setStatus('success');
-        setMessage('Email успешно подтверждён. Теперь вы можете войти.');
+        setMessage('Email подтверждён, вход выполнен.');
       })
       .catch(() => {
         setStatus('error');
         setMessage('Ссылка недействительна или истекла. Запросите новое письмо.');
       });
-  }, [token]);
+  }, [token, adoptSession]);
 
   async function handleResend() {
     if (!emailFromState) return;

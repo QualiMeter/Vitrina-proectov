@@ -26,7 +26,13 @@ export const router = createBrowserRouter([
     { path: 'reset-password', element: <ResetPasswordPage /> },
     { path: 'accept-invitation', element: <AcceptInvitationPage /> },
 
-    { path: '/university', element: <ProtectedRoute allowedRoles={['UniversityStaff', 'Admin']} />, children: [
+    { path: 'student', element: <ProtectedRoute allowedArea="student" />, children: [
+      { index: true, element: <PlaceholderPage /> },
+    ] },
+    { path: 'company', element: <ProtectedRoute allowedArea="company" />, children: [
+      { index: true, element: <PlaceholderPage /> },
+    ] },
+    { path: 'university', element: <ProtectedRoute allowedArea="university" />, children: [
       { index: true, element: <PlaceholderPage />},
       route('moderation'),
       route('moderation/:kind/:id'), 
@@ -38,14 +44,14 @@ export const router = createBrowserRouter([
       route('reports'),],
     },
 
-    { path: '/mentor', element: <ProtectedRoute allowedRoles={['Mentor']} />, children: [
+    { path: 'mentor', element: <ProtectedRoute allowedArea="mentor" />, children: [
       { index: true, element: <PlaceholderPage />},
       route('projects/:kind/:id'), 
       route('projects/:kind/:id/progress')
       ],
     },
     
-    { path: '/admin', element: <ProtectedRoute allowedRoles={['Admin']} />, children: [
+    { path: 'admin', element: <ProtectedRoute allowedArea="admin" />, children: [
       { index: true, element: <PlaceholderPage />},
       route('users'), 
       route('users/:id'), 
@@ -55,6 +61,7 @@ export const router = createBrowserRouter([
       ],
     },
 
+    { path: '403', element: <ErrorState title="Нет доступа" description="Для этого раздела у вашей учётной записи нет разрешения." /> },
     { path: '*', element: <ErrorState title="Страница не найдена" description="Проверьте адрес или вернитесь на главную." /> }
   ],
  },
