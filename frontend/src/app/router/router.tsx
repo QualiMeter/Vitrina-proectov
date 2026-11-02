@@ -3,10 +3,6 @@ import { HomePage } from '../../pages/public/HomePage/HomePage';
 import { AppShell } from '../../components/layout/AppShell';
 import { PlaceholderPage } from '../../pages/PlaceholderPage';
 import { ErrorState } from '../../components/feedback/States';
-import { CasesPage } from '../../pages/public/Cases/CasesPage';
-import { CaseDetailsPage } from '../../pages/public/Cases/CaseDetailsPage';
-import { CompanyDetailsPage } from '../../pages/public/Cases/CompanyDetailsPage';
-import { studentRoutes } from '../../features/student/routes';
 import { frontendPaths } from './paths';
 
 const route = (path: string) => ({ path, element: <PlaceholderPage /> });
