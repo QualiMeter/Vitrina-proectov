@@ -209,6 +209,14 @@ test('an authenticated account without an area is denied that cabinet', async ({
   await expect(page.getByRole('heading', { name: 'Нет доступа' })).toBeVisible();
 });
 
+test('university demo query does not bypass authentication', async ({ page }) => {
+  await page.route('**/api/v1/auth/me', route => route.fulfill({ status: 401, body: '{}' }));
+  await page.goto('/university?demo=university');
+  await expect(page).toHaveURL(/\/login$/);
+  await expect(page.getByLabel('Email')).toBeVisible();
+  await expect(page.getByText('Демо сотрудник УУНиТ')).toHaveCount(0);
+});
+
 test('unknown route shows not found state without uncaught errors', async ({ page }) => {
   await assertNoPageErrors(page, async () => {
     await page.goto('/this-route-does-not-exist');

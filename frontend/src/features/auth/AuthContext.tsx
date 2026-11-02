@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { me as apiMe, login as apiLogin, logout as apiLogout, type AuthSession, type LoginPayload } from '../../api/auth';
 import { AuthContext } from './context';
-import { createUniversityDemoSession, enableUniversityDemo, isUniversityDemoEnabled, universityDemoWasRequested } from '../university/demo';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<AuthSession | null>(null);
@@ -12,13 +11,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let cancelled = false;
     async function load() {
       setIsLoading(true);
-      if (universityDemoWasRequested()) {
-        enableUniversityDemo(true);
-        if (!cancelled) setSession(createUniversityDemoSession());
-        if (!cancelled) setIsLoading(false);
-        return;
-      }
-      enableUniversityDemo(false);
       try {
         const s = await apiMe();
         if (!cancelled) { setSession(s); setLoadError(false); }
@@ -39,11 +31,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
-    if (import.meta.env.DEV && isUniversityDemoEnabled()) {
-      enableUniversityDemo(false);
-      setSession(null);
-      return;
-    }
     await apiLogout();
     setSession(null);
     setLoadError(false);
