@@ -4,7 +4,6 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { AuthContext, type AuthContextValue } from '../../features/auth/context';
 import { ApiError } from '../../api/client';
 import { AcceptInvitationPage } from './AcceptInvitationPage';
-import { takePendingInvitationToken } from '../../features/auth/pendingInvitation';
 
 const api = vi.hoisted(() => ({ previewInvitation: vi.fn(), acceptInvitation: vi.fn() }));
 vi.mock('../../api/auth', async (importOriginal) => ({
@@ -31,13 +30,13 @@ function open(context: AuthContextValue) {
 
 function LoginLocation() {
   const location = useLocation();
-  return <output data-testid="login-location">{location.pathname}{location.search}</output>;
+  const state = location.state as { invitationToken?: string } | null;
+  return <output data-testid="login-location">{location.pathname}{location.search}:{state?.invitationToken ?? ''}</output>;
 }
 
 describe('company invitation acceptance', () => {
   beforeEach(() => {
     sessionStorage.clear();
-    takePendingInvitationToken();
     api.previewInvitation.mockReset().mockResolvedValue(invitePreview);
     api.acceptInvitation.mockReset().mockResolvedValue(signedIn.session);
   });
@@ -73,8 +72,7 @@ describe('company invitation acceptance', () => {
     const login = await screen.findByRole('link', { name: 'войдите' });
     fireEvent.click(login);
     expect(sessionStorage.getItem('vitrina.pending-company-invitation')).toBeNull();
-    expect(takePendingInvitationToken()).toBe('invitation-token-1234567890');
-    expect(await screen.findByTestId('login-location')).toHaveTextContent('/login');
+    expect(await screen.findByTestId('login-location')).toHaveTextContent('/login:invitation-token-1234567890');
   });
 
   it.each([
