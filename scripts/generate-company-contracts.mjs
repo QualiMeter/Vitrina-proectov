@@ -7,22 +7,6 @@ import { resolve } from 'node:path';
 const root = fileURLToPath(new URL('../', import.meta.url));
 const require = createRequire(resolve(root, 'frontend/package.json'));
 const { load } = require('js-yaml');
-const source = readFileSync(resolve(root, 'docs/api/openapi.yaml'));
-const schemas = load(source.toString()).components.schemas;
-const required = new Set(['CaseDraft', 'CaseStage', 'CaseStageListResponse', 'CreateStageRequest',
-  'UpdateStageRequest', 'CreateCheckpointRequest', 'UpdateCheckpointRequest', 'CaseCheckpoint',
-  'CaseApplication', 'CaseApplicationListResponse', 'CaseApplicationDecisionRequest',
-  'CompanyStudentProfile', 'CaseVersionCommand', 'CaseExecutionCommand']);
-function collect(value) {
-  if (Array.isArray(value)) return value.forEach(collect);
-  if (!value || typeof value !== 'object') return;
-  if (value.$ref) {
-    const name = value.$ref.split('/').at(-1);
-    if (!required.has(name)) { required.add(name); collect(schemas[name]); }
-  }
-  Object.values(value).forEach(collect);
-}
-[...required].forEach((name) => collect(schemas[name]));
 function ts(schema) {
   if (schema.$ref) return schema.$ref.split('/').at(-1);
   if ('const' in schema) return JSON.stringify(schema.const);
@@ -38,12 +22,36 @@ function ts(schema) {
   }
   return ({ integer: 'number', number: 'number', string: 'string', boolean: 'boolean', null: 'null' })[schema.type] ?? 'unknown';
 }
-const target = resolve(root, 'frontend/src/pages/company/workflow/contracts.generated.ts');
-const rendered = '// Generated from docs/api/openapi.yaml. Run node scripts/generate-company-contracts.mjs\n'
-  + '// SHA256: ' + createHash('sha256').update(source).digest('hex')
-  + '\n// Conditional constraints are enforced by repository/server validation.\n'
-  + Object.entries(schemas).filter(([name]) => required.has(name)).map(([name, schema]) => `export type ${name} = ${ts(schema)};`).join('\n') + '\n';
-if (process.argv.includes('--check')) {
-  if (readFileSync(target, 'utf8').replaceAll('\r\n', '\n') !== rendered) throw new Error('Company contracts are stale');
-  console.log('Company contracts match OpenAPI');
-} else { mkdirSync(resolve(target, '..'), { recursive: true }); writeFileSync(target, rendered); }
+export function renderCompanyContracts(input) {
+  // Git may check out the same YAML as CRLF on Windows and LF on Linux.
+  // Normalize before both parsing and hashing so the fingerprint is portable.
+  const source = input.toString().replaceAll('\r\n', '\n');
+  const schemas = load(source).components.schemas;
+  const required = new Set(['CaseDraft', 'CaseStage', 'CaseStageListResponse', 'CreateStageRequest',
+    'UpdateStageRequest', 'CreateCheckpointRequest', 'UpdateCheckpointRequest', 'CaseCheckpoint',
+    'CaseApplication', 'CaseApplicationListResponse', 'CaseApplicationDecisionRequest',
+    'CompanyStudentProfile', 'CaseVersionCommand', 'CaseExecutionCommand']);
+  function collect(value) {
+    if (Array.isArray(value)) return value.forEach(collect);
+    if (!value || typeof value !== 'object') return;
+    if (value.$ref) {
+      const name = value.$ref.split('/').at(-1);
+      if (!required.has(name)) { required.add(name); collect(schemas[name]); }
+    }
+    Object.values(value).forEach(collect);
+  }
+  [...required].forEach((name) => collect(schemas[name]));
+  return '// Generated from docs/api/openapi.yaml. Run node scripts/generate-company-contracts.mjs\n'
+    + '// SHA256: ' + createHash('sha256').update(source).digest('hex')
+    + '\n// Conditional constraints are enforced by repository/server validation.\n'
+    + Object.entries(schemas).filter(([name]) => required.has(name)).map(([name, schema]) => `export type ${name} = ${ts(schema)};`).join('\n') + '\n';
+}
+
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  const target = resolve(root, 'frontend/src/pages/company/workflow/contracts.generated.ts');
+  const rendered = renderCompanyContracts(readFileSync(resolve(root, 'docs/api/openapi.yaml')));
+  if (process.argv.includes('--check')) {
+    if (readFileSync(target, 'utf8').replaceAll('\r\n', '\n') !== rendered) throw new Error('Company contracts are stale');
+    console.log('Company contracts match OpenAPI');
+  } else { mkdirSync(resolve(target, '..'), { recursive: true }); writeFileSync(target, rendered); }
+}

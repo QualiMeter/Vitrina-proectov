@@ -14,7 +14,8 @@
     "test:e2e": "playwright test",
     "preview": "vite preview",
     "codegen:company": "node ../scripts/generate-company-contracts.mjs",
-    "check:company-contracts": "node ../scripts/generate-company-contracts.mjs --check"
+    "check:company-contracts": "node ../scripts/generate-company-contracts.mjs --check",
+    "test:company-codegen": "node --test ../scripts/generate-company-contracts.test.mjs"
   },
   "dependencies": {
     "react": "^19.1.0",

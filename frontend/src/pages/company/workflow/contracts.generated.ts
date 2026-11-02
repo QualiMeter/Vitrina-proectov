@@ -1,5 +1,5 @@
 // Generated from docs/api/openapi.yaml. Run node scripts/generate-company-contracts.mjs
-// SHA256: 5c263a4f6adb2c79c83be6da67b60e85a6763fd92d3fd26391501997424ff947
+// SHA256: 25bf7bd0ad5590a5164d69bc266fa686eb0e2a012754e7a7a1743abe6aba6d99
 // Conditional constraints are enforced by repository/server validation.
 export type Id = string;
 export type DisplayName = string;
