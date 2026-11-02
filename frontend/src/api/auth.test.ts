@@ -40,6 +40,12 @@ describe('auth API contract', () => {
       if (url.endsWith('/api/v1/auth/csrf')) {
         return new Response(JSON.stringify({ csrfToken: `csrf-token-${requests.length}` }), { status: 200 });
       }
+      if (url.endsWith('/api/v1/auth/register')) {
+        return new Response(JSON.stringify({
+          nextAction: 'VERIFY_EMAIL',
+          message: 'Проверьте почту для подтверждения регистрации.',
+        }), { status: 202 });
+      }
       if (url.endsWith('/api/v1/auth/login') || url.endsWith('/api/v1/auth/email-verification/confirm')
         || url.endsWith('/api/v1/company-invitations/accept')) {
         return new Response(JSON.stringify(session), { status: 200 });
@@ -59,9 +65,13 @@ describe('auth API contract', () => {
   }
 
   it('uses the OpenAPI paths, JSON DTOs, and CSRF header for every auth mutation', async () => {
-    await register({
+    const pending = await register({
       email: 'student@example.com', password: 'password123', fullName: 'Иван Иванов', nickname: 'ivan',
       privacyAccepted: true, privacyPolicyVersion: 'v1',
+    });
+    expect(pending).toEqual({
+      nextAction: 'VERIFY_EMAIL',
+      message: 'Проверьте почту для подтверждения регистрации.',
     });
     await verifyEmail('verification-token-1234567890');
     await resendVerification('student@example.com');

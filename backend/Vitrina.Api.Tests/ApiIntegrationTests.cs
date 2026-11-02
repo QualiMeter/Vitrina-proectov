@@ -85,6 +85,13 @@ public sealed class ApiIntegrationTests : IAsyncLifetime
 		registerRequest.Headers.Add("X-CSRF-Token", csrfToken);
 		var registerResponse = await Client.SendAsync(registerRequest, cancellationToken);
 		Assert.Equal(System.Net.HttpStatusCode.Accepted, registerResponse.StatusCode);
+		using (var pendingJson = JsonDocument.Parse(await registerResponse.Content.ReadAsStringAsync(cancellationToken)))
+		{
+			Assert.Equal("VERIFY_EMAIL", pendingJson.RootElement.GetProperty("nextAction").GetString());
+			Assert.False(pendingJson.RootElement.TryGetProperty("userId", out _));
+			Assert.False(pendingJson.RootElement.TryGetProperty("emailConfirmationRequired", out _));
+			Assert.False(string.IsNullOrWhiteSpace(pendingJson.RootElement.GetProperty("message").GetString()));
+		}
 		Assert.NotNull(_emailSender.LastHtmlBody);
 		await using (var scope = _factory!.Services.CreateAsyncScope())
 		{
@@ -95,6 +102,7 @@ public sealed class ApiIntegrationTests : IAsyncLifetime
 			Assert.NotNull(registeredUser.PrivacyAcceptedAt);
 		}
 
+		Assert.Equal("/verify-email", ExtractEmailUri(_emailSender.LastHtmlBody!).AbsolutePath);
 		var confirmationToken = ExtractEmailToken(_emailSender.LastHtmlBody!);
 
 		using var confirmRequest = new HttpRequestMessage(HttpMethod.Post, "/api/v1/auth/email-verification/confirm")
@@ -128,6 +136,7 @@ public sealed class ApiIntegrationTests : IAsyncLifetime
 		var forgotResponse = await Client.SendAsync(forgotRequest, cancellationToken);
 		Assert.Equal(System.Net.HttpStatusCode.Accepted, forgotResponse.StatusCode);
 		Assert.NotNull(_emailSender.LastHtmlBody);
+		Assert.Equal("/reset-password", ExtractEmailUri(_emailSender.LastHtmlBody!).AbsolutePath);
 		var resetToken = ExtractEmailToken(_emailSender.LastHtmlBody!);
 
 		using var resetRequest = new HttpRequestMessage(HttpMethod.Post, "/api/v1/auth/password/reset")
@@ -182,11 +191,16 @@ public sealed class ApiIntegrationTests : IAsyncLifetime
 		Assert.Equal(System.Net.HttpStatusCode.BadRequest, wrongVersionResponse.StatusCode);
 	}
 
-	private static string ExtractEmailToken(string htmlBody)
+	private static Uri ExtractEmailUri(string htmlBody)
 	{
 		var link = Regex.Match(htmlBody, "href=\"(?<url>[^\"]+)\"");
 		Assert.True(link.Success);
-		var uri = new Uri(link.Groups["url"].Value);
+		return new Uri(link.Groups["url"].Value);
+	}
+
+	private static string ExtractEmailToken(string htmlBody)
+	{
+		var uri = ExtractEmailUri(htmlBody);
 		return Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query)["token"].ToString();
 	}
 

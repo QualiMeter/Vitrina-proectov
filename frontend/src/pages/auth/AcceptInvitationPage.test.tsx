@@ -30,7 +30,8 @@ function open(context: AuthContextValue) {
 
 function LoginLocation() {
   const location = useLocation();
-  return <output data-testid="login-location">{location.pathname}{location.search}</output>;
+  const state = location.state as { invitationToken?: string } | null;
+  return <output data-testid="login-location">{location.pathname}{location.search}:{state?.invitationToken ?? ''}</output>;
 }
 
 describe('company invitation acceptance', () => {
@@ -44,8 +45,11 @@ describe('company invitation acceptance', () => {
     open(signedIn);
     expect(await screen.findByText('ООО Пример')).toBeInTheDocument();
     expect(api.previewInvitation).toHaveBeenCalledWith('invitation-token-1234567890');
-    fireEvent.click(screen.getByRole('button', { name: 'Подтвердить и принять приглашение' }));
-    await waitFor(() => expect(api.acceptInvitation).toHaveBeenCalledWith({ mode: 'existing', token: 'invitation-token-1234567890' }));
+    const acceptButton = screen.getByRole('button', { name: 'Подтвердить и принять приглашение' });
+    fireEvent.click(acceptButton);
+    fireEvent.click(acceptButton);
+    await waitFor(() => expect(api.acceptInvitation).toHaveBeenCalledTimes(1));
+    expect(api.acceptInvitation).toHaveBeenCalledWith({ mode: 'existing', token: 'invitation-token-1234567890' });
     expect(await screen.findByText('Компания')).toBeInTheDocument();
   });
 
@@ -67,8 +71,8 @@ describe('company invitation acceptance', () => {
     open(guest);
     const login = await screen.findByRole('link', { name: 'войдите' });
     fireEvent.click(login);
-    expect(sessionStorage.getItem('vitrina.pending-company-invitation')).toBe('invitation-token-1234567890');
-    expect(await screen.findByTestId('login-location')).toHaveTextContent('/login');
+    expect(sessionStorage.getItem('vitrina.pending-company-invitation')).toBeNull();
+    expect(await screen.findByTestId('login-location')).toHaveTextContent('/login:invitation-token-1234567890');
   });
 
   it.each([
@@ -82,4 +86,10 @@ describe('company invitation acceptance', () => {
     open(guest);
     expect(await screen.findByRole('alert')).toHaveTextContent(message);
   });
+  it('shows a retry-after message when invitation preview is rate limited', async () => {
+    api.previewInvitation.mockRejectedValueOnce(new ApiError('rateLimited', 429));
+    open(guest);
+    expect(await screen.findByRole('alert')).toHaveTextContent('Слишком много запросов');
+  });
+
 });

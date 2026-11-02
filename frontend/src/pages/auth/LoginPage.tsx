@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../../features/auth/useAuth';
+import { ApiError } from '../../api/client';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Card } from '../../components/ui/Card';
@@ -21,20 +22,31 @@ export function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const submitting = useRef(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (submitting.current) return;
+    submitting.current = true;
     setError(null);
     setLoading(true);
     try {
       await login({ email, password });
-      navigate(from, { replace: true });
+      const invitationToken = (location.state as { invitationToken?: string } | null)?.invitationToken;
+      if (invitationToken) {
+        navigate('/accept-invitation', { replace: true, state: { invitationToken } });
+      } else {
+        navigate(from, { replace: true });
+      }
     } catch (err: unknown) {
-      const status = (err as { status?: number })?.status;
-      setError(status === 401 || status === 403
-        ? 'Не удалось войти. Проверьте email и пароль, а также подтверждение адреса.'
-        : 'Не удалось войти. Попробуйте позже.');
+      const status = err instanceof ApiError ? err.status : undefined;
+      setError(status === 429
+        ? 'Слишком много попыток входа. Подождите немного и попробуйте снова.'
+        : status === 401 || status === 403
+          ? 'Не удалось войти. Проверьте email и пароль, а также подтверждение адреса.'
+          : 'Не удалось войти. Попробуйте позже.');
     } finally {
+      submitting.current = false;
       setLoading(false);
     }
   }

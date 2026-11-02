@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { resetPassword } from '../../api/auth';
+import { ApiError } from '../../api/client';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Card } from '../../components/ui/Card';
@@ -14,6 +15,7 @@ export function ResetPasswordPage() {
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const submitting = useRef(false);
 
   useEffect(() => {
     const urlToken = searchParams.get('token');
@@ -24,6 +26,7 @@ export function ResetPasswordPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (submitting.current) return;
     if (!token) {
       setError('Отсутствует токен сброса.');
       return;
@@ -32,18 +35,28 @@ export function ResetPasswordPage() {
       setError('Пароли не совпадают.');
       return;
     }
+    submitting.current = true;
     setError(null);
     setLoading(true);
     try {
       await resetPassword({ token, newPassword });
       window.dispatchEvent(new Event('vitrina:session-expired'));
       setStatus('success');
+      setToken(null);
     } catch (err: unknown) {
-      const status = (err as { status?: number })?.status;
-      setError(status === 400 || status === 401 || status === 404
-        ? 'Ссылка недействительна или истекла.'
-        : status === 409 ? 'Этот запрос уже использован. Запросите новую ссылку.' : 'Не удалось сменить пароль. Попробуйте позже.');
-    } finally { setLoading(false); }
+      const status = err instanceof ApiError ? err.status : undefined;
+      setError(status === 429
+        ? 'Слишком много запросов. Подождите немного и попробуйте снова.'
+        : status === 400 || status === 401 || status === 404
+          ? 'Ссылка недействительна или истекла.'
+          : status === 409 ? 'Этот запрос уже использован. Запросите новую ссылку.' : 'Не удалось сменить пароль. Попробуйте позже.');
+      if (status === 400 || status === 401 || status === 404 || status === 409) {
+        setToken(null);
+      }
+    } finally {
+      submitting.current = false;
+      setLoading(false);
+    }
   }
 
   if (status === 'success') {

@@ -30,6 +30,11 @@ export interface LoginPayload {
   password: string;
 }
 
+export interface PendingVerificationResponse {
+  nextAction: 'VERIFY_EMAIL';
+  message: string;
+}
+
 export interface RegisterPayload extends LoginPayload {
   fullName: string;
   nickname: string;
@@ -81,8 +86,8 @@ export async function login(payload: LoginPayload): Promise<AuthSession> {
   return session;
 }
 
-export async function register(payload: RegisterPayload): Promise<void> {
-  await apiRequest('/api/v1/auth/register', {
+export async function register(payload: RegisterPayload): Promise<PendingVerificationResponse> {
+  return apiRequest<PendingVerificationResponse>('/api/v1/auth/register', {
     method: 'POST',
     body: JSON.stringify(payload),
   });

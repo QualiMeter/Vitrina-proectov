@@ -91,7 +91,7 @@ public static class CompanyInvitationEndpoints
 		await db.SaveChangesAsync(ct);
 
 		var frontend = (configuration["Email:FrontendBaseUrl"] ?? "http://localhost:5173").TrimEnd('/');
-		var invitationPath = configuration["Email:Routes:CompanyInvitationPath"] ?? "/invitations/accept";
+		var invitationPath = configuration["Email:Routes:CompanyInvitationPath"] ?? "/accept-invitation";
 		var safeCompany = System.Net.WebUtility.HtmlEncode(company.Name);
 		var link = $"{frontend}/{invitationPath.TrimStart('/')}?token={Uri.EscapeDataString(token)}";
 		try
