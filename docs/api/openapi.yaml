@@ -120,7 +120,7 @@ paths:
       - Auth
       operationId: authConfirmEmail
       summary: Подтвердить email самостоятельно зарегистрированного студента
-      description: 'Одноразовый токен из письма. В случае успеха создаёт cookie-сессию.
+      description: 'Frontend route: /auth/confirm-email?token=... . Одноразовый токен из письма. В случае успеха создаёт cookie-сессию.
 
         Ссылки с токеном должны иметь Referrer-Policy: no-referrer;
 
@@ -306,7 +306,7 @@ paths:
       - Auth
       operationId: authResetPassword
       summary: Установить новый пароль по одноразовому токену
-      description: 'После успеха отозвать все активные сессии пользователя.
+      description: 'Frontend route: /auth/reset-password?token=... . После успеха отозвать все активные сессии пользователя.
 
         Новый вход нужен отдельно. Токен передаётся только в JSON-теле.
 
@@ -517,7 +517,7 @@ paths:
       - Invitations
       operationId: invitationsPreview
       summary: Посмотреть организацию и роль до принятия приглашения
-      description: 'Токен передаётся в JSON, не в URL запроса; ответ без внутренних данных.
+      description: 'Frontend route: /invitations/accept?token=... . Токен передаётся в JSON, не в URL запроса; ответ без внутренних данных.
 
         Не меняет состояние приглашения.
 
@@ -550,7 +550,7 @@ paths:
       - Invitations
       operationId: invitationsAccept
       summary: Принять приглашение в компанию существующим или новым аккаунтом
-      description: 'Режим existing: текущая действительная cookie-сессия обязательна,
+      description: 'Frontend route: /invitations/accept?token=... . Режим existing: текущая действительная cookie-сессия обязательна,
 
         email текущего пользователя должен совпадать с адресом приглашения.
 
@@ -3588,7 +3588,7 @@ components:
           type: string
           minLength: 1
           maxLength: 40
-          description: Идентификатор опубликованной редакции политики; сервер проверяет допустимость
+          description: Должен точно совпадать с Privacy:CurrentPolicyVersion на сервере (по умолчанию v1).
         academic:
           $ref: '#/components/schemas/AcademicProfileInput'
     AcademicProfileInput:
@@ -3723,7 +3723,9 @@ components:
         fullName:
           $ref: '#/components/schemas/DisplayName'
         nickname:
-          $ref: '#/components/schemas/Nickname'
+          oneOf:
+          - $ref: '#/components/schemas/Nickname'
+          - type: 'null'
         globalRoles:
           type: array
           uniqueItems: true

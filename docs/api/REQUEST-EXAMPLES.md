@@ -4,6 +4,25 @@
 
 В реальном клиенте перед изменяющим запросом запрашивается `GET /api/v1/auth/csrf`, а затем передаётся `X-CSRF-Token`. Cookie отправляется браузером автоматически на том же origin. Для операций `submit`, `withdraw`, `decision` клиент задаёт отдельный `Idempotency-Key` и использует **тот же ключ для сетевых повторов**.
 
+## Авторизация и регистрация
+
+Регистрация студента передаёт выбранный никнейм и явное согласие с актуальной редакцией политики:
+
+```json
+{
+  "email": "student@example.test",
+  "password": "Strong-password-123",
+  "fullName": "Иван Иванов",
+  "nickname": "ivan_dev",
+  "privacyAccepted": true,
+  "privacyPolicyVersion": "v1"
+}
+```
+
+`privacyPolicyVersion` должен совпадать с серверной настройкой `Privacy:CurrentPolicyVersion`. После подтверждения email сервер устанавливает cookie-сессию. Успешные `POST /api/v1/auth/login`, `POST /api/v1/auth/email-verification/confirm` и `GET /api/v1/auth/me` возвращают общий контракт `{ "user": { ... }, "session": { "expiresAt": "..." } }`. Успешный `POST /api/v1/auth/password/reset` возвращает `204 No Content`.
+
+Ссылки из писем ведут на frontend-маршруты `/auth/confirm-email`, `/auth/reset-password` и `/invitations/accept`. Frontend передаёт токен в API в JSON-теле, а не повторяет его в URL API.
+
 ## 1. Компания создаёт черновик кейса
 
 `POST /api/v1/companies/{companyId}/cases`:

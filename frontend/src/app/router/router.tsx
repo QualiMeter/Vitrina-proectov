@@ -3,11 +3,15 @@ import { HomePage } from '../../pages/public/HomePage/HomePage';
 import { AppShell } from '../../components/layout/AppShell';
 import { PlaceholderPage } from '../../pages/PlaceholderPage';
 import { ErrorState } from '../../components/feedback/States';
+import { frontendPaths } from './paths';
 
 const route = (path: string) => ({ path, element: <PlaceholderPage /> });
 
 export const router = createBrowserRouter([
   { path: '/', element: <HomePage /> },
+  { path: frontendPaths.emailConfirmation, element: <PlaceholderPage /> },
+  { path: frontendPaths.passwordReset, element: <PlaceholderPage /> },
+  { path: frontendPaths.companyInvitation, element: <PlaceholderPage /> },
   { path: '/university', element: <AppShell area="university" />, children: [
     { index: true, element: <PlaceholderPage /> }, route('moderation'), route('moderation/:kind/:id'), route('companies'), route('companies/new'), route('companies/:id'), route('curators'), route('projects'), route('reports')
   ] },

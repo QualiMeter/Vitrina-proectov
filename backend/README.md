@@ -39,13 +39,15 @@ Use environment variables in production:
 - `ConnectionStrings__Default`
 - `Cors__Origins__0`
 - `Email__Host`, `Email__Port`, `Email__UserName`, `Email__Password`, `Email__From`, `Email__FrontendBaseUrl`
+- `Email__Routes__EmailConfirmationPath` (`/auth/confirm-email`), `Email__Routes__PasswordResetPath` (`/auth/reset-password`), `Email__Routes__CompanyInvitationPath` (`/invitations/accept`)
+- `Privacy__CurrentPolicyVersion` (default `v1`; registration accepts only this exact version)
 - `Storage__Endpoint`, `Storage__AccessKey`, `Storage__SecretKey`, `Storage__Bucket`, `Storage__UseSsl`, `Storage__MaxFileSizeBytes`
 
 Do not use development passwords in production. SMTP is required for email confirmation and company invitations.
 
 ## Database note
 
-The current first-start bootstrap uses `EnsureCreated`. Before evolving a production database, add EF Core migrations, test them against a copy, then switch startup to `Database.Migrate()`. Never mix `EnsureCreated` with migrations on the same database.
+The API applies EF Core migrations at startup. Migration `202611020001_RegistrationPrivacyConsent` adds auditable privacy-consent columns to `Users`; existing accounts remain nullable and are not retroactively marked as having consented.
 
 
 ## Stage 5: production infrastructure
@@ -63,3 +65,10 @@ The Stage 5 unit and PostgreSQL-backed integration tests are in `Vitrina.Api.Tes
 ## NuGet package management
 
 All direct NuGet package versions are defined centrally in the `Directory.Packages.props`. Do not add `Version` attributes to `PackageReference` elements. Update the central versions together when upgrading dependencies. The selected versions are stable releases compatible with .NET 10; .NET 11 preview packages are intentionally excluded.
+
+## Authentication integration contract
+
+- `POST /api/v1/auth/login`, `GET /api/v1/auth/me` and successful `POST /api/v1/auth/email-verification/confirm` return `{ user, session: { expiresAt } }`.
+- Email links target `/auth/confirm-email`, `/auth/reset-password` and `/invitations/accept`; the paths are configurable in `Email:Routes` and have matching frontend router entries.
+- Student registration requires a unique `nickname`, `privacyAccepted: true` and a `privacyPolicyVersion` equal to `Privacy:CurrentPolicyVersion`. The accepted version and timestamp are persisted.
+- Successful `POST /api/v1/auth/password/reset` returns `204 No Content`.
