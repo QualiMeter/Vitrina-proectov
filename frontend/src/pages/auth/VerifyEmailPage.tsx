@@ -16,6 +16,7 @@ export function VerifyEmailPage() {
   const [status, setStatus] = useState<'idle' | 'verifying' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
   const [resending, setResending] = useState(false);
+  const [verificationAttempt, setVerificationAttempt] = useState(0);
   const verificationStarted = useRef<string | null>(null);
   const resendInProgress = useRef(false);
 
@@ -42,9 +43,17 @@ export function VerifyEmailPage() {
         setMessage(cause instanceof ApiError && cause.status === 429
           ? 'Слишком много запросов. Подождите немного и попробуйте снова.'
           : 'Ссылка недействительна или истекла. Запросите новое письмо.');
-        setToken(null);
+        if (!(cause instanceof ApiError && cause.status === 429)) {
+          setToken(null);
+        }
       });
-  }, [token, adoptSession]);
+  }, [token, adoptSession, verificationAttempt]);
+
+  function retryVerification() {
+    if (!token) return;
+    verificationStarted.current = null;
+    setVerificationAttempt(current => current + 1);
+  }
 
   async function handleResend() {
     if (!emailFromState || resendInProgress.current) return;
@@ -70,6 +79,7 @@ export function VerifyEmailPage() {
         {status === 'verifying' && <p>Проверяем ссылку…</p>}
         {status === 'success' && <p className="auth-success">{message}</p>}
         {status === 'error' && <p className="auth-error">{message}</p>}
+        {status === 'error' && token && <Button onClick={retryVerification}>Повторить проверку</Button>}
         {!token && emailFromState && (
           <>
             <p>На адрес <strong>{emailFromState}</strong> отправлено письмо с ссылкой для подтверждения.</p>
