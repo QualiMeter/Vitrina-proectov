@@ -27,13 +27,13 @@ export function AcceptInvitationPage() {
   const [token, setToken] = useState(() => params.get('token') ?? (location.state as { invitationToken?: string } | null)?.invitationToken ?? '');
   const [preview, setPreview] = useState<InvitationPreview | null>(null);
   const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [mode, setMode] = useState<'existing' | 'new'>('existing');
   const [fullName, setFullName] = useState('');
   const [password, setPassword] = useState('');
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [error, setError] = useState('');
-  const submitting = useRef(false);
+  const submittingRef = useRef(false);
   const preservePendingOnUnmount = useRef(false);
 
   useEffect(() => {
@@ -61,7 +61,6 @@ export function AcceptInvitationPage() {
         setError(invitationError(cause));
         if (cause instanceof ApiError && [400, 403, 404].includes(cause.status ?? 0)) {
           clearPendingInvitationToken();
-          setToken('');
         }
       }
     }).finally(() => { if (active) setLoading(false); });
@@ -70,27 +69,26 @@ export function AcceptInvitationPage() {
 
   async function handleAccept(event: React.FormEvent) {
     event.preventDefault();
-    if (!preview || submitting.current) return;
+    if (!preview || submittingRef.current) return;
     if (mode === 'new' && !privacyAccepted) {
       setError('Необходимо согласие на обработку персональных данных.');
       return;
     }
-    submitting.current = true;
-    setSubmitting(true);
+    submittingRef.current = true;
+    setIsSubmitting(true);
     setError('');
     try {
       const result = await acceptInvitation(mode === 'existing'
         ? { mode, token }
         : { mode, token, fullName, password, privacyAccepted: true, privacyPolicyVersion: PRIVACY_POLICY_VERSION });
       clearPendingInvitationToken();
-      setToken('');
       adoptSession(result);
       navigate('/company', { replace: true });
     } catch (cause: unknown) {
       setError(invitationError(cause));
     } finally {
-      submitting.current = false;
-      setSubmitting(false);
+      submittingRef.current = false;
+      setIsSubmitting(false);
     }
   }
 
@@ -123,7 +121,7 @@ export function AcceptInvitationPage() {
           <label className="auth-checkbox"><input type="checkbox" checked={privacyAccepted} onChange={(event) => setPrivacyAccepted(event.target.checked)} />Принимаю политику обработки персональных данных (версия {PRIVACY_POLICY_VERSION})</label>
         </>}
         {error && <p className="auth-error" role="alert">{error}</p>}
-        {(session || mode === 'new') && <Button type="submit" disabled={submitting}>{submitting ? 'Принимаем…' : 'Подтвердить и принять приглашение'}</Button>}
+        {(session || mode === 'new') && <Button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Принимаем…' : 'Подтвердить и принять приглашение'}</Button>}
       </form>
     </> : <p className="auth-error" role="alert">{error}</p>}
   </Card></div>;
