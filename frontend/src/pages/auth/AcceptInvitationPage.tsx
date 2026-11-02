@@ -6,7 +6,6 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { useAuth } from '../../features/auth/useAuth';
-import { clearPendingInvitationToken, setPendingInvitationToken } from '../../features/auth/pendingInvitation';
 
 function invitationError(error: unknown): string {
   if (!(error instanceof ApiError)) return 'Не удалось проверить приглашение. Попробуйте позже.';
@@ -34,13 +33,11 @@ export function AcceptInvitationPage() {
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [error, setError] = useState('');
   const submittingRef = useRef(false);
-  const preservePendingOnUnmount = useRef(false);
 
   useEffect(() => {
     const urlToken = params.get('token');
     if (urlToken) {
       setToken(urlToken);
-      setPendingInvitationToken(urlToken);
       navigate('/accept-invitation', { replace: true, state: null });
       return;
     }
@@ -66,7 +63,6 @@ export function AcceptInvitationPage() {
         setPreview(null);
         setError(invitationError(cause));
         if (cause instanceof ApiError && [400, 403, 404].includes(cause.status ?? 0)) {
-          clearPendingInvitationToken();
         }
       }
     }).finally(() => { if (active) setLoading(false); });
@@ -87,7 +83,6 @@ export function AcceptInvitationPage() {
       const result = await acceptInvitation(mode === 'existing'
         ? { mode, token }
         : { mode, token, fullName, password, privacyAccepted: true, privacyPolicyVersion: PRIVACY_POLICY_VERSION });
-      clearPendingInvitationToken();
       adoptSession(result);
       navigate('/company', { replace: true });
     } catch (cause: unknown) {
@@ -98,13 +93,11 @@ export function AcceptInvitationPage() {
     }
   }
 
-  useEffect(() => () => {
-    if (!preservePendingOnUnmount.current) {
-      clearPendingInvitationToken();
-    }
-  }, []);
-
-  const loginReturn = { from: { pathname: '/accept-invitation' }, pendingInvitation: true };
+  const loginReturn = {
+    from: { pathname: '/accept-invitation' },
+    pendingInvitation: true,
+    invitationToken: token,
+  };
   return <div className="auth-page"><Card>
     <h1>Приглашение в компанию</h1>
     {loading || authLoading ? <p role="status">Проверяем приглашение…</p> : preview ? <>
@@ -116,10 +109,7 @@ export function AcceptInvitationPage() {
         <button type="button" aria-pressed={mode === 'existing'} onClick={() => setMode('existing')}>У меня есть аккаунт</button>
         <button type="button" aria-pressed={mode === 'new'} onClick={() => setMode('new')}>Создать аккаунт</button>
       </div>}
-      {mode === 'existing' && !session ? <p>Чтобы продолжить с существующим аккаунтом, <Link to="/login" state={loginReturn} onClick={() => {
-        preservePendingOnUnmount.current = true;
-        setPendingInvitationToken(token);
-      }}>войдите</Link>. После входа вы вернётесь к приглашению.</p> : null}
+      {mode === 'existing' && !session ? <p>Чтобы продолжить с существующим аккаунтом, <Link to="/login" state={loginReturn}>войдите</Link>. После входа вы вернётесь к приглашению.</p> : null}
       <form onSubmit={handleAccept}>
         {mode === 'new' && !session && <>
           <Input label="ФИО" value={fullName} onChange={(event) => setFullName(event.target.value)} required minLength={2} maxLength={200} autoComplete="name" />
