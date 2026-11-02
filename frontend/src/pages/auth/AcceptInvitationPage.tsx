@@ -63,6 +63,7 @@ export function AcceptInvitationPage() {
         setPreview(null);
         setError(invitationError(cause));
         if (cause instanceof ApiError && [400, 403, 404].includes(cause.status ?? 0)) {
+          setToken('');
         }
       }
     }).finally(() => { if (active) setLoading(false); });
