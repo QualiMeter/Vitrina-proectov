@@ -253,7 +253,9 @@
 }
 
 @media (max-width: 560px) {
-  .public-header__inner { min-height: 72px; gap: 12px; }
+  .public-header__inner { min-height: 72px; gap: 8px; flex-wrap: wrap; padding-block: 8px; }
+  .public-header__account { flex: 1 0 100%; justify-content: flex-end; margin-left: 0; }
+  .public-header__account .public-header__name { display: block; max-width: 100px; min-width: 0; }
   .brand img { width: 90px; }
   .brand__service { padding-left: 9px; font-size: .7rem; }
   .public-header .button { min-height: 38px; padding: 8px 10px; font-size: .8rem; }
@@ -278,3 +280,7 @@
   .projects-heading__actions { justify-items: start; }
   .cta-inner .button { white-space: normal; }
 }
+.public-header__account { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+.public-header__name { max-width: 180px; overflow: hidden; color: var(--muted); font-size: .82rem; text-overflow: ellipsis; white-space: nowrap; }
+.public-header__status { margin-left: auto; color: var(--muted); font-size: .82rem; }
+.public-header__error { color: var(--danger); font-size: .78rem; }

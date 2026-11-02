@@ -1,5 +1,19 @@
 import { expect, test, type Page } from '@playwright/test';
 
+async function mockSession(page: Page, availableAreas = ['student', 'company', 'university', 'mentor', 'admin']) {
+  await page.route('**/api/v1/auth/me', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({
+      user: {
+        id: 'e2e-user', email: 'user@example.com', fullName: 'Тестовый пользователь', nickname: 'tester',
+        globalRoles: ['STUDENT'], availableAreas, permissions: [], companyMemberships: [],
+      },
+      session: { expiresAt: '2026-11-02T00:00:00Z' },
+    }),
+  }));
+}
+
 async function assertNoPageErrors(page: Page, visit: () => Promise<void>) {
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
@@ -8,6 +22,7 @@ async function assertNoPageErrors(page: Page, visit: () => Promise<void>) {
 }
 
 test('home page has accessible headings and navigation', async ({ page }) => {
+  await mockSession(page);
   await assertNoPageErrors(page, async () => {
     await page.goto('/');
     await expect(page.getByRole('heading', { level: 1, name: /Идеи встречаются/ })).toBeVisible();
@@ -28,9 +43,11 @@ test('home page has accessible headings and navigation', async ({ page }) => {
   });
 });
 
-test('implemented cabinet routes work on direct navigation and reload', async ({ page }) => {
+test('protected company and service cabinet routes work on direct navigation and reload', async ({ page }) => {
+  await mockSession(page);
   await assertNoPageErrors(page, async () => {
     for (const [path, heading] of [
+      ['/company', 'Кабинет компании'],
       ['/university', 'Кабинет сотрудника университета'],
       ['/mentor', 'Кабинет куратора'],
       ['/admin', 'Кабинет администратора']
@@ -39,7 +56,7 @@ test('implemented cabinet routes work on direct navigation and reload', async ({
       await expect(page.getByRole('heading', { level: 1, name: heading })).toBeVisible();
       await page.reload();
       await expect(page.getByRole('heading', { level: 1, name: heading })).toBeVisible();
-      await page.getByRole('link', { name: /на главную/ }).first().click();
+      await page.goto('/');
       await expect(page).toHaveURL('/');
     }
   });
@@ -139,6 +156,7 @@ test('mobile filters stay collapsed and preserve selections when reopened', asyn
 });
 
 test('375px layout has no horizontal overflow', async ({ page }) => {
+  await mockSession(page);
   await page.setViewportSize({ width: 375, height: 812 });
   const routes = [
     '/',
@@ -157,6 +175,38 @@ test('375px layout has no horizontal overflow', async ({ page }) => {
     }));
     expect(widths.document, `horizontal overflow on ${route}`).toBeLessThanOrEqual(widths.viewport);
   }
+});
+
+test('guest is sent to login and returned to the requested cabinet after a mocked sign-in', async ({ page }) => {
+  await page.route('**/api/v1/auth/me', route => route.fulfill({ status: 401, body: '{}' }));
+  await page.route('**/api/v1/auth/csrf', route => route.fulfill({
+    status: 200, contentType: 'application/json', body: JSON.stringify({ csrfToken: 'csrf-token-for-e2e-1234567890' }),
+  }));
+  await page.route('**/api/v1/auth/login', async route => {
+    expect(route.request().headers()['x-csrf-token']).toBe('csrf-token-for-e2e-1234567890');
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        user: { id: 'e2e-user', email: 'user@example.com', fullName: 'Тестовый пользователь', globalRoles: ['UNIVERSITY_STAFF'], availableAreas: ['university'], permissions: [], companyMemberships: [] },
+        session: { expiresAt: '2026-11-02T00:00:00Z' },
+      }),
+    });
+  });
+  await page.goto('/university');
+  await expect(page).toHaveURL(/\/login$/);
+  await page.getByLabel('Email').fill('user@example.com');
+  await page.getByLabel('Пароль').fill('password123');
+  await page.getByRole('button', { name: 'Войти' }).click();
+  await expect(page).toHaveURL(/\/university$/);
+  await expect(page.getByRole('heading', { level: 1, name: 'Кабинет сотрудника университета' })).toBeVisible();
+});
+
+test('an authenticated account without an area is denied that cabinet', async ({ page }) => {
+  await mockSession(page, ['student']);
+  await page.goto('/university');
+  await expect(page).toHaveURL(/\/403$/);
+  await expect(page.getByRole('heading', { name: 'Нет доступа' })).toBeVisible();
 });
 
 test('unknown route shows not found state without uncaught errors', async ({ page }) => {
