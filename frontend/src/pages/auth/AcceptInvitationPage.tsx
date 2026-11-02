@@ -52,7 +52,7 @@ export function AcceptInvitationPage() {
     let active = true;
     if (!token) {
       setLoading(false);
-      setError('В ссылке нет токена приглашения. Запросите новое приглашение.');
+      setError(currentError => currentError || 'В ссылке нет токена приглашения. Запросите новое приглашение.');
       return () => { active = false; };
     }
     setLoading(true);
@@ -87,6 +87,10 @@ export function AcceptInvitationPage() {
       navigate('/company', { replace: true });
     } catch (cause: unknown) {
       setError(invitationError(cause));
+      if (cause instanceof ApiError && [400, 403, 404, 409].includes(cause.status ?? 0)) {
+        setToken('');
+        setPreview(null);
+      }
     } finally {
       submittingRef.current = false;
       setIsSubmitting(false);
