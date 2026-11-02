@@ -52,4 +52,94 @@ describe('CSRF request coordination', () => {
     await apiRequest('/mutate', { method: 'POST' });
     expect(csrfCalls).toBe(2);
   });
+
+  it('retries a rejected CSRF mutation exactly once with a fresh token', async () => {
+    clearCsrfToken();
+    let csrfCalls = 0;
+    let mutationAttempts = 0;
+    let successfulMutations = 0;
+
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL, init: RequestInit = {}) => {
+      if (String(input).endsWith('/auth/csrf')) {
+        csrfCalls += 1;
+        return new Response(JSON.stringify({ csrfToken: csrfCalls === 1 ? 'csrf-old' : 'csrf-new' }), { status: 200 });
+      }
+
+      mutationAttempts += 1;
+      const token = new Headers(init.headers).get('X-CSRF-Token');
+
+      if (token === 'csrf-old') {
+        return new Response(JSON.stringify({ code: 'csrf_invalid' }), { status: 403 });
+      }
+
+      successfulMutations += 1;
+      return new Response(null, { status: 204 });
+    }));
+
+    await apiRequest('/mutate', { method: 'POST', body: JSON.stringify({ value: 1 }) });
+
+    expect(csrfCalls).toBe(2);
+    expect(mutationAttempts).toBe(2);
+    expect(successfulMutations).toBe(1);
+  });
+
+  it('shares CSRF recovery between parallel mutations rejected with the same stale token', async () => {
+    clearCsrfToken();
+    let csrfCalls = 0;
+    let oldTokenAttempts = 0;
+    let successfulMutations = 0;
+
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL, init: RequestInit = {}) => {
+      if (String(input).endsWith('/auth/csrf')) {
+        csrfCalls += 1;
+        return new Response(JSON.stringify({ csrfToken: csrfCalls === 1 ? 'csrf-old' : 'csrf-new' }), { status: 200 });
+      }
+
+      const token = new Headers(init.headers).get('X-CSRF-Token');
+
+      if (token === 'csrf-old') {
+        oldTokenAttempts += 1;
+        return new Response(JSON.stringify({ code: 'csrf_invalid' }), { status: 403 });
+      }
+
+      successfulMutations += 1;
+      return new Response(null, { status: 204 });
+    }));
+
+    await Promise.all([
+      apiRequest('/first', { method: 'POST', body: '{}' }),
+      apiRequest('/second', { method: 'POST', body: '{}' }),
+    ]);
+
+    expect(csrfCalls).toBe(2);
+    expect(oldTokenAttempts).toBe(2);
+    expect(successfulMutations).toBe(2);
+  });
+
+  it('notifies AuthProvider after protected API 401 but not after a failed login', async () => {
+    clearCsrfToken();
+    const expired = vi.fn();
+    window.addEventListener('vitrina:session-expired', expired);
+
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('{}', { status: 401 })));
+
+    await expect(apiRequest('/api/v1/private')).rejects.toMatchObject({ status: 401 });
+    expect(expired).toHaveBeenCalledTimes(1);
+
+    await expect(apiRequest('/api/v1/auth/login', { method: 'POST', body: '{}' })).rejects.toMatchObject({ status: 401 });
+    expect(expired).toHaveBeenCalledTimes(1);
+
+    window.removeEventListener('vitrina:session-expired', expired);
+  });
+
+  it('classifies 429 as a rate-limited API error', async () => {
+    clearCsrfToken();
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('{}', { status: 429 })));
+
+    await expect(apiRequest('/api/v1/private')).rejects.toMatchObject({
+      status: 429,
+      kind: 'rateLimited',
+    });
+  });
+
 });
