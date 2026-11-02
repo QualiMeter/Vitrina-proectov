@@ -4,6 +4,7 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { AuthContext, type AuthContextValue } from '../../features/auth/context';
 import { ApiError } from '../../api/client';
 import { AcceptInvitationPage } from './AcceptInvitationPage';
+import { takePendingInvitationToken } from '../../features/auth/pendingInvitation';
 
 const api = vi.hoisted(() => ({ previewInvitation: vi.fn(), acceptInvitation: vi.fn() }));
 vi.mock('../../api/auth', async (importOriginal) => ({
@@ -36,6 +37,7 @@ function LoginLocation() {
 describe('company invitation acceptance', () => {
   beforeEach(() => {
     sessionStorage.clear();
+    takePendingInvitationToken();
     api.previewInvitation.mockReset().mockResolvedValue(invitePreview);
     api.acceptInvitation.mockReset().mockResolvedValue(signedIn.session);
   });
@@ -44,8 +46,11 @@ describe('company invitation acceptance', () => {
     open(signedIn);
     expect(await screen.findByText('ООО Пример')).toBeInTheDocument();
     expect(api.previewInvitation).toHaveBeenCalledWith('invitation-token-1234567890');
-    fireEvent.click(screen.getByRole('button', { name: 'Подтвердить и принять приглашение' }));
-    await waitFor(() => expect(api.acceptInvitation).toHaveBeenCalledWith({ mode: 'existing', token: 'invitation-token-1234567890' }));
+    const acceptButton = screen.getByRole('button', { name: 'Подтвердить и принять приглашение' });
+    fireEvent.click(acceptButton);
+    fireEvent.click(acceptButton);
+    await waitFor(() => expect(api.acceptInvitation).toHaveBeenCalledTimes(1));
+    expect(api.acceptInvitation).toHaveBeenCalledWith({ mode: 'existing', token: 'invitation-token-1234567890' });
     expect(await screen.findByText('Компания')).toBeInTheDocument();
   });
 
@@ -67,7 +72,8 @@ describe('company invitation acceptance', () => {
     open(guest);
     const login = await screen.findByRole('link', { name: 'войдите' });
     fireEvent.click(login);
-    expect(sessionStorage.getItem('vitrina.pending-company-invitation')).toBe('invitation-token-1234567890');
+    expect(sessionStorage.getItem('vitrina.pending-company-invitation')).toBeNull();
+    expect(takePendingInvitationToken()).toBe('invitation-token-1234567890');
     expect(await screen.findByTestId('login-location')).toHaveTextContent('/login');
   });
 
