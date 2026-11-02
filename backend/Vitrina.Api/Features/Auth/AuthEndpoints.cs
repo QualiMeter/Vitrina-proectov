@@ -88,11 +88,11 @@ public static class AuthEndpoints
 			ExpiresAt = DateTimeOffset.UtcNow.AddHours(24)
 		});
 		await db.SaveChangesAsync(cancellationToken);
-		var confirmationUrl = BuildFrontendLink(configuration, "EmailConfirmationPath", "/auth/confirm-email", verification);
+		var confirmationUrl = BuildFrontendLink(configuration, "EmailConfirmationPath", "/verify-email", verification);
 		await emailSender.SendAsync(user.Email, "Подтверждение электронной почты",
 			$"<p>Для подтверждения адреса перейдите по <a href=\"{confirmationUrl}\">ссылке</a>.</p>",
 			cancellationToken);
-		return Results.Accepted(value: new { userId = user.Id, emailConfirmationRequired = true });
+		return Results.Accepted(value: new { nextAction = "VERIFY_EMAIL", message = "Проверьте почту для подтверждения регистрации." });
 	}
 
 	private static async Task<IResult> Login(
@@ -185,7 +185,7 @@ public static class AuthEndpoints
 				Purpose = "EMAIL_CONFIRMATION", ExpiresAt = DateTimeOffset.UtcNow.AddHours(24)
 			});
 			await db.SaveChangesAsync(cancellationToken);
-			var url = BuildFrontendLink(configuration, "EmailConfirmationPath", "/auth/confirm-email", raw);
+			var url = BuildFrontendLink(configuration, "EmailConfirmationPath", "/verify-email", raw);
 			await emailSender.SendAsync(user.Email, "Подтверждение электронной почты",
 				$"<p>Для подтверждения адреса перейдите по <a href=\"{url}\">ссылке</a>.</p>",
 				cancellationToken);
@@ -207,7 +207,7 @@ public static class AuthEndpoints
 				Purpose = "PASSWORD_RESET", ExpiresAt = DateTimeOffset.UtcNow.AddMinutes(30)
 			});
 			await db.SaveChangesAsync(cancellationToken);
-			var url = BuildFrontendLink(configuration, "PasswordResetPath", "/auth/reset-password", raw);
+			var url = BuildFrontendLink(configuration, "PasswordResetPath", "/reset-password", raw);
 			await emailSender.SendAsync(user.Email, "Сброс пароля",
 				$"<p>Для смены пароля перейдите по <a href=\"{url}\">ссылке</a>. Ссылка действует 30 минут.</p>",
 				cancellationToken);
