@@ -191,11 +191,16 @@ public sealed class ApiIntegrationTests : IAsyncLifetime
 		Assert.Equal(System.Net.HttpStatusCode.BadRequest, wrongVersionResponse.StatusCode);
 	}
 
-	private static string ExtractEmailToken(string htmlBody)
+	private static Uri ExtractEmailUri(string htmlBody)
 	{
 		var link = Regex.Match(htmlBody, "href=\"(?<url>[^\"]+)\"");
 		Assert.True(link.Success);
-		var uri = new Uri(link.Groups["url"].Value);
+		return new Uri(link.Groups["url"].Value);
+	}
+
+	private static string ExtractEmailToken(string htmlBody)
+	{
+		var uri = ExtractEmailUri(htmlBody);
 		return Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query)["token"].ToString();
 	}
 
