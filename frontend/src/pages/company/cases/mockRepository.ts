@@ -36,7 +36,7 @@ export function validateDraft(fields: DraftFields): string[] {
 }
 
 /** In-memory demo only. Reload resets data; no private data or fake authentication. */
-export function createMockRepository(mode: DemoMode = 'normal'): CompanyCasesRepository {
+export function createMockRepository(mode: DemoMode = 'normal', sharedRecords?: Map<string, CaseDraft>): CompanyCasesRepository {
   const stamp = '2026-11-01T10:00:00Z';
   const seed: CaseDraft = {
     id: 'a2000000-0000-4000-8000-000000000001', companyId: demoCompanyId,
@@ -50,8 +50,9 @@ export function createMockRepository(mode: DemoMode = 'normal'): CompanyCasesRep
     ...seed, id: 'a2000000-0000-4000-8000-000000000003', title: 'Панель показателей компании',
     status: 'APPROVED', allowedActions: ['open-registration']
   }];
-  const items = new Map<string, CaseDraft>(mode === 'empty' ? [] : fixtures.map((item) => [item.id,
-    mode === 'read-only' ? { ...item, allowedActions: [] } : item]));
+  const items = sharedRecords ?? new Map<string, CaseDraft>();
+  if (mode !== 'empty') for (const item of fixtures) items.set(item.id,
+    mode === 'read-only' ? { ...item, allowedActions: [] } : item);
   let conflictPending = mode === 'conflict';
   async function check(companyId: string) {
     await new Promise((resolve) => setTimeout(resolve, 150));
