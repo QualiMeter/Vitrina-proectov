@@ -35,6 +35,7 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck
+      - run: npm run check:company-contracts
       - name: Check generated student types
         run: |
           python3 -m venv "$RUNNER_TEMP/student-codegen"

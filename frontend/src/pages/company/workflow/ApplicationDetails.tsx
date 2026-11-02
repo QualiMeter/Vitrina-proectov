@@ -8,6 +8,7 @@ import type { CaseApplication, CompanyStudentProfile } from './contracts.generat
 import type { WorkflowRepository, CaseSnapshot, RunAction } from './repository';
 import { applicationStatuses } from './viewHelpers';
 import { QuotaSummary } from './QuotaSummary';
+import { demoSkillLabels, demoTechnologyLabels } from './mockWorkflow';
 
 type Props = { workflow: WorkflowRepository; companyId: string; caseId: string; applicationId: string;
   snapshot: CaseSnapshot; revision: number; busy: boolean; run: RunAction };
@@ -73,8 +74,8 @@ export function ApplicationDetails({ workflow, companyId, caseId, applicationId,
         : <><h4>{profile.fullName}</h4><p>Никнейм: {profile.publicProfile.nickname}</p>
           <p>Группа: {profile.studyGroup ?? 'Не указано'} · курс: {profile.course ?? 'Не указано'}</p>
           <h5>Навыки и технологии</h5>
-          <p>{profile.publicProfile.skillIds.length ? 'Демонстрационный навык: разработка интерфейсов.' : 'Навыки не указаны.'}</p>
-          <p>{profile.publicProfile.technologyIds.length ? 'Демонстрационная технология: React.' : 'Технологии не указаны.'}</p>
+          <p>{profile.publicProfile.skillIds.length ? profile.publicProfile.skillIds.map((id) => demoSkillLabels[id] ?? 'Навык без названия').join(', ') : 'Навыки не указаны.'}</p>
+          <p>{profile.publicProfile.technologyIds.length ? profile.publicProfile.technologyIds.map((id) => demoTechnologyLabels[id] ?? 'Технология без названия').join(', ') : 'Технологии не указаны.'}</p>
           <h5>Предыдущий опыт — публичное описание</h5><p>{profile.publicProfile.publicSummary || 'Не указан.'}</p>
           <div className="workflow__actions"><Link to={`/students/${id}`}>Публичный профиль</Link><Link to={`/students/${id}/portfolio`}>Портфолио участника</Link></div>
           <small>Портфолио открывается в общем разделе; наличие опубликованных работ проверяется отдельно.</small>

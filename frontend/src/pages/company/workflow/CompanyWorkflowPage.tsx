@@ -150,4 +150,3 @@ function ApplicationList({ workflow, companyId, caseId, revision, snapshot }: {
           </nav></>}
   </section>;
 }
-

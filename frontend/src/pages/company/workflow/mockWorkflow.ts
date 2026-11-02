@@ -9,6 +9,8 @@ export const closedCaseId = id('a2', 5);
 export const openAdmissionCaseId = id('a2', 6);
 const stamp = '2026-11-02T10:00:00Z';
 const deadline = '2027-02-01T12:00:00Z';
+export const demoSkillLabels: Readonly<Record<string, string>> = { [id('d4', 1)]: 'Разработка интерфейсов' };
+export const demoTechnologyLabels: Readonly<Record<string, string>> = { [id('e1', 1)]: 'React' };
 
 function fail(kind: ConstructorParameters<typeof WorkflowError>[0], message: string): never { throw new WorkflowError(kind, message); }
 function positive(value: number) { return Number.isInteger(value) && value > 0; }
@@ -106,7 +108,8 @@ export function createCompanyDemo(mode: DemoMode = 'normal') {
       admittedSolo: admitted.filter((app) => app.format === 'SOLO').length,
       permissions: {
         editStages: writable && ['DRAFT', 'REVISION'].includes(item.status) && item.allowedActions.includes('edit'),
-        decide: writable && item.status === 'REGISTRATION_OPEN' && item.admissionMode === 'SELECTIVE',
+        decide: writable && item.status === 'REGISTRATION_OPEN' && item.admissionMode === 'SELECTIVE'
+          && (!item.registrationDeadline || Date.parse(item.registrationDeadline) > Date.now()),
         closeRegistration: writable && item.status === 'REGISTRATION_OPEN',
         startExecution: writable && item.status === 'REGISTRATION_CLOSED' && admitted.length > 0
           && listStages(caseId).some((stage) => stage.checkpoints.length > 0)
