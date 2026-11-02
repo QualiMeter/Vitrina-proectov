@@ -175,7 +175,11 @@ function canReplayBody(body: BodyInit | null | undefined): boolean {
 function notifySessionExpired(path: string): void {
   const normalizedPath = path.split('?')[0];
 
-  if (normalizedPath.endsWith('/auth/login') || normalizedPath.endsWith('/auth/register')) {
+  if (
+    normalizedPath.endsWith('/auth/login') ||
+    normalizedPath.endsWith('/auth/register') ||
+    normalizedPath.endsWith('/auth/me')
+  ) {
     return;
   }
 
