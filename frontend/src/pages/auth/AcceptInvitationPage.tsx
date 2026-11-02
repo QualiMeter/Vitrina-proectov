@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { acceptInvitation, previewInvitation, PRIVACY_POLICY_VERSION, type InvitationPreview } from '../../api/auth';
 import { ApiError } from '../../api/client';
@@ -6,11 +6,11 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { useAuth } from '../../features/auth/useAuth';
-
-const pendingTokenKey = 'vitrina.pending-company-invitation';
+import { clearPendingInvitationToken, setPendingInvitationToken } from '../../features/auth/pendingInvitation';
 
 function invitationError(error: unknown): string {
   if (!(error instanceof ApiError)) return 'Не удалось проверить приглашение. Попробуйте позже.';
+  if (error.status === 429) return 'Слишком много запросов. Подождите немного и попробуйте снова.';
   if (error.status === 400) return 'Ссылка приглашения повреждена. Запросите новое приглашение.';
   if (error.status === 401) return 'Войдите в аккаунт, указанный в приглашении.';
   if (error.status === 403) return 'Приглашение предназначено для другого пользователя.';
@@ -24,7 +24,7 @@ export function AcceptInvitationPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const { session, isLoading: authLoading, adoptSession } = useAuth();
-  const [token, setToken] = useState(() => params.get('token') ?? sessionStorage.getItem(pendingTokenKey) ?? '');
+  const [token, setToken] = useState(() => params.get('token') ?? (location.state as { invitationToken?: string } | null)?.invitationToken ?? '');
   const [preview, setPreview] = useState<InvitationPreview | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -33,18 +33,17 @@ export function AcceptInvitationPage() {
   const [password, setPassword] = useState('');
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [error, setError] = useState('');
+  const submitting = useRef(false);
+  const preservePendingOnUnmount = useRef(false);
 
   useEffect(() => {
     const urlToken = params.get('token');
     if (urlToken) {
       setToken(urlToken);
+      setPendingInvitationToken(urlToken);
       navigate('/accept-invitation', { replace: true, state: location.state });
     }
   }, [params, navigate, location.state]);
-
-  useEffect(() => {
-    if (session && token) sessionStorage.removeItem(pendingTokenKey);
-  }, [session, token]);
 
   useEffect(() => {
     let active = true;
@@ -57,33 +56,49 @@ export function AcceptInvitationPage() {
     previewInvitation(token).then((data) => {
       if (active) { setPreview(data); setError(''); }
     }).catch((cause: unknown) => {
-      if (active) { setPreview(null); setError(invitationError(cause)); sessionStorage.removeItem(pendingTokenKey); }
+      if (active) {
+        setPreview(null);
+        setError(invitationError(cause));
+        if (cause instanceof ApiError && [400, 403, 404].includes(cause.status ?? 0)) {
+          clearPendingInvitationToken();
+          setToken('');
+        }
+      }
     }).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [token]);
 
   async function handleAccept(event: React.FormEvent) {
     event.preventDefault();
-    if (!preview || submitting) return;
+    if (!preview || submitting.current) return;
     if (mode === 'new' && !privacyAccepted) {
       setError('Необходимо согласие на обработку персональных данных.');
       return;
     }
+    submitting.current = true;
     setSubmitting(true);
     setError('');
     try {
       const result = await acceptInvitation(mode === 'existing'
         ? { mode, token }
         : { mode, token, fullName, password, privacyAccepted: true, privacyPolicyVersion: PRIVACY_POLICY_VERSION });
-      sessionStorage.removeItem(pendingTokenKey);
+      clearPendingInvitationToken();
+      setToken('');
       adoptSession(result);
       navigate('/company', { replace: true });
     } catch (cause: unknown) {
       setError(invitationError(cause));
     } finally {
+      submitting.current = false;
       setSubmitting(false);
     }
   }
+
+  useEffect(() => () => {
+    if (!preservePendingOnUnmount.current) {
+      clearPendingInvitationToken();
+    }
+  }, []);
 
   const loginReturn = { from: { pathname: '/accept-invitation' }, pendingInvitation: true };
   return <div className="auth-page"><Card>
@@ -97,7 +112,10 @@ export function AcceptInvitationPage() {
         <button type="button" aria-pressed={mode === 'existing'} onClick={() => setMode('existing')}>У меня есть аккаунт</button>
         <button type="button" aria-pressed={mode === 'new'} onClick={() => setMode('new')}>Создать аккаунт</button>
       </div>}
-      {mode === 'existing' && !session ? <p>Чтобы продолжить с существующим аккаунтом, <Link to="/login" state={loginReturn} onClick={() => sessionStorage.setItem(pendingTokenKey, token)}>войдите</Link>. После входа вы вернётесь к приглашению.</p> : null}
+      {mode === 'existing' && !session ? <p>Чтобы продолжить с существующим аккаунтом, <Link to="/login" state={loginReturn} onClick={() => {
+        preservePendingOnUnmount.current = true;
+        setPendingInvitationToken(token);
+      }}>войдите</Link>. После входа вы вернётесь к приглашению.</p> : null}
       <form onSubmit={handleAccept}>
         {mode === 'new' && !session && <>
           <Input label="ФИО" value={fullName} onChange={(event) => setFullName(event.target.value)} required minLength={2} maxLength={200} autoComplete="name" />
