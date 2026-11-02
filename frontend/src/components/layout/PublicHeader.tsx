@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Brand } from './Brand';
-import { Button } from '../ui/Button';
+import { Button, ButtonLink } from '../ui/Button';
 import { Modal } from '../ui/Modal';
 
 export function PublicHeader() {
@@ -42,6 +42,7 @@ export function PublicHeader() {
     </header>
     <Modal open={showLogin} title="Вход в сервис" onClose={() => setShowLogin(false)}>
       <p>Подключение университетской системы входа находится в разработке. Сейчас авторизация недоступна.</p>
+      <ButtonLink to="/company/cases" onClick={() => setShowLogin(false)}>Кабинет компании — демо</ButtonLink>
     </Modal>
   </>;
 }

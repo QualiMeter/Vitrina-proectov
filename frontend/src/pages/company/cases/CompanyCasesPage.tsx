@@ -6,10 +6,12 @@ import { Card } from '../../../components/ui/Card';
 import { EmptyState, ErrorState, LoadingState } from '../../../components/feedback/States';
 import type { CaseDraft, CompanyCasesRepository, DraftFields } from './contracts';
 import { statuses } from './contracts';
-import { createMockRepository, demoCompanyId, directions, technologies, validateDraft, type DemoMode } from './mockRepository';
+import { demoCompanyId, directions, technologies, validateDraft, type DemoMode } from './mockRepository';
 import './companyCases.css';
+import { createCompanyDemo } from '../workflow/mockWorkflow';
+import type { WorkflowRepository } from '../workflow/repository';
 
-type DemoContext = { repository: CompanyCasesRepository; companyId: string; canCreate: boolean };
+export type DemoContext = { repository: CompanyCasesRepository; workflow: WorkflowRepository; companyId: string; canCreate: boolean };
 const message = (error: unknown) => error instanceof Error ? error.message : 'Не удалось выполнить действие.';
 const statusLabels: Record<CaseDraft['status'], string> = {
   DRAFT: 'Черновик', MODERATION: 'На модерации', REVISION: 'На доработке', REJECTED: 'Отклонён',
@@ -21,11 +23,11 @@ const statusLabels: Record<CaseDraft['status'], string> = {
 export function CompanyDemoLayout() {
   const [mode, setMode] = useState<DemoMode>('normal');
   const [active, setActive] = useState(false);
-  const repository = useMemo(() => createMockRepository(mode), [mode]);
+  const { repository, workflow } = useMemo(() => createCompanyDemo(mode), [mode]);
   return <main className="container company-cases">
     <Link to="/">← На главную</Link>
     <p className="company-cases__notice">UI Ready · демонстрационные данные</p>
-    <p>Сервер и вход ещё не подключены. Это проверка интерфейса на вымышленной компании.
+    <p>В этой демонстрации сервер и вход не подключены. Это проверка интерфейса на вымышленной компании.
       Изменения хранятся в памяти до перезагрузки страницы или смены сценария.</p>
     <label className="field">Сценарий проверки
       <select value={mode} onChange={(event) => setMode(event.target.value as DemoMode)}>
@@ -39,7 +41,7 @@ export function CompanyDemoLayout() {
       <p>Реальные кейсы доступны только авторизованным представителям своей компании.</p>
       <Button onClick={() => setActive(true)}>Открыть демонстрацию</Button>
     </section> : mode === 'denied' ? <ErrorState title="Доступ запрещён" description="Нет членства и прав на эту компанию. Приватные данные не загружаются." />
-      : <Outlet context={{ repository, companyId: demoCompanyId, canCreate: mode !== 'read-only' } satisfies DemoContext} />}
+      : <Outlet context={{ repository, workflow, companyId: demoCompanyId, canCreate: mode !== 'read-only' } satisfies DemoContext} />}
   </main>;
 }
 
@@ -71,6 +73,7 @@ export function CompanyCasesPage() {
       : !visible ? <LoadingState /> : !visible.length ? <EmptyState title="Кейсов нет" description="Создайте черновик или выберите другой статус." />
         : <div className="company-cases__list">{visible.map((item) => <Card key={item.id}>
           <h2>{item.title}</h2><p>{statusLabels[item.status]} · версия {item.version}</p>
+          <ButtonLink to={`${item.id}/manage`}>Управление кейсом</ButtonLink>
           {['DRAFT', 'REVISION'].includes(item.status) && item.allowedActions.includes('edit') && <ButtonLink to={`${item.id}/edit`}>Редактировать</ButtonLink>}
           {['DRAFT', 'REVISION'].includes(item.status) && item.allowedActions.includes('submit-moderation') && <Button disabled aria-describedby={`actions-${item.id}`}>Отправить на модерацию</Button>}
           {item.status === 'APPROVED' && item.allowedActions.includes('open-registration') && <Button disabled aria-describedby={`actions-${item.id}`}>Открыть набор</Button>}
@@ -139,6 +142,7 @@ export function CompanyCaseEditor() {
   if (caseId && !draft) return <ErrorState title="Черновик недоступен" description={error}
     action={<Button onClick={() => setRetry((value) => value + 1)}>Повторить</Button>} />;
   return <section><Link to="/company/cases">← Мои кейсы</Link>
+    {caseId && <nav aria-label="Разделы кейса"><ButtonLink to={`/company/cases/${caseId}/stages`}>Этапы и контрольные точки</ButtonLink></nav>}
     <h1>{caseId ? 'Редактировать черновик' : 'Создать черновик'}</h1>
     <p>Для минимального черновика достаточно названия. Полные условия проверит сервер при отправке на модерацию.</p>
     <p>Поля навыков и сроков выполнения появятся после согласования условий. Ниже указывается срок набора участников.</p>

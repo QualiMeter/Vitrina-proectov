@@ -7,11 +7,22 @@ import { CasesPage } from '../../pages/public/Cases/CasesPage';
 import { CaseDetailsPage } from '../../pages/public/Cases/CaseDetailsPage';
 import { CompanyDetailsPage } from '../../pages/public/Cases/CompanyDetailsPage';
 import { studentRoutes } from '../../features/student/routes';
+import { CompanyCaseEditor, CompanyCasesPage, CompanyDemoLayout } from '../../pages/company/cases/CompanyCasesPage';
+import { CompanyWorkflowPage } from '../../pages/company/workflow/CompanyWorkflowPage';
 
 const route = (path: string) => ({ path, element: <PlaceholderPage /> });
 
 export const router = createBrowserRouter([
   { path: '/', element: <HomePage /> },
+  { path: '/company/cases', element: <CompanyDemoLayout />, children: [
+    { index: true, element: <CompanyCasesPage /> },
+    { path: 'new', element: <CompanyCaseEditor /> },
+    { path: ':caseId/edit', element: <CompanyCaseEditor /> },
+    { path: ':caseId/manage', element: <CompanyWorkflowPage view="overview" /> },
+    { path: ':caseId/stages', element: <CompanyWorkflowPage view="stages" /> },
+    { path: ':caseId/applications', element: <CompanyWorkflowPage view="applications" /> },
+    { path: ':caseId/applications/:applicationId', element: <CompanyWorkflowPage view="applications" /> }
+  ] },
   ...studentRoutes,
   { path: '/cases', element: <CasesPage /> },
   { path: '/cases/:caseId', element: <CaseDetailsPage /> },
