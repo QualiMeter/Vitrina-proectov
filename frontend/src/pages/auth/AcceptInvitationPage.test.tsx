@@ -86,4 +86,10 @@ describe('company invitation acceptance', () => {
     open(guest);
     expect(await screen.findByRole('alert')).toHaveTextContent(message);
   });
+  it('shows a retry-after message when invitation preview is rate limited', async () => {
+    api.previewInvitation.mockRejectedValueOnce(new ApiError('rateLimited', 429));
+    open(guest);
+    expect(await screen.findByRole('alert')).toHaveTextContent('Слишком много запросов');
+  });
+
 });
