@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { AmbientBackground } from '../../../components/background/AmbientBackground';
 import { PublicHeader } from '../../../components/layout/PublicHeader';
 import { ButtonLink } from '../../../components/ui/Button';
 import { Badge } from '../../../components/ui/Badge';
@@ -46,6 +47,7 @@ export function HomePage() {
     <PublicHeader />
     <main>
       <section className="hero">
+        <AmbientBackground variant="hero" />
         <div className="container hero__grid">
           <div className="hero__copy">
             <span className="eyebrow">Уфимский университет науки и технологий</span>
