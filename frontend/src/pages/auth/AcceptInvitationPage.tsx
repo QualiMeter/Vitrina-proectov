@@ -41,7 +41,13 @@ export function AcceptInvitationPage() {
     if (urlToken) {
       setToken(urlToken);
       setPendingInvitationToken(urlToken);
-      navigate('/accept-invitation', { replace: true, state: location.state });
+      navigate('/accept-invitation', { replace: true, state: null });
+      return;
+    }
+
+    const stateToken = (location.state as { invitationToken?: string } | null)?.invitationToken;
+    if (stateToken) {
+      navigate('/accept-invitation', { replace: true, state: null });
     }
   }, [params, navigate, location.state]);
 
