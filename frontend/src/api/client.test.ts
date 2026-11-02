@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { ApiError, apiRequest, clearCsrfToken, refreshCsrfToken } from './client';
+import { apiRequest, clearCsrfToken, refreshCsrfToken } from './client';
 
 describe('CSRF request coordination', () => {
   afterEach(() => { clearCsrfToken(); vi.unstubAllGlobals(); });
