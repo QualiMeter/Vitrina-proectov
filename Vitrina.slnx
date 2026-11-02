@@ -1,0 +1,12 @@
+<Solution>
+	<Folder Name="/Backend/">
+		<Project Path="backend/Vitrina.Api/Vitrina.Api.csproj" />
+		<Project Path="backend/Vitrina.Api.Tests/Vitrina.Api.Tests.csproj" />
+	</Folder>
+	<Folder Name="/Documentation/">
+		<File Path="README.md" />
+		<File Path="backend/API-COVERAGE.md" />
+		<File Path="docs/api/openapi.yaml" />
+		<File Path="deploy/README-SERVER-RU.md" />
+	</Folder>
+</Solution>

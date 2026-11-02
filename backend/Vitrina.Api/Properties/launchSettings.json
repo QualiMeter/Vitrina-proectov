@@ -1,0 +1,32 @@
+{
+	"$schema": "https://json.schemastore.org/launchsettings.json",
+	"profiles": {
+		"Vitrina.Api": {
+			"commandName": "Project",
+			"dotnetRunMessages": true,
+			"launchBrowser": true,
+			"launchUrl": "scalar/v1",
+			"applicationUrl": "http://localhost:5080",
+			"environmentVariables": {
+				"ASPNETCORE_ENVIRONMENT": "Development",
+				"Database__BootstrapSchema": "true",
+				"Database__AllowProductionBootstrap": "false",
+				"Redis__ConnectionString": "localhost:6379",
+				"Storage__Endpoint": "localhost:9000"
+			}
+		},
+		"Vitrina.Api (no browser)": {
+			"commandName": "Project",
+			"dotnetRunMessages": true,
+			"launchBrowser": false,
+			"applicationUrl": "http://localhost:5080",
+			"environmentVariables": {
+				"ASPNETCORE_ENVIRONMENT": "Development",
+				"Database__BootstrapSchema": "true",
+				"Database__AllowProductionBootstrap": "false",
+				"Redis__ConnectionString": "localhost:6379",
+				"Storage__Endpoint": "localhost:9000"
+			}
+		}
+	}
+}

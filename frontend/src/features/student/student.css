@@ -41,6 +41,8 @@
   color: var(--brand-dark);
 }
 .student-main {
+  position: relative;
+  isolation: isolate;
   min-width: 0;
   padding: 36px 32px 80px;
 }
@@ -536,3 +538,5 @@ section.student-profile-section > .field {
   font-size: 0.85rem;
   margin-block: 6px;
 }
+
+.student-main > :not(.ambient) { position: relative; z-index: 1; }

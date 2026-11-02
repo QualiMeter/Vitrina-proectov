@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { AmbientBackground } from '../background/AmbientBackground';
 import { Brand } from './Brand';
 import { Button } from '../ui/Button';
 import './shell.css';
@@ -31,6 +32,6 @@ export function AppShell({ area }: { area: Area }) {
   const [menuOpen, setMenuOpen] = useState(false);
   return <div className="shell"><div id="cabinet-menu" className={`shell__sidebar ${menuOpen ? 'is-open' : ''}`}><Sidebar area={area} onNavigate={() => setMenuOpen(false)} /></div>
     {menuOpen && <button className="shell__scrim" onClick={() => setMenuOpen(false)} aria-label="Закрыть меню" />}
-    <div className="shell__main"><header className="shell-header"><Button variant="ghost" className="shell-header__menu" aria-expanded={menuOpen} aria-controls="cabinet-menu" onClick={() => setMenuOpen(!menuOpen)}>☰ <span>Меню</span></Button><div className="shell-header__title">Витрина ИТ-проектов <span>/ {areas[area].title}</span></div><div className="shell-header__switch"><label htmlFor="area-switch">Доступные кабинеты</label><select id="area-switch" disabled value={area} aria-describedby="area-switch-hint"><option value={area}>{areas[area].title}</option></select><span id="area-switch-hint">После подключения прав</span></div></header><main className="shell__content"><Breadcrumbs area={area} /><Outlet /></main></div>
+    <div className="shell__main"><header className="shell-header"><Button variant="ghost" className="shell-header__menu" aria-expanded={menuOpen} aria-controls="cabinet-menu" onClick={() => setMenuOpen(!menuOpen)}>☰ <span>Меню</span></Button><div className="shell-header__title">Витрина ИТ-проектов <span>/ {areas[area].title}</span></div><div className="shell-header__switch"><label htmlFor="area-switch">Доступные кабинеты</label><select id="area-switch" disabled value={area} aria-describedby="area-switch-hint"><option value={area}>{areas[area].title}</option></select><span id="area-switch-hint">После подключения прав</span></div></header><main className="shell__content"><AmbientBackground variant="dashboard" /><Breadcrumbs area={area} /><Outlet /></main></div>
   </div>;
 }
