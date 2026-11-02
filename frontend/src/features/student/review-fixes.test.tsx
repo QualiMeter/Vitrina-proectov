@@ -16,6 +16,7 @@ import {
   resolveProfileConflict,
 } from "./profileConflict";
 import type * as C from "./contracts";
+import { AuthContext, type AuthContextValue } from "../auth/context";
 afterEach(() => {
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
@@ -268,9 +269,9 @@ it("accepts the server value and keeps input on another conflict", async () => {
     nickname: "mine_again",
   });
 });
-it("keeps the session across navigation and same-user focus but clears on expiry", async () => {
+it("uses the shared session without duplicate me requests and preserves unsaved edits", async () => {
   const api = createDemoGateway();
-  const session = vi
+  const sessionRequest = vi
     .spyOn(liveStudentGateway, "session")
     .mockImplementation(api.session);
   vi.spyOn(liveStudentGateway, "profile").mockImplementation(api.profile);
@@ -288,62 +289,51 @@ it("keeps the session across navigation and same-user focus but clears on expiry
     ],
     { initialEntries: ["/student/other"] },
   );
-  render(<RouterProvider router={router} />);
+  const auth: AuthContextValue = { session: await api.session(), isLoading: false, loadError: false, login: vi.fn(), logout: vi.fn(), refreshSession: vi.fn(), retrySession: vi.fn(), adoptSession: vi.fn() };
+  render(<AuthContext.Provider value={auth}><RouterProvider router={router} /></AuthContext.Provider>);
   await screen.findByText("Other page");
   await act(() => router.navigate("/student/profile"));
   const nickname = await screen.findByLabelText("Никнейм");
-  expect(session).toHaveBeenCalledTimes(1);
+  expect(sessionRequest).not.toHaveBeenCalled();
   const actor = userEvent.setup();
   await actor.clear(nickname);
   await actor.type(nickname, "unsaved_on_focus");
   await act(async () => window.dispatchEvent(new Event("focus")));
-  expect(session).toHaveBeenCalledTimes(2);
+  expect(sessionRequest).not.toHaveBeenCalled();
   expect(screen.getByLabelText("Никнейм")).toBe(nickname);
   expect(nickname).toHaveValue("unsaved_on_focus");
-  session.mockRejectedValue(new ApiError("unauthorized", 401));
   await act(async () =>
     window.dispatchEvent(new Event("vitrina:session-expired")),
   );
-  await screen.findByText("Сессия завершилась. Войдите снова.");
-  expect(screen.queryByLabelText("Никнейм")).not.toBeInTheDocument();
+  expect(screen.getByLabelText("Никнейм")).toHaveValue("unsaved_on_focus");
 });
 it("remounts private views when the account changes and revokes lost access", async () => {
   const api = createDemoGateway();
   const current = await api.session();
-  const session = vi
-    .spyOn(liveStudentGateway, "session")
-    .mockResolvedValue(current);
   const read = vi
     .spyOn(liveStudentGateway, "profile")
     .mockImplementation(api.profile);
   vi.spyOn(liveStudentGateway, "reference").mockImplementation(api.reference);
-  render(
-    <RouterProvider
-      router={createMemoryRouter(
-        [
-          {
-            path: "/student",
-            element: <StudentRoot />,
-            children: [{ path: "profile", element: <ProfilePage /> }],
-          },
-        ],
-        { initialEntries: ["/student/profile"] },
-      )}
-    />,
-  );
+  const baseAuth: AuthContextValue = { session: current, isLoading: false, loadError: false, login: vi.fn(), logout: vi.fn(), refreshSession: vi.fn(), retrySession: vi.fn(), adoptSession: vi.fn() };
+  const router = createMemoryRouter([
+    { path: "/student", element: <StudentRoot />, children: [{ path: "profile", element: <ProfilePage /> }] },
+  ], { initialEntries: ["/student/profile"] });
+  const view = render(<AuthContext.Provider value={baseAuth}>
+    <RouterProvider router={router} />
+  </AuthContext.Provider>);
   const old = await screen.findByLabelText("Никнейм");
-  session.mockResolvedValue({
+  const changedUser = {
     ...current,
     user: { ...current.user, id: "another-user" },
-  });
-  await act(async () => window.dispatchEvent(new Event("focus")));
+  };
+  view.rerender(<AuthContext.Provider value={{ ...baseAuth, session: changedUser }}><RouterProvider router={router} /></AuthContext.Provider>);
   await waitFor(() => expect(read).toHaveBeenCalledTimes(2));
   expect(await screen.findByLabelText("Никнейм")).not.toBe(old);
-  session.mockResolvedValue({
+  const lostAccess = {
     ...current,
-    user: { ...current.user, availableAreas: ["company"] },
-  });
-  await act(async () => window.dispatchEvent(new Event("focus")));
+    user: { ...current.user, availableAreas: ["company"] as C.AvailableArea[] },
+  };
+  view.rerender(<AuthContext.Provider value={{ ...baseAuth, session: lostAccess }}><RouterProvider router={router} /></AuthContext.Provider>);
   await screen.findByText("Кабинет студента недоступен");
   expect(screen.queryByLabelText("Никнейм")).not.toBeInTheDocument();
 });

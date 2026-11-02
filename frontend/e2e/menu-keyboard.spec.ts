@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 
 for (const width of [320, 375, 400]) {
   test(`mobile keyboard navigation at ${width}px`, async ({ page }) => {
+    await page.route('**/api/v1/auth/me', route => route.fulfill({ status: 401, body: '{}' }));
     await page.setViewportSize({ width, height: 812 });
     await page.goto('/');
     const toggle = page.getByRole('button', { name: /меню/ });
@@ -15,10 +16,10 @@ for (const width of [320, 375, 400]) {
     await expect(nav).toBeHidden();
     await expect(toggle).toBeFocused();
     await page.keyboard.press('Tab');
-    await expect(page.getByRole('button', { name: 'Войти', exact: true })).toBeFocused();
+    await expect(page.getByRole('link', { name: 'Войти', exact: true })).toBeFocused();
     await toggle.click();
-    for (let i = 0; i < 4; i++) await page.keyboard.press('Tab');
-    await expect(page.getByRole('button', { name: 'Войти', exact: true })).toBeFocused();
+    for (let i = 0; i < 5; i++) await page.keyboard.press('Tab');
+    await expect(page.getByRole('link', { name: 'Войти', exact: true })).toBeFocused();
     await nav.getByRole('link', { name: 'О платформе' }).click();
     await expect(nav).toBeHidden();
     await expect(toggle).toHaveAttribute('aria-expanded', 'false');
