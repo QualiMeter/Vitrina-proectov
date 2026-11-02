@@ -1,5 +1,5 @@
 // Generated from OpenAPI; do not edit by hand.
-// SHA256: 25bf7bd0ad5590a5164d69bc266fa686eb0e2a012754e7a7a1743abe6aba6d99
+// SHA256: 4285bc0680f439ab6070f6a1784eb9ba15f9ef267a134012748768732c1462c4
 // Compile-time shapes only; conditional constraints are validated by the server.
 export type Id = string;
 export type Email = string;
@@ -10,7 +10,7 @@ export type GlobalRole = "STUDENT" | "UNIVERSITY_STAFF" | "PLATFORM_ADMIN";
 export type AvailableArea = "student" | "company" | "university" | "mentor" | "admin";
 export type CompanyMembershipRole = "OWNER" | "MEMBER";
 export type MembershipSummary = { "companyId": Id; "companyName": string; "membershipRole": CompanyMembershipRole; };
-export type AuthUser = { "id": Id; "email": Email; "fullName": DisplayName; "nickname"?: Nickname; "globalRoles": (GlobalRole)[]; "availableAreas": (AvailableArea)[]; "permissions": (string)[]; "companyMemberships": (MembershipSummary)[]; };
+export type AuthUser = { "id": Id; "email": Email; "fullName": DisplayName; "nickname"?: (Nickname | null); "globalRoles": (GlobalRole)[]; "availableAreas": (AvailableArea)[]; "permissions": (string)[]; "companyMemberships": (MembershipSummary)[]; };
 export type AuthSessionResponse = { "user": AuthUser; "session": { "expiresAt": string; }; };
 export type CaseStatus = "DRAFT" | "MODERATION" | "REVISION" | "REJECTED" | "APPROVED" | "REGISTRATION_OPEN" | "REGISTRATION_CLOSED" | "EXECUTING" | "FINAL_CLOSED" | "EVALUATING" | "COMPLETED" | "CANCELED";
 export type CaseParticipationFormat = "SOLO" | "TEAM" | "BOTH";

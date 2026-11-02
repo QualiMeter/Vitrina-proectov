@@ -48,17 +48,34 @@ public static class AuthEndpoints
 		IConfiguration configuration,
 		CancellationToken cancellationToken)
 	{
+		var expectedPolicyVersion = configuration["Privacy:CurrentPolicyVersion"] ?? "v1";
+		var nickname = request.Nickname?.Trim();
+		var policyVersion = request.PrivacyPolicyVersion?.Trim();
 		if (request.Password.Length is < 8 or > 128 ||
-			string.IsNullOrWhiteSpace(request.FullName) ||
-			!new EmailAddressAttribute().IsValid(request.Email))
-			return ApiErrors.BadRequest("validation_failed", "Check email, full name and password.");
+			string.IsNullOrWhiteSpace(request.FullName) || request.FullName.Trim().Length > 200 ||
+			!new EmailAddressAttribute().IsValid(request.Email) ||
+			string.IsNullOrWhiteSpace(nickname) || nickname.Length is < 2 or > 32 ||
+			!char.IsLetterOrDigit(nickname[0]) ||
+			!nickname.All(c => char.IsLetterOrDigit(c) || c is '_' or '-' or '.') ||
+			!request.PrivacyAccepted ||
+			string.IsNullOrWhiteSpace(policyVersion) ||
+			!string.Equals(policyVersion, expectedPolicyVersion, StringComparison.Ordinal))
+			return ApiErrors.BadRequest("validation_failed", "Check email, password, full name, nickname and privacy consent.");
 
 		var email = request.Email.Trim().ToLowerInvariant();
 		if (await db.Users.AnyAsync(x => x.Email == email, cancellationToken))
 			return ApiErrors.Conflict("email_already_registered", "An account with this email already exists.");
+		if (await db.Users.AnyAsync(x => x.Nickname != null && x.Nickname.ToLower() == nickname.ToLower(), cancellationToken))
+			return ApiErrors.Conflict("nickname_unavailable", "This nickname is already in use.");
 
-		var nickname = await CreateUniqueNickname(db, email.Split('@')[0], cancellationToken);
-		var user = new UserAccount { Email = email, FullName = request.FullName.Trim(), Nickname = nickname };
+		var user = new UserAccount
+		{
+			Email = email,
+			FullName = request.FullName.Trim(),
+			Nickname = nickname,
+			PrivacyAcceptedAt = DateTimeOffset.UtcNow,
+			PrivacyPolicyVersion = policyVersion
+		};
 		user.PasswordHash = hasher.HashPassword(user, request.Password);
 		db.Users.Add(user);
 		db.StudentProfiles.Add(new StudentProfile { UserId = user.Id });
@@ -71,8 +88,7 @@ public static class AuthEndpoints
 			ExpiresAt = DateTimeOffset.UtcNow.AddHours(24)
 		});
 		await db.SaveChangesAsync(cancellationToken);
-		var frontend = configuration["Email:FrontendBaseUrl"] ?? "http://localhost:5173";
-		var confirmationUrl = $"{frontend.TrimEnd('/')}/email-confirmation?token={Uri.EscapeDataString(verification)}";
+		var confirmationUrl = BuildFrontendLink(configuration, "EmailConfirmationPath", "/auth/confirm-email", verification);
 		await emailSender.SendAsync(user.Email, "Подтверждение электронной почты",
 			$"<p>Для подтверждения адреса перейдите по <a href=\"{confirmationUrl}\">ссылке</a>.</p>",
 			cancellationToken);
@@ -99,7 +115,7 @@ public static class AuthEndpoints
 		var (token, session) = await sessions.CreateAsync(user.Id, cancellationToken);
 		context.Response.Cookies.Append(SessionAuthenticationMiddleware.CookieName(context), token,
 			SessionCookie(context, session.ExpiresAt));
-		return Results.Ok(await ToMe(user, db, cancellationToken));
+		return Results.Ok(await ToAuthSession(user, db, session.ExpiresAt, cancellationToken));
 	}
 
 	private static async Task<IResult> Logout(HttpContext context, SessionService sessions, CancellationToken cancellationToken)
@@ -111,15 +127,26 @@ public static class AuthEndpoints
 		return Results.NoContent();
 	}
 
-	private static async Task<IResult> Me(CurrentUser current, VitrinaDbContext db, CancellationToken cancellationToken)
+	private static async Task<IResult> Me(
+		CurrentUser current, HttpContext context, VitrinaDbContext db, CancellationToken cancellationToken)
 	{
-		if (current.Id is not Guid id)
+		if (current.Id is not Guid id ||
+			!context.Request.Cookies.TryGetValue(SessionAuthenticationMiddleware.CookieName(context), out var rawToken))
 			return ApiErrors.Unauthorized();
+
+		var now = DateTimeOffset.UtcNow;
+		var session = await db.Sessions.AsNoTracking().SingleOrDefaultAsync(x =>
+			x.UserId == id && x.TokenHash == SessionService.Hash(rawToken) &&
+			x.RevokedAt == null && x.ExpiresAt > now && x.AbsoluteExpiresAt > now, cancellationToken);
 		var user = await db.Users.AsNoTracking().SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
-		return user is null ? ApiErrors.Unauthorized() : Results.Ok(await ToMe(user, db, cancellationToken));
+		return user is null || session is null
+			? ApiErrors.Unauthorized()
+			: Results.Ok(await ToAuthSession(user, db, session.ExpiresAt, cancellationToken));
 	}
 
-	private static async Task<IResult> ConfirmEmail(ConfirmEmailRequest request, VitrinaDbContext db, CancellationToken cancellationToken)
+	private static async Task<IResult> ConfirmEmail(
+		ConfirmEmailRequest request, HttpContext context, VitrinaDbContext db,
+		SessionService sessions, CancellationToken cancellationToken)
 	{
 		var hash = SessionService.Hash(request.Token);
 		var token = await db.EmailTokens.SingleOrDefaultAsync(x =>
@@ -135,7 +162,12 @@ public static class AuthEndpoints
 		user.EmailConfirmed = true;
 		token.ConsumedAt = DateTimeOffset.UtcNow;
 		await db.SaveChangesAsync(cancellationToken);
-		return Results.Ok(new { emailConfirmed = true });
+
+		var (sessionToken, session) = await sessions.CreateAsync(user.Id, cancellationToken);
+		context.Response.Cookies.Append(SessionAuthenticationMiddleware.CookieName(context), sessionToken,
+			SessionCookie(context, session.ExpiresAt));
+		context.Response.Headers["Referrer-Policy"] = "no-referrer";
+		return Results.Ok(await ToAuthSession(user, db, session.ExpiresAt, cancellationToken));
 	}
 
 	private static async Task<IResult> ResendEmail(
@@ -153,8 +185,7 @@ public static class AuthEndpoints
 				Purpose = "EMAIL_CONFIRMATION", ExpiresAt = DateTimeOffset.UtcNow.AddHours(24)
 			});
 			await db.SaveChangesAsync(cancellationToken);
-			var frontend = configuration["Email:FrontendBaseUrl"] ?? "http://localhost:5173";
-			var url = $"{frontend.TrimEnd('/')}/email-confirmation?token={Uri.EscapeDataString(raw)}";
+			var url = BuildFrontendLink(configuration, "EmailConfirmationPath", "/auth/confirm-email", raw);
 			await emailSender.SendAsync(user.Email, "Подтверждение электронной почты",
 				$"<p>Для подтверждения адреса перейдите по <a href=\"{url}\">ссылке</a>.</p>",
 				cancellationToken);
@@ -176,8 +207,7 @@ public static class AuthEndpoints
 				Purpose = "PASSWORD_RESET", ExpiresAt = DateTimeOffset.UtcNow.AddMinutes(30)
 			});
 			await db.SaveChangesAsync(cancellationToken);
-			var frontend = configuration["Email:FrontendBaseUrl"] ?? "http://localhost:5173";
-			var url = $"{frontend.TrimEnd('/')}/password-reset?token={Uri.EscapeDataString(raw)}";
+			var url = BuildFrontendLink(configuration, "PasswordResetPath", "/auth/reset-password", raw);
 			await emailSender.SendAsync(user.Email, "Сброс пароля",
 				$"<p>Для смены пароля перейдите по <a href=\"{url}\">ссылке</a>. Ссылка действует 30 минут.</p>",
 				cancellationToken);
@@ -208,20 +238,11 @@ public static class AuthEndpoints
 		foreach (var session in sessions)
 			session.RevokedAt = DateTimeOffset.UtcNow;
 		await db.SaveChangesAsync(cancellationToken);
-		return Results.Ok(new { passwordReset = true });
+		return Results.NoContent();
 	}
 
-	private static async Task<string> CreateUniqueNickname(VitrinaDbContext db, string seed, CancellationToken ct)
-	{
-		var candidate = new string(seed.Where(char.IsLetterOrDigit).Take(32).ToArray());
-		if (candidate.Length < 2) candidate = "student";
-		var suffix = 1;
-		while (await db.Users.AnyAsync(x => x.Nickname == candidate, ct))
-			candidate = $"{candidate[..Math.Min(candidate.Length, 32)]}{suffix++}";
-		return candidate;
-	}
-
-	private static async Task<object> ToMe(UserAccount user, VitrinaDbContext db, CancellationToken ct)
+	private static async Task<object> ToAuthSession(
+		UserAccount user, VitrinaDbContext db, DateTimeOffset expiresAt, CancellationToken ct)
 	{
 		var memberships = await db.CompanyMembers.AsNoTracking()
 			.Where(x => x.UserId == user.Id)
@@ -240,15 +261,28 @@ public static class AuthEndpoints
 		if (user.GlobalPermissions.Contains("mentor.access")) areas.Add("mentor");
 		return new
 		{
-			id = user.Id,
-			email = user.Email,
-			fullName = user.FullName,
-			nickname = user.Nickname,
-			globalRoles = user.GlobalRoles,
-			availableAreas = areas,
-			permissions = user.GlobalPermissions,
-			companyMemberships = memberships
+			user = new
+			{
+				id = user.Id,
+				email = user.Email,
+				fullName = user.FullName,
+				nickname = user.Nickname,
+				globalRoles = user.GlobalRoles,
+				availableAreas = areas,
+				permissions = user.GlobalPermissions,
+				companyMemberships = memberships
+			},
+			session = new { expiresAt }
 		};
+	}
+
+	private static string BuildFrontendLink(
+		IConfiguration configuration, string pathSetting, string defaultPath, string token)
+	{
+		var frontend = (configuration["Email:FrontendBaseUrl"] ?? "http://localhost:5173").TrimEnd('/');
+		var path = configuration[$"Email:Routes:{pathSetting}"] ?? defaultPath;
+		path = "/" + path.TrimStart('/');
+		return $"{frontend}{path}?token={Uri.EscapeDataString(token)}";
 	}
 
 	private static CookieOptions SessionCookie(HttpContext context, DateTimeOffset expires) => new()
@@ -262,7 +296,7 @@ public static class AuthEndpoints
 	};
 }
 
-public sealed record RegisterRequest(string Email, string Password, string FullName, bool PrivacyAccepted, string PrivacyPolicyVersion);
+public sealed record RegisterRequest(string Email, string Password, string FullName, string Nickname, bool PrivacyAccepted, string PrivacyPolicyVersion);
 public sealed record LoginRequest(string Email, string Password);
 public sealed record EmailRequest(string Email);
 public sealed record ConfirmEmailRequest(string Token);

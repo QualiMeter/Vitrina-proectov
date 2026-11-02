@@ -10,6 +10,8 @@ public sealed class UserAccount
 	public string[] GlobalRoles { get; set; } = ["STUDENT"];
 	public string[] GlobalPermissions { get; set; } = [];
 	public bool EmailConfirmed { get; set; }
+	public DateTimeOffset? PrivacyAcceptedAt { get; set; }
+	public string? PrivacyPolicyVersion { get; set; }
 	public bool IsBlocked { get; set; }
 	public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 	public StudentProfile? StudentProfile { get; set; }

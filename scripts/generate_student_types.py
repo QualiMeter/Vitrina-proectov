@@ -7,7 +7,7 @@ import yaml
 
 root = Path(__file__).resolve().parents[1]
 source = root / 'docs/api/openapi.yaml'
-schemas = yaml.safe_load(source.read_text())['components']['schemas']
+schemas = yaml.safe_load(source.read_text(encoding="utf-8"))['components']['schemas']
 
 def ts(s):
     if '$ref' in s:

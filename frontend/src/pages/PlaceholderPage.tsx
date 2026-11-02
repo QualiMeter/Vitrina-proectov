@@ -1,6 +1,9 @@
 import { useLocation } from 'react-router-dom';
 
 const titles: Record<string, string> = {
+  '/auth/confirm-email': 'Подтверждение электронной почты',
+  '/auth/reset-password': 'Сброс пароля',
+  '/invitations/accept': 'Приглашение в компанию',
   '/university': 'Кабинет сотрудника университета', '/university/moderation': 'Модерация', '/university/companies': 'Компании', '/university/companies/new': 'Новая компания', '/university/curators': 'Кураторы', '/university/projects': 'Проекты', '/university/reports': 'Отчёты',
   '/mentor': 'Кабинет куратора', '/admin': 'Кабинет администратора', '/admin/users': 'Пользователи', '/admin/directories': 'Справочники', '/admin/companies': 'Компании', '/admin/audit': 'Журнал аудита'
 };
