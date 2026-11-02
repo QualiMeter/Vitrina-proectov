@@ -1,8 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../../features/auth/useAuth';
 import { ApiError } from '../../api/client';
-import { clearPendingInvitationToken, takePendingInvitationToken } from '../../features/auth/pendingInvitation';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Card } from '../../components/ui/Card';
@@ -25,10 +24,6 @@ export function LoginPage() {
   const [loading, setLoading] = useState(false);
   const submitting = useRef(false);
 
-  useEffect(() => () => {
-    clearPendingInvitationToken();
-  }, []);
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (submitting.current) return;
@@ -37,7 +32,7 @@ export function LoginPage() {
     setLoading(true);
     try {
       await login({ email, password });
-      const invitationToken = takePendingInvitationToken();
+      const invitationToken = (location.state as { invitationToken?: string } | null)?.invitationToken;
       if (invitationToken) {
         navigate('/accept-invitation', { replace: true, state: { invitationToken } });
       } else {
