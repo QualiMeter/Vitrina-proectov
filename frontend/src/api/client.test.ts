@@ -121,7 +121,13 @@ describe('CSRF request coordination', () => {
     const expired = vi.fn();
     window.addEventListener('vitrina:session-expired', expired);
 
-    vi.stubGlobal('fetch', vi.fn(async () => new Response('{}', { status: 401 })));
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
+      if (String(input).endsWith('/auth/csrf')) {
+        return new Response(JSON.stringify({ csrfToken: 'csrf-login' }), { status: 200 });
+      }
+
+      return new Response('{}', { status: 401 });
+    }));
 
     await expect(apiRequest('/api/v1/private')).rejects.toMatchObject({ status: 401 });
     expect(expired).toHaveBeenCalledTimes(1);
