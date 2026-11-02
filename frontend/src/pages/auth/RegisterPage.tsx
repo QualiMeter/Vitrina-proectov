@@ -44,8 +44,10 @@ export function RegisterPage() {
       });
       navigate('/verify-email', { state: { email: form.email } });
     } catch (err: unknown) {
-  const status = (err as { status?: number })?.status;
-  if (status === 409) {
+      const status = err instanceof ApiError ? err.status : undefined;
+      if (status === 429) {
+        setError('Слишком много попыток регистрации. Подождите немного и попробуйте снова.');
+      } else if (status === 409) {
         setError('Пользователь с таким email уже зарегистрирован.');
       } else {
         setError('Ошибка регистрации. Попробуйте позже.');
