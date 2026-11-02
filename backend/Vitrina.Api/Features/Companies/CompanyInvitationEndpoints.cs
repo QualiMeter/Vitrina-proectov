@@ -90,9 +90,10 @@ public static class CompanyInvitationEndpoints
 		});
 		await db.SaveChangesAsync(ct);
 
-		var frontend = configuration["Email:FrontendBaseUrl"]?.TrimEnd('/') ?? "http://localhost:5173";
+		var frontend = (configuration["Email:FrontendBaseUrl"] ?? "http://localhost:5173").TrimEnd('/');
+		var invitationPath = configuration["Email:Routes:CompanyInvitationPath"] ?? "/invitations/accept";
 		var safeCompany = System.Net.WebUtility.HtmlEncode(company.Name);
-		var link = $"{frontend}/company-invitations/accept?token={Uri.EscapeDataString(token)}";
+		var link = $"{frontend}/{invitationPath.TrimStart('/')}?token={Uri.EscapeDataString(token)}";
 		try
 		{
 			await emailSender.SendAsync(email, $"Приглашение в компанию {company.Name}",
@@ -167,7 +168,9 @@ public static class CompanyInvitationEndpoints
 				FullName = request.FullName.Trim(),
 				Nickname = nickname,
 				GlobalRoles = ["STUDENT"],
-				EmailConfirmed = true
+				EmailConfirmed = true,
+				PrivacyAcceptedAt = DateTimeOffset.UtcNow,
+				PrivacyPolicyVersion = request.PrivacyPolicyVersion!.Trim()
 			};
 			user.PasswordHash = hasher.HashPassword(user, request.Password);
 			db.Users.Add(user);
