@@ -66,9 +66,9 @@ services:
       Email__Password: ${SMTP_PASSWORD}
       Email__From: ${SMTP_FROM}
       Email__FrontendBaseUrl: ${FRONTEND_BASE_URL}
-      Email__Routes__EmailConfirmationPath: ${EMAIL_CONFIRMATION_PATH:-/auth/confirm-email}
-      Email__Routes__PasswordResetPath: ${PASSWORD_RESET_PATH:-/auth/reset-password}
-      Email__Routes__CompanyInvitationPath: ${COMPANY_INVITATION_PATH:-/invitations/accept}
+      Email__Routes__EmailConfirmationPath: ${EMAIL_CONFIRMATION_PATH:-/verify-email}
+      Email__Routes__PasswordResetPath: ${PASSWORD_RESET_PATH:-/reset-password}
+      Email__Routes__CompanyInvitationPath: ${COMPANY_INVITATION_PATH:-/accept-invitation}
       Privacy__CurrentPolicyVersion: ${PRIVACY_POLICY_VERSION:-v1}
       Email__UseSsl: ${SMTP_USE_SSL}
       Storage__Endpoint: minio:9000
