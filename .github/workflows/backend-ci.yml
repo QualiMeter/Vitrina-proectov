@@ -1,0 +1,30 @@
+name: Backend CI
+
+on:
+  push:
+    paths:
+      - "backend/**"
+      - "Vitrina.slnx"
+      - "global.json"
+      - ".github/workflows/backend-ci.yml"
+  pull_request:
+    paths:
+      - "backend/**"
+      - "Vitrina.slnx"
+      - "global.json"
+      - ".github/workflows/backend-ci.yml"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Restore
+        run: dotnet restore Vitrina.slnx
+      - name: Build
+        run: dotnet build Vitrina.slnx --configuration Release --no-restore
+      - name: Test
+        run: dotnet test --solution Vitrina.slnx --configuration Release

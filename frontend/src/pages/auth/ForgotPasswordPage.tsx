@@ -8,17 +8,19 @@ import { Card } from '../../components/ui/Card';
 export function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setLoading(true);
     try {
       await forgotPassword(email);
       setSent(true);
     } catch {
       setError('Не удалось отправить запрос. Попробуйте позже.');
-    }
+    } finally { setLoading(false); }
   }
 
   return (
@@ -31,7 +33,7 @@ export function ForgotPasswordPage() {
           <form onSubmit={handleSubmit}>
             <Input label="Email" type="email" value={email} onChange={e => setEmail(e.target.value)} required />
             {error && <p className="auth-error">{error}</p>}
-            <Button type="submit">Отправить ссылку</Button>
+            <Button type="submit" disabled={loading}>{loading ? 'Отправляем…' : 'Отправить ссылку'}</Button>
           </form>
         )}
         <p className="auth-footer"><Link to="/login">Вернуться ко входу</Link></p>

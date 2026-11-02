@@ -7,6 +7,7 @@ import {
   PublicProfilePage,
 } from "./ProfilePages";
 import { DemoProvider, LaterSection } from "./Day1Shell";
+import { ProtectedRoute } from "../auth/ProtectedRoute";
 const privatePages: RouteObject[] = [
   { index: true, element: <DashboardPage /> },
   { path: "profile", element: <ProfilePage /> },
@@ -17,7 +18,9 @@ const privatePages: RouteObject[] = [
   ),
 ];
 export const studentRoutes: RouteObject[] = [
-  { path: "/student", element: <StudentRoot />, children: privatePages },
+  { path: "/student", element: <ProtectedRoute allowedArea="student" />, children: [
+    { element: <StudentRoot />, children: privatePages },
+  ] },
   { path: "/students/:id", element: <PublicProfilePage /> },
   ...[
     "/students/:id/portfolio",

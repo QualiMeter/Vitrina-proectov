@@ -16,6 +16,8 @@ backend/**/TestResults/
 .vs/
 *.user
 *.suo
+# Deployment secrets
+/deploy/.env
 
 # Local environment for the OpenAPI type generator
 .venv-codegen/

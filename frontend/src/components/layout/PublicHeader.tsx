@@ -9,7 +9,7 @@ const areaPaths = ['student', 'company', 'university', 'mentor', 'admin'] as con
 export function PublicHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
   const toggleRef = useRef<HTMLButtonElement>(null);
-  const { session, isLoading, logout } = useAuth();
+  const { session, logout } = useAuth();
   const navigate = useNavigate();
   const firstArea = areaPaths.find(area => session?.user.availableAreas.includes(area));
   const [logoutError, setLogoutError] = useState(false);
@@ -45,7 +45,7 @@ export function PublicHeader() {
       <Link to="/#directions" onClick={() => setMenuOpen(false)}>Направления</Link>
       <Link to="/#projects" onClick={() => setMenuOpen(false)}>Примеры проектов</Link>
     </nav>
-    {isLoading ? <span className="public-header__status" role="status">Проверяем вход…</span> : session ? (
+    {session ? (
       <div className="public-header__account">
         <span className="public-header__name">{session.user.fullName}</span>
         {firstArea ? <ButtonLink variant="secondary" to={`/${firstArea}`}>Кабинет</ButtonLink> : null}

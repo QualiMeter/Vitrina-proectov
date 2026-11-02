@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { clearCsrfToken } from './client';
 import {
   acceptInvitation,
+  previewInvitation,
   forgotPassword,
   login,
   me,
@@ -43,6 +44,7 @@ describe('auth API contract', () => {
         || url.endsWith('/api/v1/company-invitations/accept')) {
         return new Response(JSON.stringify(session), { status: 200 });
       }
+      if (url.endsWith('/api/v1/company-invitations/preview')) return new Response(JSON.stringify({ companyId: 'company-1', companyName: 'ООО Пример', role: 'MEMBER', expiresAt: '2026-12-01T00:00:00Z', maskedEmail: 's***@example.com' }), { status: 200 });
       if (url.endsWith('/api/v1/auth/me')) return new Response(JSON.stringify(session), { status: 200 });
       return new Response(null, { status: 204 });
     }));
@@ -65,7 +67,9 @@ describe('auth API contract', () => {
     await resendVerification('student@example.com');
     await forgotPassword('student@example.com');
     await resetPassword({ token: 'reset-token-1234567890', newPassword: 'new-password-123' });
-    await acceptInvitation('invitation-token-1234567890');
+    await previewInvitation('invitation-token-1234567890');
+    await acceptInvitation({ mode: 'existing', token: 'invitation-token-1234567890' });
+    await acceptInvitation({ mode: 'new', token: 'invitation-token-1234567890', fullName: 'Иван Иванов', password: 'password1234', privacyAccepted: true, privacyPolicyVersion: 'v1' });
     await logout();
 
     expect(requests[0].url).toMatch(/\/api\/v1\/auth\/csrf$/);
@@ -77,7 +81,11 @@ describe('auth API contract', () => {
     expect(mutation('/api/v1/auth/email-verification/resend').init.body).toBe(JSON.stringify({ email: 'student@example.com' }));
     expect(mutation('/api/v1/auth/password/forgot').init.body).toBe(JSON.stringify({ email: 'student@example.com' }));
     expect(mutation('/api/v1/auth/password/reset').init.body).toBe(JSON.stringify({ token: 'reset-token-1234567890', newPassword: 'new-password-123' }));
-    expect(mutation('/api/v1/company-invitations/accept').init.body).toBe(JSON.stringify({ mode: 'existing', token: 'invitation-token-1234567890' }));
+    expect(mutation('/api/v1/company-invitations/preview').init.body).toBe(JSON.stringify({ token: 'invitation-token-1234567890' }));
+    expect(requests.filter(request => request.url.endsWith('/api/v1/company-invitations/accept')).map(request => JSON.parse(request.init.body as string))).toEqual([
+      { mode: 'existing', token: 'invitation-token-1234567890' },
+      { mode: 'new', token: 'invitation-token-1234567890', fullName: 'Иван Иванов', password: 'password1234', privacyAccepted: true, privacyPolicyVersion: 'v1' },
+    ]);
     mutation('/api/v1/auth/logout');
     expect(requests.some(request => request.url.includes('/accept/invitation-token'))).toBe(false);
   });

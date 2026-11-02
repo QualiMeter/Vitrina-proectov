@@ -42,6 +42,18 @@ export interface ResetPasswordPayload {
   newPassword: string;
 }
 
+export interface InvitationPreview {
+  companyId: string;
+  companyName: string;
+  role: 'OWNER' | 'MEMBER';
+  expiresAt: string;
+  maskedEmail: string;
+}
+
+export type AcceptInvitationPayload =
+  | { mode: 'existing'; token: string }
+  | { mode: 'new'; token: string; fullName: string; password: string; privacyAccepted: true; privacyPolicyVersion: string };
+
 /** The version must match the published privacy policy accepted by the user. */
 export const PRIVACY_POLICY_VERSION = 'v1';
 
@@ -121,10 +133,17 @@ export async function logout(): Promise<void> {
   await rotateCsrfToken();
 }
 
-export async function acceptInvitation(token: string): Promise<AuthSession> {
+export async function previewInvitation(token: string): Promise<InvitationPreview> {
+  return apiRequest<InvitationPreview>('/api/v1/company-invitations/preview', {
+    method: 'POST',
+    body: JSON.stringify({ token }),
+  });
+}
+
+export async function acceptInvitation(payload: AcceptInvitationPayload): Promise<AuthSession> {
   const session = await apiRequest<AuthSession>('/api/v1/company-invitations/accept', {
     method: 'POST',
-    body: JSON.stringify({ mode: 'existing', token }),
+    body: JSON.stringify(payload),
   });
   await rotateCsrfToken();
   return session;

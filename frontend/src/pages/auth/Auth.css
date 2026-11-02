@@ -144,11 +144,15 @@
   color: #b91c1c;
 }
 
+.auth-page p.auth-error { color: #b91c1c; }
+
 .auth-success {
   background: #f0fdf4;
   border: 1px solid #bbf7d0;
   color: #15803d;
 }
+
+.auth-page p.auth-success { color: #15803d; }
 
 /* ─────────────────────────────────────────────
    Ссылки внизу карточки

@@ -12,7 +12,11 @@ export function LoginPage() {
   interface LocationState {
     from?: { pathname?: string };
   }
-  const from = (location.state as LocationState | null)?.from?.pathname ?? '/';
+  const fromState = (location.state as LocationState | null)?.from;
+  const candidate = fromState?.pathname;
+  const from = candidate?.startsWith('/') && !candidate.startsWith('//')
+    ? `${candidate}${(fromState as { search?: string } | undefined)?.search ?? ''}${(fromState as { hash?: string } | undefined)?.hash ?? ''}`
+    : '/';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);

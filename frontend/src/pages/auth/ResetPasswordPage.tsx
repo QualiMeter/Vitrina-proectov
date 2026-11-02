@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { resetPassword } from '../../api/auth';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
@@ -7,11 +7,20 @@ import { Card } from '../../components/ui/Card';
 
 export function ResetPasswordPage() {
   const [searchParams] = useSearchParams();
-  const token = searchParams.get('token');
+  const [token, setToken] = useState(() => searchParams.get('token'));
+  const navigate = useNavigate();
   const [newPassword, setNewPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const urlToken = searchParams.get('token');
+    if (!urlToken) return;
+    setToken(urlToken);
+    navigate('/reset-password', { replace: true });
+  }, [searchParams, navigate]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -24,13 +33,17 @@ export function ResetPasswordPage() {
       return;
     }
     setError(null);
+    setLoading(true);
     try {
       await resetPassword({ token, newPassword });
+      window.dispatchEvent(new Event('vitrina:session-expired'));
       setStatus('success');
     } catch (err: unknown) {
-  const status = (err as { status?: number })?.status;
-  setError(status === 401 ? 'Ссылка недействительна или истекла.' : 'Ошибка сброса пароля.');
-}
+      const status = (err as { status?: number })?.status;
+      setError(status === 400 || status === 401 || status === 404
+        ? 'Ссылка недействительна или истекла.'
+        : status === 409 ? 'Этот запрос уже использован. Запросите новую ссылку.' : 'Не удалось сменить пароль. Попробуйте позже.');
+    } finally { setLoading(false); }
   }
 
   if (status === 'success') {
@@ -53,7 +66,7 @@ export function ResetPasswordPage() {
         <form onSubmit={handleSubmit}>
           <Input label="Новый пароль" type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} required minLength={8} />
           <Input label="Подтверждение пароля" type="password" value={confirm} onChange={e => setConfirm(e.target.value)} required />
-          <Button type="submit">Сменить пароль</Button>
+          <Button type="submit" disabled={loading}>{loading ? 'Сохраняем…' : 'Сменить пароль'}</Button>
         </form>
         <p className="auth-footer"><Link to="/login">Вернуться ко входу</Link></p>
       </Card>

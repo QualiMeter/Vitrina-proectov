@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useLocation, useSearchParams, Link } from 'react-router-dom';
+import { useLocation, useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { verifyEmail, resendVerification } from '../../api/auth';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
@@ -7,12 +7,21 @@ import { useAuth } from '../../features/auth/useAuth';
 
 export function VerifyEmailPage() {
   const [searchParams] = useSearchParams();
-  const token = searchParams.get('token');
+  const [token, setToken] = useState(() => searchParams.get('token'));
+  const navigate = useNavigate();
   const location = useLocation();
   const emailFromState = (location.state as { email?: string } | null)?.email;
   const { adoptSession } = useAuth();
   const [status, setStatus] = useState<'idle' | 'verifying' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
+  const [resending, setResending] = useState(false);
+
+  useEffect(() => {
+    const urlToken = searchParams.get('token');
+    if (!urlToken) return;
+    setToken(urlToken);
+    navigate('/verify-email', { replace: true, state: location.state });
+  }, [searchParams, navigate, location.state]);
 
   useEffect(() => {
     if (!token) return;
@@ -30,13 +39,14 @@ export function VerifyEmailPage() {
   }, [token, adoptSession]);
 
   async function handleResend() {
-    if (!emailFromState) return;
+    if (!emailFromState || resending) return;
+    setResending(true);
     try {
       await resendVerification(emailFromState);
       setMessage('Письмо отправлено повторно. Проверьте почту.');
     } catch {
       setMessage('Не удалось отправить письмо. Попробуйте позже.');
-    }
+    } finally { setResending(false); }
   }
 
   return (
@@ -49,7 +59,7 @@ export function VerifyEmailPage() {
         {!token && emailFromState && (
           <>
             <p>На адрес <strong>{emailFromState}</strong> отправлено письмо с ссылкой для подтверждения.</p>
-            <Button onClick={handleResend}>Отправить повторно</Button>
+            <Button onClick={handleResend} disabled={resending}>{resending ? 'Отправляем…' : 'Отправить повторно'}</Button>
           </>
         )}
         {!token && !emailFromState && (

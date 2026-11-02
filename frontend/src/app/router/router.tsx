@@ -15,14 +15,15 @@ import { CasesPage } from '../../pages/public/Cases/CasesPage';
 import { CaseDetailsPage } from '../../pages/public/Cases/CaseDetailsPage';
 import { CompanyDetailsPage } from '../../pages/public/Cases/CompanyDetailsPage';
 import '../../pages/auth/Auth.css';
+import { AppShell } from '../../components/layout/AppShell';
 
 const route = (path: string) => ({ path, element: <PlaceholderPage /> });
 
 export const router = createBrowserRouter([
-  ...studentRoutes,
   {
   element: <PublicLayout />,
   children: [
+    ...studentRoutes,
     { index: true, element: <HomePage /> },
     { path: 'login', element: <LoginPage /> },
     { path: 'register', element: <RegisterPage /> },
@@ -36,7 +37,7 @@ export const router = createBrowserRouter([
     { path: 'company', element: <ProtectedRoute allowedArea="company" />, children: [
       { index: true, element: <PlaceholderPage /> },
     ] },
-    { path: 'university', element: <ProtectedRoute allowedArea="university" />, children: [
+    { path: 'university', element: <ProtectedRoute allowedArea="university" />, children: [{ element: <AppShell area="university" />, children: [
       { index: true, element: <PlaceholderPage />},
       route('moderation'),
       route('moderation/:kind/:id'), 
@@ -45,24 +46,24 @@ export const router = createBrowserRouter([
       route('companies/:id'), 
       route('curators'), 
       route('projects'), 
-      route('reports'),],
+      route('reports'),]},],
     },
 
-    { path: 'mentor', element: <ProtectedRoute allowedArea="mentor" />, children: [
+    { path: 'mentor', element: <ProtectedRoute allowedArea="mentor" />, children: [{ element: <AppShell area="mentor" />, children: [
       { index: true, element: <PlaceholderPage />},
       route('projects/:kind/:id'), 
       route('projects/:kind/:id/progress')
-      ],
+      ]},],
     },
     
-    { path: 'admin', element: <ProtectedRoute allowedArea="admin" />, children: [
+    { path: 'admin', element: <ProtectedRoute allowedArea="admin" />, children: [{ element: <AppShell area="admin" />, children: [
       { index: true, element: <PlaceholderPage />},
       route('users'), 
       route('users/:id'), 
       route('directories'), 
       route('companies'), 
       route('audit')
-      ],
+      ]},],
     },
 
     { path: '403', element: <ErrorState title="Нет доступа" description="Для этого раздела у вашей учётной записи нет разрешения." /> },

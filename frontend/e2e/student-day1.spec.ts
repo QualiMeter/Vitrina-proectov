@@ -42,9 +42,8 @@ test("private data is not requested before authentication", async ({
     });
   });
   await page.goto("/student/profile");
-  await expect(
-    page.getByText("Сессия завершилась. Войдите снова."),
-  ).toBeVisible();
+  await expect(page).toHaveURL(/\/login$/);
+  await expect(page.getByRole("heading", { name: "Вход" })).toBeVisible();
   expect(calls).toEqual(["/api/v1/auth/me"]);
 });
 

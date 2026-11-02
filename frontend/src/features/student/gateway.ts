@@ -27,10 +27,7 @@ async function mutate<T>(
   method: string,
   body?: unknown,
 ): Promise<T> {
-  const token = await apiRequest<C.CsrfTokenResponse>(`${root}/auth/csrf`, {
-    cache: "no-store",
-  });
-  const headers: Record<string, string> = { "X-CSRF-Token": token.csrfToken };
+  const headers: Record<string, string> = {};
   if (body !== undefined && !(body instanceof FormData))
     headers["Content-Type"] = "application/json";
   return apiRequest<T>(`${root}${path}`, {
