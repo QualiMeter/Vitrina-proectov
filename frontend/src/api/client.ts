@@ -227,6 +227,7 @@ export async function apiRequest<T>(path: string, options: RequestInit = {}): Pr
     const csrfError = await toApiError(response);
 
     if (csrfError.code === 'csrf_invalid') {
+      // CsrfMiddleware rejects before calling the endpoint, so replaying this request cannot duplicate its mutation.
       const refreshedToken = await refreshRejectedCsrfToken(usedCsrfToken);
 
       if (!canReplayBody(options.body)) {
