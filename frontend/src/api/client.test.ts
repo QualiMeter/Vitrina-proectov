@@ -135,6 +135,9 @@ describe('CSRF request coordination', () => {
     await expect(apiRequest('/api/v1/auth/login', { method: 'POST', body: '{}' })).rejects.toMatchObject({ status: 401 });
     expect(expired).toHaveBeenCalledTimes(1);
 
+    await expect(apiRequest('/api/v1/auth/me')).rejects.toMatchObject({ status: 401 });
+    expect(expired).toHaveBeenCalledTimes(1);
+
     window.removeEventListener('vitrina:session-expired', expired);
   });
 
