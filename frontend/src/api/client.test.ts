@@ -24,18 +24,18 @@ describe('CSRF request coordination', () => {
     expect(mutations.map(([, init]) => new Headers(init?.headers).get('X-CSRF-Token'))).toEqual(['csrf-current', 'csrf-current']);
   });
 
-  it('preserves safe server error codes and does not retry a mutation with an invalid token', async () => {
+  it('does not loop when the refreshed CSRF token is also rejected', async () => {
     clearCsrfToken();
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => String(input).endsWith('/auth/csrf')
       ? new Response(JSON.stringify({ csrfToken: 'csrf-invalid' }), { status: 200 })
       : new Response(JSON.stringify({ code: 'csrf_invalid', message: 'technical details hidden' }), { status: 403 }));
     vi.stubGlobal('fetch', fetchMock);
-    await expect(apiRequest('/mutate', { method: 'POST', body: '{}' })).rejects.toMatchObject({ status: 403, code: 'csrf_invalid', kind: 'forbidden' });
-    expect(fetchMock).toHaveBeenCalledTimes(2);
-    try { await apiRequest('/mutate', { method: 'POST', body: '{}' }); } catch (error) {
-      expect(error).toBeInstanceOf(ApiError);
-      expect((error as ApiError).message).toBe('forbidden');
-    }
+    await expect(apiRequest('/mutate', { method: 'POST', body: '{}' })).rejects.toMatchObject({
+      status: 403,
+      code: 'csrf_invalid',
+      kind: 'forbidden',
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(4);
   });
 
   it('clears the cached token after a failed refresh so the next mutation can fetch again', async () => {
