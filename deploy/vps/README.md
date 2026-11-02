@@ -17,6 +17,8 @@
 
 Деплой не перезаписывает `.env`, `/var/lib/vitrina`, PostgreSQL, Redis или данные RustFS. Перед заменой файлов запускается существующий скрипт резервного копирования PostgreSQL. EF Core применяет миграции при старте API.
 
+При обновлении существующего окружения проверьте переменные в `/etc/vitrina/vitrina.env` и `/opt/vitrina-infra/.env`: `Email__Routes__EmailConfirmationPath=/verify-email`, `Email__Routes__PasswordResetPath=/reset-password`, `Email__Routes__CompanyInvitationPath=/accept-invitation`. После изменения перезапустите API.
+
 ## 1. Установить серверный скрипт
 
 Сначала добавьте файлы из этого архива в репозиторий и отправьте их в `main`. Затем на своём ПК из корня репозитория скопируйте скрипт на сервер:
