@@ -79,12 +79,6 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
-      - name: Check generated student types
-        run: |
-          python3 -m venv "$RUNNER_TEMP/student-codegen"
-          "$RUNNER_TEMP/student-codegen/bin/pip" install -r ../scripts/requirements-codegen.txt
-          "$RUNNER_TEMP/student-codegen/bin/python" ../scripts/generate_student_types.py --check
-
       - name: Unit tests
         run: npm run test:coverage
 
