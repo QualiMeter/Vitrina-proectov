@@ -47,11 +47,15 @@
 .public-header .public-header__menu { display: none; }
 
 .hero {
+  position: relative;
+  isolation: isolate;
   background: var(--surface);
   border-bottom: 1px solid var(--line);
 }
 
 .hero__grid {
+  position: relative;
+  z-index: 1;
   display: grid;
   grid-template-columns: 1.04fr .96fr;
   align-items: center;
