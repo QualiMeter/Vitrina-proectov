@@ -1,6 +1,7 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { ApiError } from "../../api/client";
+import { AmbientBackground } from "../../components/background/AmbientBackground";
 import { Brand } from "../../components/layout/Brand";
 import { ErrorState } from "../../components/feedback/States";
 import { DemoGatewayContext } from "./demoContext";
@@ -113,6 +114,7 @@ export function StudentRoot({ demo = false }: { demo?: boolean }) {
           </Link>
         </nav>
         <main className="student-main">
+          <AmbientBackground variant="dashboard" />
           <Load state={session}>
             {(data) =>
               data.user.availableAreas.includes("student") ? (
