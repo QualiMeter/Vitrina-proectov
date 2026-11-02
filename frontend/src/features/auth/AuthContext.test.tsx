@@ -47,7 +47,7 @@ function deferred<T>() {
     resolve = resolvePromise;
   });
 
-  return { promise, resolve, reject };
+  return { promise, resolve };
 }
 
 function AuthProbe() {
