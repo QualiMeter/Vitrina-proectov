@@ -1,8 +1,8 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../../features/auth/useAuth';
 import { ApiError } from '../../api/client';
-import { takePendingInvitationToken } from '../../features/auth/pendingInvitation';
+import { clearPendingInvitationToken, takePendingInvitationToken } from '../../features/auth/pendingInvitation';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Card } from '../../components/ui/Card';
@@ -24,6 +24,10 @@ export function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const submitting = useRef(false);
+
+  useEffect(() => () => {
+    clearPendingInvitationToken();
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
