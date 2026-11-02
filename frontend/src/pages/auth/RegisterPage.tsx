@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { PRIVACY_POLICY_VERSION, register } from '../../api/auth';
+import { ApiError } from '../../api/client';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Card } from '../../components/ui/Card';
@@ -16,6 +17,7 @@ export function RegisterPage() {
   });
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const submitting = useRef(false);
 
   function update(field: keyof typeof form, value: string | boolean) {
     setForm(prev => ({ ...prev, [field]: value }));
@@ -23,10 +25,12 @@ export function RegisterPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (submitting.current) return;
     if (!form.privacyAccepted) {
       setError('Необходимо согласие на обработку персональных данных.');
       return;
     }
+    submitting.current = true;
     setError(null);
     setLoading(true);
     try {
@@ -47,6 +51,7 @@ export function RegisterPage() {
         setError('Ошибка регистрации. Попробуйте позже.');
       }
     } finally {
+      submitting.current = false;
       setLoading(false);
     }
   }
