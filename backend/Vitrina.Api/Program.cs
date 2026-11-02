@@ -153,11 +153,8 @@ app.UseMiddleware<RequestContextMiddleware>();
 app.UseMiddleware<SessionAuthenticationMiddleware>();
 app.UseMiddleware<CsrfMiddleware>();
 
-if (app.Environment.IsDevelopment())
-{
-	app.MapOpenApi();
-	app.MapScalarApiReference();
-}
+app.MapOpenApi();
+app.MapScalarApiReference();
 
 app.MapGet("/health/live", () => Results.Ok(new { status = "ok", service = "vitrina-api" }));
 app.MapGet("/health/ready", async (VitrinaDbContext db, IDistributedCache cache, CancellationToken ct) =>
