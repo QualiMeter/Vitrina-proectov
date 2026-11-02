@@ -91,6 +91,7 @@ describe('AuthProvider session synchronization', () => {
 
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'Login' }));
+      await Promise.resolve();
     });
 
     expect(screen.getByTestId('session')).toHaveTextContent('new@example.com');
@@ -112,6 +113,7 @@ describe('AuthProvider session synchronization', () => {
 
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'Logout' }));
+      await Promise.resolve();
     });
 
     await act(async () => {
