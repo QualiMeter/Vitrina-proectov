@@ -21,6 +21,7 @@ import {
 } from '../../pages/university/UniversityPages';
 import { PlaceholderPage } from '../../pages/PlaceholderPage';
 import { PublicLayout } from './PublicLayout';
+import { CompanyCaseEditor, CompanyCasesPage, CompanyDemoLayout } from '../../pages/company/cases/CompanyCasesPage';
 import '../../pages/auth/Auth.css';
 
 const placeholderRoute = (path: string) => ({ path, element: <PlaceholderPage /> });
@@ -71,6 +72,15 @@ export const router = createBrowserRouter([
       { path: 'cases', element: <CasesPage /> },
       { path: 'cases/:caseId', element: <CaseDetailsPage /> },
       { path: 'companies/:companyId', element: <CompanyDetailsPage /> },
+      {
+        path: 'company/cases',
+        element: <CompanyDemoLayout />,
+        children: [
+          { index: true, element: <CompanyCasesPage /> },
+          { path: 'new', element: <CompanyCaseEditor /> },
+          { path: ':caseId/edit', element: <CompanyCaseEditor /> },
+        ],
+      },
       {
         path: 'company',
         element: <ProtectedRoute allowedArea="company" />,
