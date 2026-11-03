@@ -20,6 +20,9 @@ public sealed class SecurityAndNotificationsTests
 
 		Assert.NotNull(db.Model.FindEntityType(typeof(CaseAward)));
 		Assert.NotNull(db.Model.FindEntityType(typeof(CaseResultPublication)));
+		var userEntity = db.Model.FindEntityType(typeof(UserAccount));
+		Assert.NotNull(userEntity?.FindProperty(nameof(UserAccount.PrivacyAcceptedAt)));
+		Assert.NotNull(userEntity?.FindProperty(nameof(UserAccount.PrivacyPolicyVersion)));
 	}
 
 	[Fact]

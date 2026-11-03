@@ -21,3 +21,5 @@ backend/**/TestResults/
 
 # Local environment for the OpenAPI type generator
 .venv-codegen/
+
+/Vitrina-proectov/

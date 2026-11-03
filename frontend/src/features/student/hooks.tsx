@@ -33,10 +33,11 @@ export function errorMessage(error: unknown): string {
       notFound: "Объект не найден или недоступен.",
       conflict:
         "Состояние изменилось. Обновите данные перед повторным действием.",
+      rateLimited: "Слишком много запросов. Подождите и повторите действие.",
       network: "Нет связи с сервером. Проверьте подключение.",
       server: "Сервер временно недоступен.",
       unknown: "Не удалось выполнить запрос.",
-    }[error.kind];
+    }[error.kind] ?? "Не удалось выполнить запрос.";
   }
   return error instanceof Error
     ? error.message

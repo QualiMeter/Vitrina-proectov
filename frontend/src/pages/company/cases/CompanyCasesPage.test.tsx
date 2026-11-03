@@ -55,7 +55,7 @@ it('keeps input after a failed save and focuses the accessible error', async () 
   fireEvent.click(screen.getByRole('button', { name: 'Сохранить демочерновик' }));
   const alert = await screen.findByRole('alert');
   expect(alert).toHaveTextContent('Не удалось сохранить');
-  expect(alert).toHaveFocus();
+  await waitFor(() => expect(alert).toHaveFocus());
   expect(screen.getByLabelText('Название')).toHaveValue('Моя правка');
 });
 

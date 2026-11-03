@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { StudentGateway } from "./gateway";
 import type { AuthSessionResponse } from "./contracts";
-/** Read-only bridge until FE-C exposes its AuthProvider. No credentials or login state. */
+/** Demo sessions stay isolated; live sessions are owned by the shared AuthProvider. */
 export function useStudentSession(api: StudentGateway, demo: boolean) {
   const [state, setState] = useState<{
     data?: AuthSessionResponse;
@@ -28,18 +28,9 @@ export function useStudentSession(api: StudentGateway, demo: boolean) {
     void refresh(true);
   }, [refresh]);
   useEffect(() => {
-    reload();
-    const verify = () => {
-      void refresh(false);
-    };
-    if (!demo) {
-      window.addEventListener("focus", verify);
-      window.addEventListener("vitrina:session-expired", reload);
-    }
+    if (demo) reload();
     return () => {
       invalidate();
-      window.removeEventListener("focus", verify);
-      window.removeEventListener("vitrina:session-expired", reload);
     };
   }, [demo, refresh, reload, invalidate]);
   return { data: state.data, error: state.error, reload };
