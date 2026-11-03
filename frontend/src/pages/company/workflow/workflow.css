@@ -1,0 +1,18 @@
+.workflow { padding-block: 24px; min-width: 0; }
+.workflow h1, .workflow h2, .workflow h3 { color: var(--brand-dark); overflow-wrap: anywhere; }
+.workflow__nav, .workflow__actions { display: flex; flex-wrap: wrap; gap: 12px; margin-block: 20px; }
+.workflow__nav .button, .workflow__actions .button { max-width: 100%; white-space: normal; text-align: center; }
+.workflow__cards { display: grid; gap: 20px; margin-block: 24px; }
+.workflow__cards .card { padding: 24px; min-width: 0; overflow-wrap: anywhere; }
+.workflow__quotas, .workflow__filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; margin-block: 20px; }
+.workflow__quotas { padding: 20px; background: var(--brand-pale); border-radius: var(--radius-md); }
+.workflow__quotas dd { margin: 6px 0; font-weight: 700; }
+.workflow__checkpoint { border-top: 1px solid var(--line); margin-top: 20px; padding-top: 20px; }
+.workflow__private { white-space: pre-wrap; overflow-wrap: anywhere; }
+.workflow__form { margin-block: 24px; }
+.workflow__form fieldset { background: var(--surface); }
+.workflow__error { padding: 16px; border: 1px solid var(--danger); border-radius: var(--radius-sm); margin-block: 20px; }
+.workflow__success { color: var(--success); }
+.workflow__blocked { margin-top: 36px; }
+.workflow__blocked fieldset { opacity: .7; }
+@media (max-width: 600px) { .workflow__quotas, .workflow__filters { grid-template-columns: 1fr; } .workflow__cards .card { padding: 16px; } }
