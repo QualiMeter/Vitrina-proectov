@@ -2,7 +2,6 @@ import { beforeAll, afterAll, expect, it } from 'vitest';
 import { render, screen, within, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createMemoryRouter, RouterProvider } from 'react-router-dom';
-import { PublicHeader } from '../../../components/layout/PublicHeader';
 import { CompanyCaseEditor, CompanyCasesPage, CompanyDemoLayout } from '../cases/CompanyCasesPage';
 import { CompanyWorkflowPage } from './CompanyWorkflowPage';
 import { registrationCaseId } from './mockWorkflow';
@@ -21,7 +20,6 @@ afterAll(() => {
 });
 function setup(path: string) {
   const router = createMemoryRouter([
-    { path: '/', element: <PublicHeader /> },
     { path: '/company/cases', element: <CompanyDemoLayout />, children: [
       { index: true, element: <CompanyCasesPage /> }, { path: ':caseId/edit', element: <CompanyCaseEditor /> },
       { path: ':caseId/manage', element: <CompanyWorkflowPage view="overview" /> },
@@ -35,11 +33,8 @@ function setup(path: string) {
 }
 async function enterDemo() { fireEvent.click(screen.getByRole('button', { name: 'Открыть демонстрацию' })); }
 
-it('reaches the company demo from the public site without pretending to log in', async () => {
-  const { user } = setup('/');
-  await user.click(screen.getByRole('button', { name: 'Войти' }));
-  const modal = screen.getByRole('dialog', { name: 'Вход в сервис' });
-  await user.click(within(modal).getByRole('link', { name: 'Кабинет компании — демо' }));
+it('requires explicit entry to the company demo without pretending to log in', async () => {
+  setup('/company/cases');
   expect(screen.getByRole('heading', { name: 'Кабинет компании' })).toBeVisible();
   expect(screen.queryByRole('heading', { name: 'Мои кейсы' })).not.toBeInTheDocument();
   await enterDemo();

@@ -1,48 +1,57 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Brand } from './Brand';
 import { Button, ButtonLink } from '../ui/Button';
-import { Modal } from '../ui/Modal';
+import { useAuth } from '../../features/auth/useAuth';
+
+const areaPaths = ['student', 'company', 'university', 'mentor', 'admin'] as const;
 
 export function PublicHeader() {
-  const [showLogin, setShowLogin] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const toggleRef = useRef<HTMLButtonElement>(null);
+  const { session, logout } = useAuth();
+  const navigate = useNavigate();
+  const firstArea = areaPaths.find(area => session?.user.availableAreas.includes(area));
+  const [logoutError, setLogoutError] = useState(false);
 
-  return <>
-    <header className="public-header" onKeyDown={(event) => {
-      if (event.key === 'Escape' && menuOpen) {
-        event.preventDefault();
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
         setMenuOpen(false);
-        event.currentTarget.querySelector<HTMLButtonElement>('.public-header__menu')?.focus();
+        toggleRef.current?.focus();
       }
-    }}>
-      <div className="container public-header__inner">
-        <Brand />
-        <Button
-          variant="ghost"
-          className="public-header__menu"
-          aria-controls="public-navigation"
-          aria-expanded={menuOpen}
-          onClick={() => setMenuOpen((open) => !open)}
-          aria-label={menuOpen ? 'Закрыть меню' : 'Открыть меню'}
-        >
-          <span aria-hidden="true">☰</span>
-        </Button>
-        <nav
-          id="public-navigation"
-          className={menuOpen ? 'is-open' : ''}
-          aria-label="Основная навигация"
-        >
-          <a href="/#about" onClick={() => setMenuOpen(false)}>О платформе</a>
-          <a href="/#directions" onClick={() => setMenuOpen(false)}>Направления</a>
-          <Link to="/cases" onClick={() => setMenuOpen(false)}>Каталог кейсов</Link>
-        </nav>
-        <Button variant="secondary" onClick={() => setShowLogin(true)}>Войти</Button>
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [menuOpen]);
+
+  async function handleLogout() {
+    setLogoutError(false);
+    try {
+      await logout();
+      navigate('/', { replace: true });
+    } catch {
+      setLogoutError(true);
+    }
+  }
+
+  return <header className="public-header"><div className="container public-header__inner">
+    <Brand />
+    <Button ref={toggleRef} variant="ghost" className="public-header__menu" aria-controls="public-navigation" aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)} aria-label="Открыть меню">☰</Button>
+    <nav id="public-navigation" className={menuOpen ? 'is-open' : ''} aria-label="Основная навигация">
+      <Link to="/#about" onClick={() => setMenuOpen(false)}>О платформе</Link>
+      <Link to="/cases" onClick={() => setMenuOpen(false)}>Каталог кейсов</Link>
+      <Link to="/#directions" onClick={() => setMenuOpen(false)}>Направления</Link>
+      <Link to="/#projects" onClick={() => setMenuOpen(false)}>Примеры проектов</Link>
+    </nav>
+    {session ? (
+      <div className="public-header__account">
+        <span className="public-header__name">{session.user.fullName}</span>
+        {firstArea ? <ButtonLink variant="secondary" to={`/${firstArea}`}>Кабинет</ButtonLink> : null}
+        <Button variant="ghost" onClick={handleLogout}>Выйти</Button>
+        {logoutError && <span className="public-header__error" role="alert">Не удалось выйти. Попробуйте ещё раз.</span>}
       </div>
-    </header>
-    <Modal open={showLogin} title="Вход в сервис" onClose={() => setShowLogin(false)}>
-      <p>Подключение университетской системы входа находится в разработке. Сейчас авторизация недоступна.</p>
-      <ButtonLink to="/company/cases" onClick={() => setShowLogin(false)}>Кабинет компании — демо</ButtonLink>
-    </Modal>
-  </>;
+    ) : <ButtonLink variant="secondary" to="/login">Войти</ButtonLink>}
+  </div></header>;
 }

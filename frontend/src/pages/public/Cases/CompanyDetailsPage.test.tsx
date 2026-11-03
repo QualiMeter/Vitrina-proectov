@@ -2,12 +2,13 @@ import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { CompanyDetailsPage } from './CompanyDetailsPage';
+import { MockAuthProvider } from '../../../test/MockAuthProvider';
 
 describe('public company details', () => {
   it('shows public description and the company’s public cases without private contact fields', async () => {
     render(
       <MemoryRouter initialEntries={['/companies/c1000000-0000-4000-8000-000000000001']}>
-        <Routes><Route path="/companies/:companyId" element={<CompanyDetailsPage />} /></Routes>
+        <Routes><Route path="/companies/:companyId" element={<MockAuthProvider><CompanyDetailsPage /></MockAuthProvider>} /></Routes>
       </MemoryRouter>
     );
 
@@ -21,7 +22,7 @@ describe('public company details', () => {
   it('shows a not-found state for an unknown company', async () => {
     render(
       <MemoryRouter initialEntries={['/companies/unknown']}>
-        <Routes><Route path="/companies/:companyId" element={<CompanyDetailsPage />} /></Routes>
+        <Routes><Route path="/companies/:companyId" element={<MockAuthProvider><CompanyDetailsPage /></MockAuthProvider>} /></Routes>
       </MemoryRouter>
     );
     expect(await screen.findByRole('heading', { name: 'Компания не найдена' })).toBeInTheDocument();
@@ -34,7 +35,7 @@ describe('public company details', () => {
       .mockResolvedValueOnce({ company: { id: companyId, name: 'Публичная компания', description: 'Описание', directionIds: [] }, cases: [] });
     render(
       <MemoryRouter initialEntries={[`/companies/${companyId}`]}>
-        <Routes><Route path="/companies/:companyId" element={<CompanyDetailsPage loadCompany={loadCompany} />} /></Routes>
+        <Routes><Route path="/companies/:companyId" element={<MockAuthProvider><CompanyDetailsPage loadCompany={loadCompany} /></MockAuthProvider>} /></Routes>
       </MemoryRouter>
     );
     expect(await screen.findByRole('heading', { name: 'Не удалось загрузить профиль компании' })).toBeInTheDocument();

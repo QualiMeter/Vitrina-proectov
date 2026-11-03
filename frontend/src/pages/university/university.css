@@ -1,0 +1,59 @@
+.university-page { display: grid; gap: 24px; }
+.university-heading, .university-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+.university-heading h1 { margin: 7px 0 0; color: var(--brand-dark); font-size: clamp(1.8rem, 3vw, 2.45rem); line-height: 1.15; }
+.university-lead, .university-section-heading p, .university-shortcut p, .university-invite-panel p { margin: 0; color: var(--muted); }
+.university-shortcuts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.university-shortcut { display: flex; flex-direction: column; align-items: flex-start; gap: 18px; padding: 22px; }
+.university-shortcut__icon { display: grid; width: 40px; height: 40px; place-items: center; border-radius: 50%; background: var(--brand-pale); color: var(--brand); font-size: 1.2rem; }
+.university-shortcut h2, .university-invite-panel h2 { margin: 0 0 6px; color: var(--brand-dark); font-size: 1.08rem; }
+.university-metric { display: block; margin-top: 12px; color: var(--brand-dark); font-size: 1.8rem; line-height: 1; }.university-metric--unknown { color: var(--muted); }
+.university-shortcut .button { margin-top: auto; }
+.university-section-heading { margin-top: 16px; }
+.university-section-heading h2 { margin: 0 0 4px; color: var(--brand-dark); font-size: 1.3rem; }
+.university-recent { padding: 20px 24px; }
+.university-count { margin: 0 0 10px; color: var(--muted); }
+.university-recent ul { display: grid; margin: 0; padding: 0; list-style: none; }
+.university-recent li { display: flex; justify-content: space-between; gap: 16px; padding: 13px 0; border-top: 1px solid var(--line); }
+.university-recent li a, .university-table-link { color: var(--brand-dark); font-weight: 600; text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 3px; }
+.university-recent li a:hover, .university-table-link:hover { color: var(--brand); text-decoration-color: currentColor; }
+.university-recent li span { color: var(--muted); }
+.university-panel { padding: 22px; }
+.company-search { display: flex; align-items: end; gap: 12px; margin-bottom: 20px; }
+.company-search > .field:first-child { flex: 1; }
+.company-search .field select, .university-form select, .university-invite-panel select { min-height: 44px; padding: 9px 12px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface); color: var(--ink); }
+.data-table-wrap { width: 100%; overflow-x: auto; }
+.data-table { width: 100%; border-collapse: collapse; text-align: left; }
+.data-table th { padding: 12px 14px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: .76rem; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; white-space: nowrap; }
+.data-table td { padding: 14px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.data-table tbody tr:last-child td { border-bottom: 0; }
+.data-table__empty { padding: 30px 14px !important; color: var(--muted); text-align: center; }
+.university-pagination, .university-pagination > div { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.university-pagination { margin-top: 12px; color: var(--muted); font-size: .86rem; }
+.university-pagination > div { color: var(--ink); }
+.university-form-page { max-width: 850px; }
+.university-form-card { padding: clamp(20px, 4vw, 34px); }
+.university-form { display: grid; gap: 18px; margin-top: 24px; }
+.university-form textarea { width: 100%; resize: vertical; padding: 12px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface); color: var(--ink); font: inherit; }
+.university-form textarea:focus, .university-form select:focus { outline: 3px solid var(--brand-soft); outline-offset: 1px; }
+.university-directions { margin: 0; padding: 16px; border: 1px solid var(--line); border-radius: var(--radius-sm); }
+.university-directions legend { padding: 0 6px; font-weight: 600; }
+.university-directions > div { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 20px; }
+.university-directions > p { margin: 0; color: var(--muted); }
+.university-check { display: flex; align-items: center; gap: 9px; }
+.university-check input { width: 18px; height: 18px; accent-color: var(--brand); }
+.university-form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; }
+.university-inline-note { padding: 12px 14px; border-radius: var(--radius-sm); background: var(--brand-pale); color: var(--brand-dark); }
+.university-company-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; padding: 22px; }
+.university-company-summary > div { display: grid; gap: 5px; }
+.university-company-summary .eyebrow { font-size: .7rem; }
+.university-company-summary > p { grid-column: 1 / -1; margin: 0; padding-top: 16px; border-top: 1px solid var(--line); white-space: pre-wrap; }
+.university-invite-panel { display: grid; gap: 18px; }
+.university-invite-panel .company-search { margin: 0; }
+.university-invite-panel .field { min-width: 180px; }
+.university-success { margin: 0; color: var(--success); }
+.invitation-status { display: inline-flex; padding: 4px 9px; border-radius: 99px; background: var(--brand-gray); font-size: .8rem; white-space: nowrap; }
+.invitation-status--pending { background: var(--brand-pale); color: var(--brand-dark); }
+.invitation-status--accepted { background: var(--success-pale); color: var(--success); }
+.invitation-status--expired, .invitation-status--revoked { color: var(--muted); }
+@media (max-width: 900px) { .university-shortcuts { grid-template-columns: 1fr; }.university-shortcut { display: grid; grid-template-columns: auto 1fr; }.university-shortcut .button { grid-column: 2; justify-self: start; } }
+@media (max-width: 640px) { .university-heading, .university-section-heading { align-items: flex-start; flex-direction: column; }.company-search, .university-invite-panel .company-search { align-items: stretch; flex-direction: column; }.university-pagination, .university-pagination > div { align-items: flex-start; flex-direction: column; }.university-company-summary { grid-template-columns: 1fr; }.university-directions > div { grid-template-columns: 1fr; }.university-form-actions { flex-direction: column-reverse; }.university-form-actions .button { width: 100%; }.university-recent li { align-items: flex-start; flex-direction: column; gap: 3px; } }

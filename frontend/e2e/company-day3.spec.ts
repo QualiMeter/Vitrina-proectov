@@ -16,10 +16,11 @@ async function createStage(page: Page, title = 'Прототип') {
   await page.getByRole('button', { name: 'Сохранить этап', exact: true }).click();
   await expect(page.getByRole('heading', { name: `2. ${title}`, exact: true })).toBeVisible();
 }
-test('company demo is reachable from the existing public header', async ({ page }) => {
+test('explicit company demo works alongside the real public login', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'Войти', exact: true }).click();
-  await page.getByRole('dialog', { name: 'Вход в сервис' }).getByRole('link', { name: 'Кабинет компании — демо' }).click();
+  await page.getByRole('link', { name: 'Войти', exact: true }).click();
+  await expect(page).toHaveURL(/\/login$/);
+  await page.goto('/company/cases');
   await expect(page).toHaveURL(/\/company\/cases$/);
   await page.getByRole('button', { name: 'Открыть демонстрацию' }).click();
   await expect(page.getByRole('article')).toHaveCount(6);

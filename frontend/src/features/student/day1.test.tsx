@@ -14,14 +14,19 @@ import { liveStudentGateway } from "./gateway";
 import { StudentProjectsBlock } from "./StudentProjectsBlock";
 import { PublicProfilePage } from "./ProfilePages";
 import { safeUrl } from "./hooks";
+import { MockAuthProvider } from "../../test/MockAuthProvider";
+import type { AuthContextValue } from "../auth/context";
 
 afterEach(() => vi.unstubAllGlobals());
 function demo(path: string) {
   render(
-    <RouterProvider
-      router={createMemoryRouter(studentRoutes, { initialEntries: [path] })}
-    />,
+    <MockAuthProvider><RouterProvider
+      router={createMemoryRouter([...studentRoutes, { path: "/login", element: <p>Общий экран входа</p> }, { path: "/403", element: <p>Нет доступа</p> }], { initialEntries: [path] })}
+    /></MockAuthProvider>,
   );
+}
+function live(path: string, auth: AuthContextValue) {
+  render(<MockAuthProvider value={auth}><RouterProvider router={createMemoryRouter([...studentRoutes, { path: "/login", element: <p>Общий экран входа</p> }, { path: "/403", element: <p>Нет доступа</p> }], { initialEntries: [path] })} /></MockAuthProvider>);
 }
 describe("Frontend B day 1", () => {
   it("clears a saved institute, preserves the selection after remount and allows selecting it again", async () => {
@@ -192,33 +197,15 @@ describe("Frontend B day 1", () => {
       .mockResolvedValue(new Response(null, { status: 401 }));
     vi.stubGlobal("fetch", fetch);
     demo("/student/profile");
-    expect(
-      await screen.findByText("Сессия завершилась. Войдите снова."),
-    ).toBeInTheDocument();
-    expect(fetch).toHaveBeenCalledTimes(1);
-    expect(fetch.mock.calls[0][0]).toBe("/api/v1/auth/me");
+    expect(await screen.findByText("Общий экран входа")).toBeInTheDocument();
+    expect(fetch).not.toHaveBeenCalled();
     expect(screen.queryByLabelText("ФИО")).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole("link", { name: "Войти через общий экран входа" }),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.getByRole("link", { name: "Вернуться на главную" }),
-    ).toHaveAttribute("href", "/");
   });
   it("does not grant a company account access to the student area", async () => {
     const session = await createDemoGateway().session();
-    const fetch = vi.fn().mockResolvedValue(
-      Response.json({
-        ...session,
-        user: { ...session.user, availableAreas: ["company"] },
-      }),
-    );
-    vi.stubGlobal("fetch", fetch);
-    demo("/student/profile");
-    expect(
-      await screen.findByText("Кабинет студента недоступен"),
-    ).toBeInTheDocument();
-    expect(fetch).toHaveBeenCalledTimes(1);
+    const auth: AuthContextValue = { session: { ...session, user: { ...session.user, availableAreas: ["company"] } }, isLoading: false, loadError: false, login: vi.fn(), logout: vi.fn(), refreshSession: vi.fn(), retrySession: vi.fn(), adoptSession: vi.fn() };
+    live("/student/profile", auth);
+    expect(await screen.findByText("Нет доступа")).toBeInTheDocument();
   });
   it("ignores unexpected private fields returned by a public profile endpoint", async () => {
     vi.stubGlobal(
@@ -267,11 +254,10 @@ describe("Frontend B day 1", () => {
     expect(options).toMatchObject({
       method: "PATCH",
       credentials: "same-origin",
-      headers: {
-        "X-CSRF-Token": "csrf-test",
-        "Content-Type": "application/json",
-      },
     });
+    const headers = new Headers(options.headers);
+    expect(headers.get("X-CSRF-Token")).toBe("csrf-test");
+    expect(headers.get("Content-Type")).toBe("application/json");
     expect(JSON.parse(options.body)).toEqual({
       expectedVersion: 1,
       nickname: "new_name",

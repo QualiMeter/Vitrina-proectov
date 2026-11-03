@@ -1,6 +1,5 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
-import { ApiError } from "../../api/client";
 import { AmbientBackground } from "../../components/background/AmbientBackground";
 import { Brand } from "../../components/layout/Brand";
 import { ErrorState } from "../../components/feedback/States";
@@ -9,13 +8,20 @@ import { liveStudentGateway } from "./gateway";
 import { StudentContext } from "./hooks";
 import { Load, DemoNotice } from "./shared";
 import { useStudentSession } from "./useStudentSession";
+import { AuthContext } from "../auth/context";
 import "./student.css";
 
 export function StudentRoot({ demo = false }: { demo?: boolean }) {
   const demoApi = useContext(DemoGatewayContext);
   const api = demo && demoApi ? demoApi : liveStudentGateway;
   const location = useLocation();
-  const session = useStudentSession(api, demo);
+  const auth = useContext(AuthContext);
+  const demoSession = useStudentSession(api, demo);
+  const session = demo ? demoSession : {
+    data: auth?.session ?? undefined,
+    error: auth?.loadError && !auth.session ? new Error("Не удалось проверить вход.") : undefined,
+    reload: () => { void auth?.retrySession().catch(() => undefined); },
+  };
   const base = demo ? "/demo/student" : "/student";
   const [menu, setMenu] = useState(false);
   const menuButton = useRef<HTMLButtonElement>(null);
@@ -134,14 +140,6 @@ export function StudentRoot({ demo = false }: { demo?: boolean }) {
               )
             }
           </Load>
-          {session.error instanceof ApiError &&
-            session.error.status === 401 && (
-              <p role="status">
-                Общий экран входа ещё не подключён.{" "}
-                <Link to="/">Вернуться на главную</Link> или повторите проверку
-                сессии после входа через доступный экран команды.
-              </p>
-            )}
         </main>
       </div>
     </div>
