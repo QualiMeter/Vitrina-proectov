@@ -30,7 +30,10 @@ export function renderCompanyContracts(input) {
   const required = new Set(['CaseDraft', 'CaseStage', 'CaseStageListResponse', 'CreateStageRequest',
     'UpdateStageRequest', 'CreateCheckpointRequest', 'UpdateCheckpointRequest', 'CaseCheckpoint',
     'CaseApplication', 'CaseApplicationListResponse', 'CaseApplicationDecisionRequest',
-    'CompanyStudentProfile', 'CaseVersionCommand', 'CaseExecutionCommand']);
+    'CompanyStudentProfile', 'CaseVersionCommand', 'CaseExecutionCommand',
+    'CaseExecutionDashboard', 'SubmissionVersionList', 'CompleteSelectionRequest',
+    'ExcludeTeamRequest', 'TeamExclusionResult', 'ReviewDraftRequest', 'ApplicationReview',
+    'AwardsDraft', 'SaveAwardsDraftRequest', 'CheckpointCloseRequest', 'EvaluationProgress']);
   function collect(value) {
     if (Array.isArray(value)) return value.forEach(collect);
     if (!value || typeof value !== 'object') return;

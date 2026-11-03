@@ -1,0 +1,6 @@
+.execution fieldset { min-width: 0; margin-block: 16px; border: 1px solid var(--line); border-radius: var(--radius-sm); }
+.execution select, .execution textarea, .execution input[type="number"] { width: 100%; max-width: 100%; }
+.execution textarea { min-height: 100px; }
+.execution__choice { display: flex; align-items: baseline; gap: 10px; margin-block: 12px; overflow-wrap: anywhere; }
+.execution .card { padding: 20px; overflow-wrap: anywhere; }
+.execution fieldset:disabled { opacity: .75; }

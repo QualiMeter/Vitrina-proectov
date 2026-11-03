@@ -10,8 +10,10 @@ import { demoCompanyId, directions, technologies, validateDraft, type DemoMode }
 import './companyCases.css';
 import { createCompanyDemo } from '../workflow/mockWorkflow';
 import type { WorkflowRepository } from '../workflow/repository';
+import { createLazyExecution } from '../execution/lazyExecution';
+import { executionCaseId, evaluationCaseId, type ExecutionRepository } from '../execution/repository';
 
-export type DemoContext = { repository: CompanyCasesRepository; workflow: WorkflowRepository; companyId: string; canCreate: boolean };
+export type DemoContext = { repository: CompanyCasesRepository; workflow: WorkflowRepository; execution: ExecutionRepository; companyId: string; canCreate: boolean };
 const message = (error: unknown) => error instanceof Error ? error.message : 'Не удалось выполнить действие.';
 const statusLabels: Record<CaseDraft['status'], string> = {
   DRAFT: 'Черновик', MODERATION: 'На модерации', REVISION: 'На доработке', REJECTED: 'Отклонён',
@@ -24,6 +26,7 @@ export function CompanyDemoLayout() {
   const [mode, setMode] = useState<DemoMode>('normal');
   const [active, setActive] = useState(false);
   const { repository, workflow } = useMemo(() => createCompanyDemo(mode), [mode]);
+  const execution = useMemo(() => createLazyExecution(mode), [mode]);
   return <main className="container company-cases">
     <Link to="/">← На главную</Link>
     <p className="company-cases__notice">UI Ready · демонстрационные данные</p>
@@ -41,7 +44,9 @@ export function CompanyDemoLayout() {
       <p>Реальные кейсы доступны только авторизованным представителям своей компании.</p>
       <Button onClick={() => setActive(true)}>Открыть демонстрацию</Button>
     </section> : mode === 'denied' ? <ErrorState title="Доступ запрещён" description="Нет членства и прав на эту компанию. Приватные данные не загружаются." />
-      : <Outlet context={{ repository, workflow, companyId: demoCompanyId, canCreate: mode !== 'read-only' } satisfies DemoContext} />}
+      : <><nav aria-label="Демонстрации выполнения"><Link to={`/company/cases/${executionCaseId}/workspace`}>День 4: выполнение и совместные места</Link>{' · '}
+          <Link to={`/company/cases/${evaluationCaseId}/workspace`}>День 4: оценивание без совместных мест</Link></nav>
+        <Outlet context={{ repository, workflow, execution, companyId: demoCompanyId, canCreate: mode !== 'read-only' } satisfies DemoContext} /></>}
   </main>;
 }
 
