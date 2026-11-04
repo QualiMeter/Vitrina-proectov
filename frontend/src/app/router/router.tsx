@@ -1,4 +1,5 @@
 import { createBrowserRouter } from 'react-router-dom';
+import { lazy, Suspense } from 'react';
 import { ErrorState } from '../../components/feedback/States';
 import { AppShell } from '../../components/layout/AppShell';
 import { ProtectedRoute } from '../../features/auth/ProtectedRoute';
@@ -21,9 +22,13 @@ import {
 } from '../../pages/university/UniversityPages';
 import { PlaceholderPage } from '../../pages/PlaceholderPage';
 import { PublicLayout } from './PublicLayout';
+import { CompanyCaseEditor, CompanyCasesPage, CompanyDemoLayout } from '../../pages/company/cases/CompanyCasesPage';
+import { CompanyWorkflowPage } from '../../pages/company/workflow/CompanyWorkflowPage';
 import '../../pages/auth/Auth.css';
 
 const placeholderRoute = (path: string) => ({ path, element: <PlaceholderPage /> });
+const CompanyExecutionPage = lazy(() => import('../../pages/company/execution/CompanyExecutionPage')
+  .then(module => ({ default: module.CompanyExecutionPage })));
 
 const universityRoute = {
   path: 'university',
@@ -71,6 +76,20 @@ export const router = createBrowserRouter([
       { path: 'cases', element: <CasesPage /> },
       { path: 'cases/:caseId', element: <CaseDetailsPage /> },
       { path: 'companies/:companyId', element: <CompanyDetailsPage /> },
+      {
+        path: 'company/cases',
+        element: <CompanyDemoLayout />,
+        children: [
+          { index: true, element: <CompanyCasesPage /> },
+          { path: 'new', element: <CompanyCaseEditor /> },
+          { path: ':caseId/edit', element: <CompanyCaseEditor /> },
+          { path: ':caseId/manage', element: <CompanyWorkflowPage view="overview" /> },
+          { path: ':caseId/workspace', element: <Suspense fallback={<p role="status">Загрузка рабочего пространства…</p>}><CompanyExecutionPage /></Suspense> },
+          { path: ':caseId/stages', element: <CompanyWorkflowPage view="stages" /> },
+          { path: ':caseId/applications', element: <CompanyWorkflowPage view="applications" /> },
+          { path: ':caseId/applications/:applicationId', element: <CompanyWorkflowPage view="applications" /> },
+        ],
+      },
       {
         path: 'company',
         element: <ProtectedRoute allowedArea="company" />,
